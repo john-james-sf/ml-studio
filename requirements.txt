@@ -10,7 +10,6 @@ autopep8==1.4.3
 Babel==2.7.0
 backcall==0.1.0
 binaryornot==0.4.4
-black==19.3b0
 bleach==3.1.0
 bumpversion==0.5.3
 certifi==2019.6.16
@@ -55,7 +54,6 @@ MarkupSafe==1.1.1
 matplotlib==3.0.3
 mccabe==0.6.1
 mistune==0.8.4
-# Following are not python modules
 # mkl-fft==1.0.10
 # mkl-random==1.0.2
 more-itertools==7.2.0
