@@ -134,7 +134,7 @@ class LinearRegressionTests:
         # With random initialization
         lr = LinearRegression()
         lr.fit(X, y)
-        assert sum(lr.history.batch_log['theta'][0]) < 10, "Random theta initialization failed"
+        assert np.mean(lr.history.batch_log['theta'][0]) == 0, "Random theta initialization failed, mean not zero"
 
     @mark.fit
     @mark.fit_linear_regression
