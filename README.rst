@@ -21,9 +21,6 @@ ML Studio
      :target: https://pyup.io/repos/github/scientanalytics/ml_studio/
      :alt: Updates
 
-.. image:: https://codecov.io/gh/ScientAnalytics/MLStudio/branch/master/graph/badge.svg
-  :target: https://codecov.io/gh/ScientAnalytics/MLStudio
-  :alt: Code Coverage
 
 Machine Learning Algorithms
 
