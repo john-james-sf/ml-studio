@@ -13,13 +13,10 @@ from sklearn.utils import shuffle
 
 from ml_studio.utils.data import batch_iterator
 
-from ml_studio.deep_learning.neural_network.operations_nn.initializers import RandomNormal
-from ml_studio.deep_learning.neural_network.operations_nn import optimizers as op 
-
 from ml_studio.operations import callbacks as cbks
 from ml_studio.operations.metrics import Metric, Scorer
 from ml_studio.operations.regularizers import Regularizer, L1, L2, ElasticNet
-from ml_studio.supervised_learning.operations_sl.cost import Cost, CostFunctions
+from ml_studio.operations.cost import Cost, CostFunctions
 
 from ml_studio.utils import reports
 from ml_studio.utils.data import make_polynomial_features
@@ -33,12 +30,12 @@ import warnings
 class Regression(ABC, BaseEstimator, RegressorMixin):
     """Class defines base behavior for regression classes."""
     
-    def __init__(self, optimizer, theta_init=None, epochs=1000, 
+    def __init__(self, learning_rate=0.01, theta_init=None, epochs=1000, 
                  fit_intercept=True, cost='quadratic', monitor='val_score',  
                  metric='root_mean_squared_error', val_size=0.3, 
                  verbose = False, checkpoint=100, name=None, seed=None):
         
-        self.optimizer = optimizer
+        self.learning_rate = learning_rate
         self.theta_init = theta_init
         self.epochs = epochs
         self.fit_intercept = fit_intercept
@@ -69,7 +66,7 @@ class Regression(ABC, BaseEstimator, RegressorMixin):
     def get_params(self, deep=True):
         """Returns the parameters for the estimator."""
 
-        return {"optimizer": self.optimizer,
+        return {"learning_rate": self.learning_rate,
                 'theta_init': self.theta_init,
                 "epochs": self.epochs,
                 "fit_intercept": self.fit_intercept,
@@ -89,8 +86,8 @@ class Regression(ABC, BaseEstimator, RegressorMixin):
 
     def _validate_params(self):
         """Validate parameters."""
-        if not isinstance(self.optimizer, op.Optimizer):
-            raise ValueError("optimizer must provide a valid optimizer object.")
+        if not isinstance(self.learning_rate, float):
+            raise ValueError("learning_rate must provide a float.")
         if self.theta_init is not None:
             if not isinstance(self.theta_init,(list,pd.core.series.Series,np.ndarray)):
                 raise ValueError("theta must be an array like object.")
@@ -176,7 +173,8 @@ class Regression(ABC, BaseEstimator, RegressorMixin):
     def _init_weights(self):
         """Initializes weights (thetas) to random normal distribution."""
         if self.theta_init is None:
-            self.theta = RandomNormal(seed=self.seed)(self.X.shape[1])              
+            np.random.seed(self.seed)
+            self.theta = np.random.normal(size=self.X.shape[1])
         else:
             self.theta = self.theta_init.copy()
 
@@ -269,9 +267,9 @@ class Regression(ABC, BaseEstimator, RegressorMixin):
                 # Update batch log with weights and cost
                 batch_log = {'batch': self.batch, 'batch_size': X_batch.shape[0], 
                              'theta': self.theta.copy(), 'train_cost': J.copy()}      
-                # Compute gradient and update weights as per optimizer                   
+                # Compute gradient and update weights                    
                 gradient = self.cost_function.gradient(X_batch, y_batch, y_pred) - self.regularizer.gradient(self.theta[1:])
-                self.theta  = self.optimizer.apply_gradient(self.theta, gradient, self.batch)
+                self.theta  -= self.learning_rate * gradient
                 # Update batch log
                 self._end_batch(batch_log)
 
@@ -320,11 +318,11 @@ class Regression(ABC, BaseEstimator, RegressorMixin):
 class LinearRegression(Regression):
     """Performs linear regression with gradient descent."""
 
-    def __init__(self, optimizer, theta_init=None, epochs=1000, 
+    def __init__(self, learning_rate=0.01, theta_init=None, epochs=1000, 
                  fit_intercept=True, cost='quadratic', monitor='val_score',  
                  metric='root_mean_squared_error',  val_size=0.3, 
                  verbose = False, checkpoint=100, name=None, seed=None):
-        super(LinearRegression, self).__init__(optimizer=optimizer, 
+        super(LinearRegression, self).__init__(learning_rate=learning_rate, 
               theta_init=theta_init, epochs=epochs, fit_intercept=fit_intercept, 
               cost=cost, monitor=monitor, metric=metric, val_size=val_size, 
               verbose=verbose, checkpoint=checkpoint, name=name, seed=seed)
@@ -342,11 +340,11 @@ class LinearRegression(Regression):
 class LassoRegression(Regression):
     """Performs lasso regression with gradient descent."""
 
-    def __init__(self, optimizer, theta_init=None, alpha=1.0, epochs=1000, 
+    def __init__(self, learning_rate=0.01, theta_init=None, alpha=1.0, epochs=1000, 
                  fit_intercept=True, cost='quadratic', monitor='val_score',  
                  metric='root_mean_squared_error',  val_size=0.3, 
                  verbose = False, checkpoint=100, name=None, seed=None):
-        super(LassoRegression, self).__init__(optimizer=optimizer, 
+        super(LassoRegression, self).__init__(learning_rate=learning_rate, 
               theta_init=theta_init, epochs=epochs,  
               fit_intercept=fit_intercept, cost=cost, monitor=monitor, 
               metric=metric, val_size=val_size, verbose=verbose, 
@@ -364,7 +362,7 @@ class LassoRegression(Regression):
     def get_params(self, deep=True):
         """Returns the parameters for the estimator."""
 
-        return {"optimizer": self.optimizer,
+        return {"learning_rate": self.learning_rate,
                 'theta_init': self.theta_init,
                 'alpha': self.alpha,
                 "epochs": self.epochs,
@@ -384,11 +382,11 @@ class LassoRegression(Regression):
 class RidgeRegression(Regression):
     """Performs ridge regression with gradient descent."""
 
-    def __init__(self, optimizer, theta_init=None, alpha=1.0, epochs=1000, 
+    def __init__(self, learning_rate=0.01, theta_init=None, alpha=1.0, epochs=1000, 
                  fit_intercept=True, cost='quadratic', monitor='val_score',  
                  metric='root_mean_squared_error',  val_size=0.3, 
                  verbose = False, checkpoint=100, name=None, seed=None):
-        super(RidgeRegression, self).__init__(optimizer=optimizer, 
+        super(RidgeRegression, self).__init__(learning_rate=learning_rate, 
               theta_init=theta_init, epochs=epochs, 
               fit_intercept=fit_intercept, cost=cost, monitor=monitor, 
               metric=metric, val_size=val_size, verbose=verbose, 
@@ -406,7 +404,7 @@ class RidgeRegression(Regression):
     def get_params(self, deep=True):
         """Returns the parameters for the estimator."""
 
-        return {"optimizer": self.optimizer,
+        return {"learning_rate": self.learning_rate,
                 'theta_init': self.theta_init,
                 'alpha': self.alpha,
                 "epochs": self.epochs,
@@ -425,12 +423,12 @@ class RidgeRegression(Regression):
 class ElasticNetRegression(Regression):
     """Performs elastic net regression with gradient descent."""
 
-    def __init__(self, optimizer, theta_init=None, alpha=1.0, ratio=0.5,
+    def __init__(self, learning_rate=0.01, theta_init=None, alpha=1.0, ratio=0.5,
                  epochs=1000,  fit_intercept=True, cost='quadratic',
                  monitor='val_score',  metric='root_mean_squared_error',
                  val_size=0.3, verbose = False, checkpoint=100, 
                  name=None, seed=None):
-        super(ElasticNetRegression, self).__init__(optimizer=optimizer, 
+        super(ElasticNetRegression, self).__init__(learning_rate=learning_rate, 
               theta_init=theta_init, epochs=epochs, 
               fit_intercept=fit_intercept, cost=cost, monitor=monitor, 
               metric=metric, val_size=val_size, verbose=verbose, 
@@ -449,7 +447,7 @@ class ElasticNetRegression(Regression):
     def get_params(self, deep=True):
         """Returns the parameters for the estimator."""
 
-        return {"optimizer": self.optimizer,
+        return {"learning_rate": self.learning_rate,
                 'theta_init': self.theta_init,
                 'alpha': self.alpha,
                 'ratio': self.ratio,
@@ -469,12 +467,12 @@ class ElasticNetRegression(Regression):
 class PolynomialRegression(Regression):
     """The relationship between x and y is modelled as an nth degree polynomial."""
 
-    def __init__(self, optimizer, degree, theta_init=None, 
+    def __init__(self, degree, learning_rate=0.01, theta_init=None, 
                  epochs=1000,  fit_intercept=True, cost='quadratic',
                  monitor='val_score',  metric='root_mean_squared_error', 
                  val_size=0.3, verbose = False, checkpoint=100, 
                  name=None, seed=None):
-        super(PolynomialRegression, self).__init__(optimizer=optimizer,
+        super(PolynomialRegression, self).__init__(learning_rate=learning_rate,
               theta_init=theta_init, epochs=epochs,  fit_intercept=fit_intercept, 
               cost=cost, monitor=monitor, metric=metric, 
               val_size=val_size, verbose=verbose, 
@@ -495,7 +493,7 @@ class PolynomialRegression(Regression):
     def get_params(self, deep=True):
         """Returns the parameters for the estimator."""
 
-        return {"optimizer": self.optimizer,
+        return {"learning_rate": self.learning_rate,
                 'degree': self.degree,
                 'theta_init': self.theta_init,
                 "epochs": self.epochs,
@@ -523,11 +521,11 @@ class PolynomialRegression(Regression):
 class SGDRegression(LinearRegression):
     """The relationship between x and y is modelled as an nth degree polynomial."""
 
-    def __init__(self, optimizer, batch_size=1, theta_init=None, epochs=1000, 
+    def __init__(self, learning_rate=0.01, batch_size=1, theta_init=None, epochs=1000, 
                  fit_intercept=True, cost='quadratic', monitor='val_score',  
                  metric='root_mean_squared_error',  val_size=0.3, 
                  verbose = False, checkpoint=100, name=None, seed=None):
-        super(SGDRegression, self).__init__(optimizer=optimizer, 
+        super(SGDRegression, self).__init__(learning_rate=learning_rate, 
               theta_init=theta_init, epochs=epochs, 
               fit_intercept=fit_intercept, cost=cost, monitor=monitor, 
               metric=metric, val_size=val_size, verbose=verbose, 
@@ -548,7 +546,7 @@ class SGDRegression(LinearRegression):
     def get_params(self, deep=True):
         """Returns the parameters for the estimator."""
 
-        return {"optimizer": self.optimizer,
+        return {"learning_rate": self.learning_rate,
                 "batch_size": self.batch_size,
                 'theta_init': self.theta_init,
                 "epochs": self.epochs,
@@ -567,11 +565,11 @@ class SGDRegression(LinearRegression):
 class SGDLassoRegression(LassoRegression):
     """The relationship between x and y is modelled as an nth degree polynomial."""
 
-    def __init__(self, optimizer, batch_size=1, theta_init=None, alpha=1.0,
+    def __init__(self, learning_rate=0.01, batch_size=1, theta_init=None, alpha=1.0,
                  epochs=1000,  fit_intercept=True, monitor='val_score',  
                  metric='root_mean_squared_error',  val_size=0.3, 
                  verbose = False, checkpoint=100, name=None, seed=None):
-        super(SGDLassoRegression, self).__init__(optimizer=optimizer, 
+        super(SGDLassoRegression, self).__init__(learning_rate=learning_rate, 
               theta_init=theta_init, alpha=alpha, epochs=epochs, 
               fit_intercept=fit_intercept, monitor=monitor, 
               metric=metric, val_size=val_size, verbose=verbose, 
@@ -591,7 +589,7 @@ class SGDLassoRegression(LassoRegression):
     def get_params(self, deep=True):
         """Returns the parameters for the estimator."""
 
-        return {"optimizer": self.optimizer,
+        return {"learning_rate": self.learning_rate,
                 "batch_size": self.batch_size,
                 'theta_init': self.theta_init,
                 'alpha': self.alpha,
@@ -611,12 +609,12 @@ class SGDLassoRegression(LassoRegression):
 class SGDRidgeRegression(RidgeRegression):
     """Performs ridge regression with gradient descent."""
 
-    def __init__(self, optimizer, batch_size=1, theta_init=None, alpha=1.0, 
+    def __init__(self, learning_rate=0.01, batch_size=1, theta_init=None, alpha=1.0, 
                 epochs=1000, fit_intercept=True, cost='quadratic', 
                 monitor='val_score',  metric='root_mean_squared_error',  
                 val_size=0.3, verbose = False, checkpoint=100, name=None, 
                 seed=None):
-        super(SGDRidgeRegression, self).__init__(optimizer=optimizer, 
+        super(SGDRidgeRegression, self).__init__(learning_rate=learning_rate, 
               theta_init=theta_init, alpha=alpha, epochs=epochs, 
               fit_intercept=fit_intercept, cost=cost, monitor=monitor, 
               metric=metric, val_size=val_size, verbose=verbose, 
@@ -636,7 +634,7 @@ class SGDRidgeRegression(RidgeRegression):
     def get_params(self, deep=True):
         """Returns the parameters for the estimator."""
 
-        return {"optimizer": self.optimizer,
+        return {"learning_rate": self.learning_rate,
                 "batch_size": self.batch_size,
                 'theta_init': self.theta_init,
                 'alpha': self.alpha,
@@ -656,12 +654,12 @@ class SGDRidgeRegression(RidgeRegression):
 class SGDElasticNetRegression(ElasticNetRegression):
     """Performs elastic net regression with gradient descent."""
 
-    def __init__(self, optimizer, batch_size=1, theta_init=None, alpha=1.0, 
+    def __init__(self, learning_rate=0.01, batch_size=1, theta_init=None, alpha=1.0, 
                  ratio=0.5, epochs=1000,  fit_intercept=True, cost='quadratic',
                  monitor='val_score',  metric='root_mean_squared_error',
                  val_size=0.3, verbose = False, checkpoint=100, 
                  name=None, seed=None):
-        super(SGDElasticNetRegression, self).__init__(optimizer=optimizer, 
+        super(SGDElasticNetRegression, self).__init__(learning_rate=learning_rate, 
               theta_init=theta_init, alpha=alpha, ratio=ratio, epochs=epochs, 
               fit_intercept=fit_intercept, cost=cost, monitor=monitor, 
               metric=metric, val_size=val_size, verbose=verbose, 
@@ -681,7 +679,7 @@ class SGDElasticNetRegression(ElasticNetRegression):
     def get_params(self, deep=True):
         """Returns the parameters for the estimator."""
 
-        return {"optimizer": self.optimizer,
+        return {"learning_rate": self.learning_rate,
                 'batch_size': self.batch_size,
                 'theta_init': self.theta_init,
                 'alpha': self.alpha,
@@ -702,12 +700,12 @@ class SGDElasticNetRegression(ElasticNetRegression):
 class SGDPolynomialRegression(PolynomialRegression):
     """The relationship between x and y is modelled as an nth degree polynomial."""
 
-    def __init__(self, optimizer, degree, batch_size=1, theta_init=None, 
+    def __init__(self, degree, learning_rate=0.01, batch_size=1, theta_init=None, 
                  epochs=1000,  fit_intercept=True, cost='quadratic',
                  monitor='val_score',  metric='root_mean_squared_error', 
                  val_size=0.3, verbose = False, checkpoint=100, 
                  name=None, seed=None):
-        super(SGDPolynomialRegression, self).__init__(optimizer=optimizer,
+        super(SGDPolynomialRegression, self).__init__(learning_rate=learning_rate,
               degree = degree, theta_init=theta_init, epochs=epochs,  
               fit_intercept=fit_intercept,  cost=cost, monitor=monitor, 
               metric=metric, val_size=val_size, verbose=verbose, 
@@ -728,7 +726,7 @@ class SGDPolynomialRegression(PolynomialRegression):
     def get_params(self, deep=True):
         """Returns the parameters for the estimator."""
 
-        return {"optimizer": self.optimizer,
+        return {"learning_rate": self.learning_rate,
                 'degree': self.degree,
                 'batch_size': self.batch_size,                
                 'theta_init': self.theta_init,
