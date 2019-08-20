@@ -119,6 +119,6 @@ webencodings==0.5.1
 whichcraft==0.6.0
 widgetsnbextension==3.5.1
 wincertstore==0.2
-wrapt==1.11.1
+wrapt==1.11.2
 xlrd==1.2.0
 zipp==0.5.2
