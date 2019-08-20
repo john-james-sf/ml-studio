@@ -13,12 +13,13 @@ ML Studio
         :target: https://ml-studio.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-
 .. image:: https://pyup.io/repos/github/scientanalytics/ml_studio/shield.svg
      :target: https://pyup.io/repos/github/scientanalytics/ml_studio/
      :alt: Updates
 
-
+.. image:: https://codecov.io/gh/ScientAnalytics/MLStudio/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/ScientAnalytics/MLStudio
+  :alt: Code Coverage
 
 Machine Learning Algorithms
 
