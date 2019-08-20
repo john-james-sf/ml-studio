@@ -2,13 +2,12 @@ language: python
 python:
 - 3.7
 - 3.6
-
 before_install:
 - python --version
 - pip install -U pip
 - pip install -U pytest
 - pip install codecov
-install: 
+install:
 - pip install -r requirements.txt
 - pip install -r requirements_dev.txt
 script: pytest
@@ -17,7 +16,7 @@ deploy:
   distributions: sdist bdist_wheel
   user: scientanalytics
   password:
-    secure: SsUAGV7z5uxOT5avqFDOeZeTGKijhMEg/mlDzUq6brsQGfktyhx7UHsqNOJs40sjcT7QJpfFsNlxnuC1XeZM+cZZnQtP8gBcK3J2F3LckF9dogFaIQmC1w9xVWydLTf5M/tysoBUdBPyI3HdiRSlLGYBHAFilrbugKt7SAxoVnloAMRWj7m7hVkHu+73Ny8rpLtrfTNiMEr6sZIArVhGyvojEPGJiZPkrH2SMUj9osLTULzpoF0rClH/aNi1QX9biDnkuqKH+4HbfWBaa4/OlRrPkq9hp4msXTxzfEzyySLUdjGQUq2iWXNqrXtzz7fcoFKMmOFLWbulyGG3vLi6aDeP/wWTL3/aVpSldmemb3tvbatq7ImWgmeZxnFEHQmyL1zBq2Vd6L1hBzI7UiJgez1gjkLma/PwjcBqYN7TF7MdyWkK1zMpaOLPdNYh/Z0lgflFsDKfNO1qwU2WGtUyFuKTtanER28AjLQ6v7r5fzTNOy1BEjrhAcr9+ULYxKCxEwR7gGcHnA8pFzjGb1dGWZbfrb3wgJcUA3tPgrTRJTWEawGpzp/OeDvPjeVW9Z/PCrk0Qe6/UygCVS8PxXufiXslmbKR9CvllPjMPNaJ5mK4XwDWCGHVXkHk/obxED9LI3qRAnDyf3/QkFjlP/6g+zJHtL2uzLjc1OBXfU/hTm4=
+    secure: FBFouxUhXaaAJ1VE0dM91W+L6/a0zl2HuY71xFg46ylavv9gmimiy7m+02Mpcax/YotKGuZixlEMEgRuAxATuKs3Du2HKP2Sczuui9qC4xDBILMCmqgLRK2g2z8cvzmf0F3ogNyBeulMGsSPd12xsfBWekh9LU/LKpX1SPjRYX64kILHS1+Q2f2ljFR3hYFSh6aWJM9HsxrQv0aDahYzZKS0ql48MJ/ADIy1aNDKUs9I7Swi4ehrCmanLqbG7IJszTJreji00nbmuam1sXyOs3PQaWQaUZ6e63jfnxaY/R+O2p7rFBV7aK9ncAfF3bhPV5cBIxq1lFEpFDyBYYpTUnIvSCT1CxGOFJ+78k8csNLJXQeZqdcRFgkJyRRFSrokCrQwjSm18yc0eIjiuwl5uTNegWr3t68N9OoHVNAM84aBnNdY0KpUhWQfYz80AgDQEbha0tRM4ocNmp7famSHV2DfnoxeCdimMLJYiGeHmrx17ue0s+oG4+XFQM2QPCfRjrT0fdftBtuRAdnf/f6h3QxJbWaFUIusX4c+ccjJnCMeMJw8ekXkXlZKy+CT6c4to4/aSAxUOJbgGeJ0polpd62lrhYtdmY2E77wlCjHyet0wF0+bINsjIpqiNMjAATMuaXtcO+24VSut9ef64pP78CwPViCYGjs6Rd4oUE7rhc=
   on:
     tags: true
     repo: scientanalytics/MLStudio
