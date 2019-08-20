@@ -81,7 +81,7 @@ def get_quadratic_y_pred():
 
 @fixture(scope='class')
 def get_quadratic_X():    
-    filename = "tests/test_supervised_learning/test_operations/test_quadratic_cost.xlsx"
+    filename = "tests/test_operations/test_quadratic_cost.xlsx"
     df = pd.read_excel(io=filename,sheet_name='Sheet1', usecols=[2,3,4], skipfooter=2)
     X = df.values
     return X
@@ -96,21 +96,21 @@ def get_quadratic_gradient():
 
 @fixture(scope='class')
 def get_binary_cost_X():    
-    filename = "tests/test_supervised_learning/test_operations/test_binary_cost.xlsx"
+    filename = "tests/test_operations/test_binary_cost.xlsx"
     df = pd.read_excel(io=filename,sheet_name='Sheet1', usecols=[2,3,4])
     X = df.values    
     return X
 
 @fixture(scope='class')
 def get_binary_cost_y():    
-    filename = "tests/test_supervised_learning/test_operations/test_binary_cost.xlsx"
+    filename = "tests/test_operations/test_binary_cost.xlsx"
     df = pd.read_excel(io=filename,sheet_name='Sheet1', usecols=[0])
     y = df.values    
     return y
 
 @fixture(scope='class')
 def get_binary_cost_y_pred():    
-    filename = "tests/test_supervised_learning/test_operations/test_binary_cost.xlsx"
+    filename = "tests/test_operations/test_binary_cost.xlsx"
     df = pd.read_excel(io=filename,sheet_name='Sheet1', usecols=[1])
     y_pred = df.values    
     return y_pred
@@ -125,21 +125,21 @@ def get_binary_cost_gradient():
           
 @fixture(scope='class')
 def get_categorical_cost_X():    
-    filename = "tests/test_supervised_learning/test_operations/test_categorical_cost.xlsx"
+    filename = "tests/test_operations/test_categorical_cost.xlsx"
     df = pd.read_excel(io=filename,sheet_name='Sheet1', usecols=[12,13,14])
     X = df.values    
     return X
 
 @fixture(scope='class')
 def get_categorical_cost_y():    
-    filename = "tests/test_supervised_learning/test_operations/test_categorical_cost.xlsx"
+    filename = "tests/test_operations/test_categorical_cost.xlsx"
     df = pd.read_excel(io=filename,sheet_name='Sheet1', usecols=[0,1,2])
     y = df.values    
     return y
 
 @fixture(scope='class')
 def get_categorical_cost_y_pred():    
-    filename = "tests/test_supervised_learning/test_operations/test_categorical_cost.xlsx"
+    filename = "tests/test_operations/test_categorical_cost.xlsx"
     df = pd.read_excel(io=filename,sheet_name='Sheet1', usecols=[3,4,5])
     y_pred = df.values    
     return y_pred
@@ -150,7 +150,7 @@ def get_categorical_cost():
 
 @fixture(scope='class')
 def get_categorical_cost_gradient():        
-    filename = "tests/test_supervised_learning/test_operations/test_categorical_cost.xlsx"
+    filename = "tests/test_operations/test_categorical_cost.xlsx"
     df = pd.read_excel(io=filename,sheet_name='Sheet1', usecols=[26,27,28], skipfooter=7)
     y_grad = df.values    
     return y_grad
