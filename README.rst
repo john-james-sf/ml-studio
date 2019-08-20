@@ -6,8 +6,8 @@ ML Studio
 .. image:: https://img.shields.io/pypi/v/ml_studio.svg
         :target: https://pypi.python.org/pypi/ml_studio
 
-.. image:: https://img.shields.io/travis/scientanalytics/ml_studio.svg
-        :target: https://travis-ci.org/scientanalytics/ml_studio
+.. image:: https://img.shields.io/travis/scientanalytics/MLStudio.svg
+        :target: https://travis-ci.org/scientanalytics/MLStudio
 
 .. image:: https://readthedocs.org/projects/ml-studio/badge/?version=latest
         :target: https://ml-studio.readthedocs.io/en/latest/?badge=latest
