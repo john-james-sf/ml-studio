@@ -133,7 +133,7 @@ class SGDRegressionTests:
         # With random initialization
         lr = LinearRegression()
         lr.fit(X, y)
-        assert np.mean(lr.history.batch_log['theta'][0]) == 0, "Random theta initialization failed, mean not zero"
+        assert (0-np.mean(lr.history.batch_log['theta'][0])) < 0.01, "Random theta initialization failed"
 
     @mark.fit
     @mark.fit_linear_regression
