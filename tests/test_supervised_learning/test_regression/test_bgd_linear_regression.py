@@ -135,7 +135,7 @@ class LinearRegressionTests:
         lr = LinearRegression()
         lr.fit(X, y)
         assert not np.array_equal(lr.history.batch_log.get('theta')[0],theta_init), "Random initialization failed."        
-        assert len(lr.history.epoch_log.get('theta')[0]) == X.shape[1], "Theta shape doesn't equal input shape."         
+        assert len(lr.history.epoch_log.get('theta')[0]) == X.shape[1]+1, "Theta shape doesn't equal input shape."         
 
 
     @mark.fit
