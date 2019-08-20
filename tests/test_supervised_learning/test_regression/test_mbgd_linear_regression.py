@@ -17,58 +17,59 @@ from ml_studio.utils.filemanager import save_csv
 @mark.mbgdregression
 class SGDRegressionTests:
 
-    def test_mbgd_validation(self, get_ames_data, get_optimizer):
+    def test_mbgd_validation(self, get_ames_data):
 
         X, y = get_ames_data
-        optimizer = get_optimizer
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer="x")
+            lr = LinearRegression(learning_rate="x")
+            lr.fit(X, y)        
+        with pytest.raises(ValueError):
+            lr = LinearRegression(learning_rate=5, epochs=5,theta_init='k')            
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5,theta_init='k')            
+            lr = LinearRegression(epochs=5,theta_init='k')            
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs='k')           
+            lr = LinearRegression(epochs='k')           
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5,fit_intercept='k')                                            
+            lr = LinearRegression(epochs=5,fit_intercept='k')                                            
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5,monitor='k')                                
+            lr = LinearRegression(epochs=5,monitor='k')                                
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5,metric='k')                                
+            lr = LinearRegression(epochs=5,metric='k')                                
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5,val_size=1)                                
+            lr = LinearRegression(epochs=5,val_size=1)                                
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5,monitor='val_cost',
+            lr = LinearRegression(epochs=5,monitor='val_cost',
                                           val_size=0)
             lr.fit(X, y)                                          
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5,verbose='k')                                                                                      
+            lr = LinearRegression(epochs=5,verbose='k')                                                                                      
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5,checkpoint='k')
+            lr = LinearRegression(epochs=5,checkpoint='k')
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5,checkpoint=-1)
+            lr = LinearRegression(epochs=5,checkpoint=-1)
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5,seed='k')                                
+            lr = LinearRegression(epochs=5,seed='k')                                
             lr.fit(X, y)
         with pytest.raises(ValueError):
-            lr = LinearRegression(optimizer=optimizer, epochs=5, metric=None,
+            lr = LinearRegression(epochs=5, metric=None,
                                   monitor='val_score')                                
             lr.fit(X, y)            
 
-    def test_mbgd_prepare_data_w_fit_intercept_n_validation(self, get_ames_data, get_optimizer):
+    def test_mbgd_prepare_data_w_fit_intercept_n_validation(self, get_ames_data):
 
-        optimizer = get_optimizer
         X, y = get_ames_data
         # Test with fit intercept and validation set
-        lr = LinearRegression(optimizer=optimizer, epochs=5)
+        lr = LinearRegression(epochs=5)
         lr.fit(X, y)
         assert lr.X.shape[0] > 700, "X data not available when fitting intercept"
         assert lr.X_val.shape[0] > 200, "X_val data not available when fitting intercept"
@@ -79,11 +80,10 @@ class SGDRegressionTests:
         assert isinstance(lr.X_val, (np.ndarray, np.generic)), "X_val is not a numpy array"
         assert isinstance(lr.y_val, (np.ndarray, np.generic)), "y_val is not a numpy array"
 
-    def test_mbgd_prepare_data_wo_fit_intercept_w_validation(self, get_ames_data, get_optimizer):
-        optimizer = get_optimizer
+    def test_mbgd_prepare_data_wo_fit_intercept_w_validation(self, get_ames_data):
         X, y = get_ames_data
         # Test with validation set and without fitting intercept
-        lr = LinearRegression(optimizer=optimizer, epochs=5, fit_intercept=False)
+        lr = LinearRegression(epochs=5, fit_intercept=False)
         lr.fit(X, y)        
         assert lr.X.shape[0] > 700, "X data not available when not fitting intercept"
         assert lr.X_val.shape[0] > 200, "X_val data not available when not fitting intercept"
@@ -94,11 +94,10 @@ class SGDRegressionTests:
         assert isinstance(lr.X_val, (np.ndarray, np.generic)), "X_val is not a numpy array"
         assert isinstance(lr.y_val, (np.ndarray, np.generic)), "y_val is not a numpy array"        
 
-    def test_mbgd_prepare_data_w_fit_intercept_wo_validation(self, get_ames_data, get_optimizer):
-        optimizer = get_optimizer
+    def test_mbgd_prepare_data_w_fit_intercept_wo_validation(self, get_ames_data):
         X, y = get_ames_data        
         # Test with fit intercept, no validation set
-        lr = LinearRegression(optimizer=optimizer, epochs=5, val_size=0.0, monitor='train_cost')
+        lr = LinearRegression(epochs=5, val_size=0.0, monitor='train_cost')
         lr.fit(X, y)        
         assert lr.X.shape[0] > 1000, "X data not available when not fitting intercept"
         assert lr.X.shape[1] == X.shape[1]+1, "X doesn't equal input shape plus bias."
@@ -107,11 +106,10 @@ class SGDRegressionTests:
         assert isinstance(lr.X, (np.ndarray, np.generic)), "X is not a numpy array"
         assert isinstance(lr.y, (np.ndarray, np.generic)), "y is not a numpy array"
 
-    def test_mbgd_prepare_data_wo_fit_intercept_wo_validation(self, get_ames_data, get_optimizer):
-        optimizer = get_optimizer
+    def test_mbgd_prepare_data_wo_fit_intercept_wo_validation(self, get_ames_data):
         X, y = get_ames_data        
         # Test with no validation set and no fitting intercept
-        lr = LinearRegression(optimizer=optimizer, epochs=5, fit_intercept=False, 
+        lr = LinearRegression(epochs=5, fit_intercept=False, 
                               monitor='train_cost', val_size=0)
         lr.fit(X, y)        
         assert lr.X.shape[0] > 1000, "X data not available when not fitting intercept"
@@ -121,33 +119,31 @@ class SGDRegressionTests:
         assert lr.X_val is None, "X_val is not None"
         assert lr.y_val is None, "y_val is not None"
 
-    def test_mbgd_init_weights(self, get_ames_data, get_optimizer):
-        optimizer = get_optimizer
+    def test_mbgd_init_weights(self, get_ames_data):
         X, y = get_ames_data
         # With initialization and bias term
         theta_init = np.ones(X.shape[1]+1)
-        lr = LinearRegression(optimizer=optimizer, epochs=5, theta_init=theta_init)
+        lr = LinearRegression(epochs=5, theta_init=theta_init)
         lr.fit(X, y)
         assert np.array_equal(lr.history.batch_log.get('theta')[0],theta_init), "Theta failed to initiate to initial weights."        
         assert len(lr.history.batch_log.get('theta')[0]) == X.shape[1] + 1, "Theta shape doesn't equal input shape plus bias."
         # With initialization and no bias term
         theta_init = np.ones(X.shape[1])
-        lr = LinearRegression(optimizer=optimizer, epochs=5, theta_init=theta_init, fit_intercept=False)
+        lr = LinearRegression(epochs=5, theta_init=theta_init, fit_intercept=False)
         lr.fit(X, y)
         assert np.array_equal(lr.history.batch_log.get('theta')[0],theta_init), "Theta failed to initiate to initial weights."        
         assert len(lr.history.epoch_log.get('theta')[0]) == X.shape[1], "Theta shape doesn't equal input shape."         
         # With random initialization
-        lr = LinearRegression(optimizer=optimizer)
+        lr = LinearRegression()
         lr.fit(X, y)
         assert sum(lr.history.batch_log['theta'][0]) < 10, "Random theta initialization failed"
 
     @mark.fit
     @mark.fit_linear_regression
-    def test_mbgd_fit_linear_regression_w_validation(self, get_ames_data, get_optimizer):        
+    def test_mbgd_fit_linear_regression_w_validation(self, get_ames_data):        
         # Run model
-        optimizer = get_optimizer
         X, y = get_ames_data
-        lr = LinearRegression(optimizer=optimizer, epochs=5)
+        lr = LinearRegression(epochs=5)
         lr.fit(X, y)
         # Obtain parameters and function that obtains best value by metric
         params = lr.get_params()
@@ -195,11 +191,12 @@ class SGDRegressionTests:
         # Check shapes
         assert len(best_weights) == X.shape[1] + 1, "Weights and features dimension mismatch."
 
-    def test_mbgd_fit_linear_regression_wo_validation(self, get_ames_data, get_optimizer):        
+    @mark.fit
+    @mark.fit_linear_regression
+    def test_mbgd_fit_linear_regression_wo_validation(self, get_ames_data):        
         # Run model
-        optimizer = get_optimizer
         X, y = get_ames_data
-        lr = LinearRegression(optimizer=optimizer, monitor='train_cost', val_size=0, epochs=5)
+        lr = LinearRegression(monitor='train_cost', val_size=0, epochs=5)
         lr.fit(X, y)        
         # Obtain parameters and function that obtains best value by metric
         params = lr.get_params()
@@ -247,11 +244,12 @@ class SGDRegressionTests:
         # Check shapes
         assert len(best_weights) == X.shape[1] + 1, "Weights and features dimension mismatch."        
 
-    def test_mbgd_fit_linear_regression_wo_fit_intercept_wo_validation(self, get_ames_data, get_optimizer):        
+    @mark.fit
+    @mark.fit_linear_regression
+    def test_mbgd_fit_linear_regression_wo_fit_intercept_wo_validation(self, get_ames_data):        
         # Run model
-        optimizer = get_optimizer
         X, y = get_ames_data
-        lr = LinearRegression(optimizer=optimizer, monitor='train_cost', val_size=0, epochs=5,
+        lr = LinearRegression(monitor='train_cost', val_size=0, epochs=5,
                               fit_intercept=False)
         lr.fit(X, y)        
         # Obtain parameters and function that obtains best value by metric
@@ -298,66 +296,67 @@ class SGDRegressionTests:
         # Check shapes
         assert len(best_weights) == X.shape[1], "Weights and features dimension mismatch."    
 
-    def test_mbgd_fit_linear_regression_monitor_train_cost(self, get_ames_data, get_optimizer):        
+    @mark.fit
+    @mark.fit_linear_regression
+    def test_mbgd_fit_linear_regression_monitor_train_cost(self, get_ames_data):        
         # Run model
-        optimizer = get_optimizer
         X, y = get_ames_data
-        lr = LinearRegression(optimizer=optimizer, monitor='train_cost', epochs=5)
+        lr = LinearRegression(monitor='train_cost', epochs=5)
         lr.fit(X, y)        
         # Check benchmark
         assert lr.benchmark.best_model['monitor'] == "train_cost", "Invalid monitor value in benchmark"
        
-    def test_mbgd_fit_linear_regression_monitor_train_score(self, get_ames_data, get_optimizer):        
+    @mark.fit
+    @mark.fit_linear_regression       
+    def test_mbgd_fit_linear_regression_monitor_train_score(self, get_ames_data):        
         # Run model
-        optimizer = get_optimizer
         X, y = get_ames_data
-        lr = LinearRegression(optimizer=optimizer, monitor='train_score', epochs=5)
+        lr = LinearRegression(monitor='train_score', epochs=5)
         lr.fit(X, y)        
         # Check benchmark
         assert lr.benchmark.best_model['monitor'] == "train_score", "Invalid monitor value in benchmark"
 
-    def test_mbgd_fit_linear_regression_monitor_val_cost(self, get_ames_data, get_optimizer):        
+    @mark.fit
+    @mark.fit_linear_regression
+    def test_mbgd_fit_linear_regression_monitor_val_cost(self, get_ames_data):        
         # Run model
-        optimizer = get_optimizer
         X, y = get_ames_data
-        lr = LinearRegression(optimizer=optimizer, monitor='val_cost', epochs=5)
+        lr = LinearRegression(monitor='val_cost', epochs=5)
         lr.fit(X, y)        
         # Check benchmark
         assert lr.benchmark.best_model['monitor'] == "val_cost", "Invalid monitor value in benchmark"
 
-    def test_mbgd_fit_linear_regression_monitor_val_score(self, get_ames_data, get_optimizer):        
+    @mark.fit
+    @mark.fit_linear_regression
+    def test_mbgd_fit_linear_regression_monitor_val_score(self, get_ames_data):        
         # Run model
-        optimizer = get_optimizer
         X, y = get_ames_data
-        lr = LinearRegression(optimizer=optimizer, monitor='val_score', epochs=5)
+        lr = LinearRegression(monitor='val_score', epochs=5)
         lr.fit(X, y)        
         # Check benchmark
         assert lr.benchmark.best_model['monitor'] == "val_score", "Invalid monitor value in benchmark"        
 
     @mark.predict_linear_regression
-    def test_mbgd_predict_linear_regression(self, get_ames_data, get_optimizer):
-        optimizer = get_optimizer
+    def test_mbgd_predict_linear_regression(self, get_ames_data):
         X, y = get_ames_data
-        lr = LinearRegression(optimizer=optimizer, epochs=5)
+        lr = LinearRegression(epochs=5)
         lr.fit(X, y)
         y_pred = lr.predict(X)
         assert isinstance(y_pred, (np.ndarray, np.generic)), "The predict method did not return an np.ndarray."
         assert y_pred.shape[0] == X.shape[0], "Prediction shape[0] not equal to X.shape[0]"
 
     @mark.score_linear_regression
-    def test_mbgd_score_linear_regression(self, get_ames_data, get_optimizer):
-        optimizer = get_optimizer
+    def test_mbgd_score_linear_regression(self, get_ames_data):
         X, y = get_ames_data
-        lr = LinearRegression(optimizer=optimizer, epochs=5)
+        lr = LinearRegression(epochs=5)
         lr.fit(X, y)
         score = lr.score(X, y)
         assert isinstance(score, float), "The score method did not return a float."
     
     @mark.mbgd 
-    def test_mbgd_linear_regression_mbgd_batch_size_1(self, get_ames_data, get_optimizer):
-        optimizer = get_optimizer
+    def test_mbgd_linear_regression_mbgd_batch_size_1(self, get_ames_data):
         X, y = get_ames_data
-        lr = SGDRegression(optimizer=optimizer, epochs=5, batch_size=128)
+        lr = SGDRegression(epochs=5, batch_size=128)
         lr.fit(X, y)
         total_epochs = lr.history.total_epochs
         total_batches = lr.history.total_batches

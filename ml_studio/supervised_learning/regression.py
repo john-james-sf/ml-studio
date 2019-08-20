@@ -86,7 +86,7 @@ class Regression(ABC, BaseEstimator, RegressorMixin):
 
     def _validate_params(self):
         """Validate parameters."""
-        if not isinstance(self.learning_rate, float):
+        if not isinstance(self.learning_rate, (int,float)):
             raise ValueError("learning_rate must provide a float.")
         if self.theta_init is not None:
             if not isinstance(self.theta_init,(list,pd.core.series.Series,np.ndarray)):

@@ -8,7 +8,6 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
-from ml_studio.deep_learning.neural_network.operations_nn.optimizers import GradientDescent
 from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.supervised_learning.regression import LassoRegression
 from ml_studio.supervised_learning.regression import RidgeRegression
@@ -36,11 +35,6 @@ def get_svd_data(X):
     svd.fit(X)
     X = svd.transform(X)
     return X
-
-@fixture(scope='class')
-def get_optimizer():
-    optimizer = GradientDescent(learning_rate=0.01)
-    return optimizer
 
 @fixture(scope='session')
 def get_alpha():    
