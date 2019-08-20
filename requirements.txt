@@ -85,7 +85,7 @@ pytz==2019.2
 pywinpty==0.5.5
 PyYAML==5.1.2
 pyzmq==18.1.0
-qtconsole==4.4.3
+qtconsole==4.5.3
 readme-renderer==24.0
 requests==2.21.0
 requests-toolbelt==0.9.1
