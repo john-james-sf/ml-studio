@@ -4,7 +4,6 @@ import pandas as pd
 from pytest import fixture
 import xlrd
 
-from sklearn.decomposition import TruncatedSVD
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
@@ -27,14 +26,6 @@ def get_ames_data():
     X = pd.read_csv(X_file)    
     y  = pd.read_csv(y_file)    
     return X, y
-
-@fixture(scope="session")
-def get_svd_data(X):
-    # Get transformed and encoded data    
-    svd = TruncatedSVD(n_components=2)
-    svd.fit(X)
-    X = svd.transform(X)
-    return X
 
 @fixture(scope='session')
 def get_alpha():    
