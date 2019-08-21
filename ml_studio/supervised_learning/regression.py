@@ -211,8 +211,7 @@ class Regression(ABC, BaseEstimator, RegressorMixin):
             self.best_intercept = self.benchmark.best_model['theta'][0]
         else:
             self.final_coef = self.theta                    
-            self.best_coef = self.benchmark.best_model['theta']
-            
+            self.best_coef = self.benchmark.best_model['theta']            
 
     def _begin_epoch(self, log=None):
         """Increment the epoch count and shuffle the data."""
@@ -222,16 +221,24 @@ class Regression(ABC, BaseEstimator, RegressorMixin):
             self.seed += 1            
     
     def _end_epoch(self, log=None):        
-        """Performs end-of-batch functionality."""
-        # Compute and accumulate final batch training cost and score  
-        y_pred = self._predict(log.get('X'))   
-        log['train_cost'] += self.cost_function(y=log.get('y'), y_pred=y_pred)              
-        log['train_score'] += self.scorer(y=log.get('y'), y_pred=y_pred)       
+        """Performs end-of-epoch evaluation and scoring."""
+        # Compute final epoch training cost and score  
+        log = {}
+        y_pred = self._predict(self.X)   
+        # Compute final epoch training cost (and scores)
+        log['epoch'] = self.epoch
+        log['train_cost'] = log['train_score'] = None
+        log['train_cost'] = self.cost_function(y=self.y, y_pred=y_pred) 
+        if self.metric is not None and self.val_size > 0:             
+            log['train_score'] = self.scorer(y=self.y, y_pred=y_pred)       
         
-        # Compute validation cost and scores if performing validation
+        # Compute final epoch validation cost (and scores)
         log['val_cost'] = log['val_score'] = None
         if self.metric is not None and self.val_size > 0:
-            log['val_cost'], log['val_score'] = self._evaluate()        
+            log['val_cost'], log['val_score'] = self._evaluate()     
+
+        # Save epoch final weights in log
+        log['theta'] = self.theta
 
         # Update history and benchmark callbacks
         self.history.on_epoch_end(self.epoch, log)
@@ -253,17 +260,14 @@ class Regression(ABC, BaseEstimator, RegressorMixin):
         while (self.epoch < self.epochs):
 
             self._begin_epoch()
-            cost = score = 0
 
             for X_batch, y_batch in batch_iterator(self.X, self.y, batch_size=self.batch_size):
 
                 self._begin_batch()
                 # Compute prediction
                 y_pred = self._predict(X_batch)   
-                # Compute and accumulate costs and score
+                # Compute costs
                 J = self.cost_function(y=y_batch, y_pred = y_pred) + self.regularizer(self.theta[1:])              
-                cost += J
-                score += self.scorer(y=y_batch, y_pred=y_pred)  
                 # Update batch log with weights and cost
                 batch_log = {'batch': self.batch, 'batch_size': X_batch.shape[0], 
                              'theta': self.theta.copy(), 'train_cost': J.copy()}      
@@ -273,9 +277,8 @@ class Regression(ABC, BaseEstimator, RegressorMixin):
                 # Update batch log
                 self._end_batch(batch_log)
 
-            epoch_log = {'X': X_batch, 'y': y_batch, 'train_cost': cost,
-                         'train_score': score, 'theta': self.theta.copy()}
-            self._end_epoch(epoch_log) 
+            # Wrap up epoch
+            self._end_epoch() 
 
         self._end_training()
         return self

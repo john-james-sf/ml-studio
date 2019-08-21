@@ -10,7 +10,6 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 
-from ml_studio.deep_learning.neural_network.operations_nn.optimizers import GradientDescent
 from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.utils.filemanager import save_csv
 
