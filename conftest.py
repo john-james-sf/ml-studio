@@ -29,6 +29,23 @@ def get_ames_data():
     y = pd.read_csv(y_file)
     return X, y
 
+@fixture(scope='function')
+def train_algorithm_w_validation(get_ames_data):
+    X, y = get_ames_data
+    lr = LinearRegression(epochs=100)
+    lr.fit(X, y)
+    return lr
+
+@fixture(scope='function')
+def train_algorithm_wo_validation(get_ames_data):
+    X, y = get_ames_data
+    lr = LinearRegression(epochs=100, monitor='train_score', val_size=None)
+    lr.fit(X, y)
+    return lr
+
+@fixture(scope='session')
+def get_figure_path():
+    return "tests/test_figures"
 
 @fixture(scope='session')
 def get_alpha():

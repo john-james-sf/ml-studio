@@ -241,15 +241,10 @@ class History(Callback):
         The callback is automatically attached to all model objects. The 
         Log is returned by the 'fit' method of models.        
     """
-    def __init__(self, verbose=None):
-        super(History, self).__init__()
-        self._verbose = verbose    
-
     def on_train_begin(self, logs=None):
         self.total_epochs = 0
         self.total_batches = 0
         self.start = datetime.datetime.now() 
-        self.epochs = []
         self.epoch_log = {}
         self.batch_log = {}
 
@@ -264,63 +259,18 @@ class History(Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
-        self.epochs.append(epoch)
         self.total_epochs = epoch
         for k,v in logs.items():
             self.epoch_log.setdefault(k,[]).append(v)
 
-        if self._verbose:
-            if epoch % self.params.get('checkpoint') == 0:
-                if self.params.get('val_size'):
-                    print('Epoch: {:<4} - Training Loss: {:<8.3} - Validation Loss: {:<8.3} - Training Score: {:<8.3} - Validation Score: {:<8.3}'.format(
-                                    epoch,
-                                    logs.get('train_cost'),
-                                    logs.get('val_cost'),
-                                    logs.get('train_score'),
-                                    logs.get('val_score')))
-                else:
-                    print('Epoch: {:<4} - Training Loss: {:<8.3} - Training Score: {:<8.3}'.format(
-                                    epoch,
-                                    logs.get('train_cost'),
-                                    logs.get('train_score')))
-
 # --------------------------------------------------------------------------- #
-#                            BENCHMARK CLASS                                  #
-# --------------------------------------------------------------------------- #        
-class Benchmark(Callback):
-    """Benchmarks performance and indicates whether performance improves."""
-    
-    def __init__(self, verbose=None):
-        super(Benchmark, self).__init__()
-        self._verbose = verbose
-
-    def on_train_begin(self, logs=None):
-        """Initializes performance and improvement function."""
-        self._labels = {'train_cost': 'Training Cost',
-                    'train_score': 'Training Score',
-                    'val_cost': 'Validation Cost',
-                    'val_score': 'Validation Score'}      
-
-        self.best_model = {}
-        self._monitor = self.params.get('monitor')
-        self._metric = self.params.get('metric')        
-        self.best_model['monitor'] = self._monitor
-        self.best_model['metric'] = self._metric
-
-        # Obtain better function and initial performance values for the metric
-        if 'cost' in self._monitor:
-            self._better = np.less
-            self._best_performance = np.Inf
-        else:                    
-            self._better = Scorer()(metric=self._metric).better
-            self._best_performance = Scorer()(metric=self._metric).worst                
+#                            PROGRESS CLASS                                   #
+# --------------------------------------------------------------------------- #              
+class Progress(Callback):
 
     def on_epoch_end(self, epoch, logs=None):
-        logs = logs or {}                
-        current = logs.get(self._monitor)
-        if self._better(current, self._best_performance):            
-            self._best_performance = current
-            self.best_model['epoch'] = epoch
-            self.best_model['performance'] = self._best_performance
-            self.best_model['theta'] = logs.get('theta').copy()
+        if epoch % self.params.get('checkpoint') == 0:
+            progress = "".join(str(key) + ': ' + str(round(value,4)) + ' ' \
+                for key, value in logs.items())
+            print(progress)
 

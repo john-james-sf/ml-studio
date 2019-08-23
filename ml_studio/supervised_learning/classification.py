@@ -3,9 +3,18 @@
 # =========================================================================== #
 """Model for training and evaluating a neural network."""
 import numpy as np
-from .gradient_descent import GradientDescent
-from ml_studio.operations.loss import BinaryCrossEntropy, SoftmaxCrossEntropy
-from ml_studio.deep_learning.neural_network.activations import Sigmoid, Softmax
+
+from ml_studio.supervised_learning.regression import Regression
+from ml_studio.operations.cost import BinaryCrossEntropy, CategoricalCrossEntropy
+
+# --------------------------------------------------------------------------- #
+#                          CLASSIFICATION BASE CLASS                          #
+# --------------------------------------------------------------------------- #       
+class Classification(Regression):
+    """Abstract base class for the Classification classes."""
+
+    def __init__(self):
+        pass
 
 # --------------------------------------------------------------------------- #
 #                          LOGISTIC CLASSIFICATION                            #
