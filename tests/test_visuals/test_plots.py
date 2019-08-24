@@ -18,7 +18,6 @@ from ml_studio.utils.filemanager import save_csv
 
 class TrainingPlotTests:
 
-    @mark.plot
     def test_training_plots_validation(self,
                                        get_figure_path,
                                        train_algorithm_w_validation):
@@ -45,7 +44,6 @@ class TrainingPlotTests:
         with pytest.raises(TypeError):
             plots.cost_plot(algorithm=algorithm, show='x')
 
-    @mark.plot
     def test_cost_plot_no_validation(self,
                                      get_figure_path,
                                      train_algorithm_wo_validation):

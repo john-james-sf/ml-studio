@@ -4,10 +4,11 @@ import pandas as pd
 from pytest import fixture
 import xlrd
 
-from sklearn.model_selection import train_test_split
+from sklearn import datasets
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
-from ml_studio.operations.callbacks import History, Benchmark
+from ml_studio.operations.callbacks import History
+from ml_studio.supervised_learning.estimator import GradientDescent
 from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.supervised_learning.regression import LassoRegression
 from ml_studio.supervised_learning.regression import RidgeRegression
@@ -20,28 +21,46 @@ warnings.filterwarnings("ignore", category=PendingDeprecationWarning)
 
 
 @fixture(scope="session")
-def get_ames_data():
-    X_file = "./tests/test_data/processed/X_train.csv"
-    y_file = "./tests/test_data/processed/y_train.csv"
-
-    # Read the data
-    X = pd.read_csv(X_file)
-    y = pd.read_csv(y_file)
+def get_regression_data():
+    X, y = datasets.load_boston(return_X_y=True)
+    scaler = StandardScaler()    
+    X = scaler.fit_transform(X)
+    y = np.log(y)
     return X, y
 
-@fixture(scope='function')
-def train_algorithm_w_validation(get_ames_data):
-    X, y = get_ames_data
-    lr = LinearRegression(epochs=100)
-    lr.fit(X, y)
-    return lr
+@fixture(scope='session', params=['r2',
+                                  'var_explained',
+                                  'mean_absolute_error',
+                                  'mean_squared_error',
+                                  'neg_mean_squared_error',
+                                  'root_mean_squared_error',
+                                  'neg_root_mean_squared_error',
+                                  'median_absolute_error'])
+def regression_metric(request):
+    return request.param
 
-@fixture(scope='function')
-def train_algorithm_wo_validation(get_ames_data):
-    X, y = get_ames_data
-    lr = LinearRegression(epochs=100, monitor='train_score', val_size=None)
-    lr.fit(X, y)
-    return lr
+@fixture(scope='session', params=np.linspace(0.005,.01,5))
+def get_learning_rate(request):
+    return request.param
+
+
+@fixture(scope='session')
+def analytical_solution(get_regression_data):
+    X, y = get_regression_data
+    X = np.insert(X, 0, 1, axis=1)
+    w = np.linalg.lstsq(X,y)[0]
+    return w
+
+@fixture(scope='session')
+def predict_y():
+    X, y = datasets.load_boston(return_X_y=True)
+    scaler = StandardScaler()    
+    X = scaler.fit_transform(X)
+    gd = GradientDescent(epochs=5)
+    gd.fit(X, y)
+    y_pred = gd.predict(X)
+    return y, y_pred
+
 
 @fixture(scope='session')
 def get_figure_path():
@@ -205,9 +224,5 @@ def get_history():
     return History()
 
 
-@fixture(scope='function')
-def get_benchmark():
-    return Benchmark()
 
 #%%
-# %%

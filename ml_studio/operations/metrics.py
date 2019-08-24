@@ -52,7 +52,7 @@ class SST(Metric):
     
     def __call__(self, y, y_pred):
         y_avg = np.mean(y)
-        e = (y-y_avg)**2                
+        e = (y-y_avg)                
         return np.sum(e**2)
 
 class R2(Metric):
@@ -88,8 +88,25 @@ class VarExplained(Metric):
 
     
     def __call__(self, y, y_pred):
-        var_explained = 1 - np.var(y-y_pred) / np.var(y)
+        var_explained = 1 - (np.var(y-y_pred) / np.var(y))
         return var_explained                   
+
+class MAE(Metric):
+    """Computes mean absolute error given data and parameters."""
+
+    def __init__(self):
+        self.mode = 'min'
+        self.name = 'mean_absolute_error'
+        self.label = "Mean Absolute Error"
+        self.stateful = False
+        self.best = np.min
+        self.better = np.less
+        self.worst = np.Inf
+    
+    def __call__(self, y, y_pred):
+        e = abs(y-y_pred)
+        return np.mean(e)
+
 
 class MSE(Metric):
     """Computes mean squared error given data and parameters."""
@@ -158,21 +175,53 @@ class NRMSE(Metric):
         e = y-y_pred
         return -np.sqrt(np.mean(e**2))
 
-class NLRMSE(Metric):
-    """Computes negative log root mean squared error given data and parameters."""
+class MSLE(Metric):
+    """Computes mean squared log error given data and parameters."""
 
     def __init__(self):
-        self.mode = 'max'
-        self.name = 'neg_log_root_mean_squared_error'
-        self.label = "Negative Log Root Mean Squared Error"
+        self.mode = 'min'
+        self.name = 'mean_squared_log_error'
+        self.label = "Mean Squared Log Error"
         self.stateful = False
-        self.best = np.max
-        self.better = np.greater
-        self.worst = -np.Inf
+        self.best = np.min
+        self.better = np.less
+        self.worst = np.Inf
     
     def __call__(self, y, y_pred):
-        e = np.log(y+1)-np.log(y_pred)
-        return -np.sqrt(np.mean(e**2))  
+        e = np.log(y+1)-np.log(y_pred+1)
+        return np.mean(e**2)  
+
+class RMSLE(Metric):
+    """Computes root mean squared log error given data and parameters."""
+
+    def __init__(self):
+        self.mode = 'min'
+        self.name = 'root_mean_squared_log_error'
+        self.label = "Root Mean Squared Log Error"
+        self.stateful = False
+        self.best = np.min
+        self.better = np.less
+        self.worst = np.Inf
+    
+    def __call__(self, y, y_pred):
+        e = np.log(y+1)-np.log(y_pred+1)
+        return np.sqrt(np.mean(e**2))
+
+class MEDAE(Metric):
+    """Computes median absolute error given data and parameters."""
+
+    def __init__(self):
+        self.mode = 'min'
+        self.name = 'median_absolute_error'
+        self.label = "Median Absolute Error"
+        self.stateful = False
+        self.best = np.min
+        self.better = np.less
+        self.worst = np.Inf
+    
+    def __call__(self, y, y_pred):        
+        return np.median(np.abs(y_pred-y))
+
 
 class BinaryAccuracy(Metric):
     """Computes binary accuracy."""
@@ -210,11 +259,16 @@ class Scorer:
 
     def __call__(self, metric='neg_mean_squared_error'):
 
-        dispatcher = {'mean_squared_error': MSE(),                      
+        dispatcher = {'r2': R2(),
+                      'var_explained': VarExplained(),
+                      'mean_absolute_error': MAE(),
+                      'mean_squared_error': MSE(),                      
                       'neg_mean_squared_error': NMSE(),
                       'root_mean_squared_error': RMSE(),
-                      'neg_log_root_mean_squared_error': NLRMSE(),
                       'neg_root_mean_squared_error': NRMSE(),
+                      'mean_squared_log_error': MSLE(),
+                      'root_mean_squared_log_error': RMSLE(),
+                      'median_absolute_error': MEDAE(),
                       'binary_accuracy': BinaryAccuracy(),
                       'categorical_accuracy': CategoricalAccuracy()}
         return(dispatcher[metric])
