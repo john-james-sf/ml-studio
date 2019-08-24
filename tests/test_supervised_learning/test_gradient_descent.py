@@ -95,6 +95,7 @@ class GradientDescentTests:
         # Test epoch history
         assert gd.history.total_epochs == 10, "total_epochs from history doesn't match epochs"
         assert len(gd.history.epoch_log.get('epoch')) == 10, "number of epochs in log doesn't match epochs"
+        assert (len(gd.history.epoch_log.get("learning_rate")) == 10), "length of learning rate doesn't match epochs"
         assert len(gd.history.epoch_log.get('theta')) == 10, "number of thetas in log doesn't match epochs"
         assert len(gd.history.epoch_log.get('train_cost')) == 10, "length of train_cost doesn't match epochs"
         assert len(gd.history.epoch_log.get('train_score')) == 10, "length of train_score doesn't match epochs"
@@ -125,6 +126,7 @@ class GradientDescentTests:
         # Test epoch history
         assert gd.history.total_epochs == 10, "total_epochs from history doesn't match epochs"
         assert len(gd.history.epoch_log.get('epoch')) == 10, "number of epochs in log doesn't match epochs"
+        assert (len(gd.history.epoch_log.get("learning_rate")) == 10), "length of learning rate doesn't match epochs"
         assert len(gd.history.epoch_log.get('theta')) == 10, "number of thetas in log doesn't match epochs"
         assert len(gd.history.epoch_log.get('train_cost')) == 10, "length of train_cost doesn't match epochs"
         assert len(gd.history.epoch_log.get('train_score')) == 10, "length of train_score doesn't match epochs"
@@ -149,6 +151,7 @@ class GradientDescentTests:
         # Test epoch history
         assert gd.history.total_epochs == 10, "total_epochs from history doesn't match epochs"
         assert len(gd.history.epoch_log.get('epoch')) == 10, "number of epochs in log doesn't match epochs"
+        assert (len(gd.history.epoch_log.get("learning_rate")) == 10), "length of learning rate doesn't match epochs"
         assert len(gd.history.epoch_log.get('theta')) == 10, "number of thetas in log doesn't match epochs"
         assert len(gd.history.epoch_log.get('train_cost')) == 10, "length of train_cost doesn't match epochs"
         assert gd.history.epoch_log.get('train_score') is None, "Train score should be none"
@@ -171,6 +174,7 @@ class GradientDescentTests:
         # Test epoch history
         assert gd.history.total_epochs == 10, "total_epochs from history doesn't match epochs"
         assert len(gd.history.epoch_log.get('epoch')) == 10, "number of epochs in log doesn't match epochs"
+        assert (len(gd.history.epoch_log.get("learning_rate")) == 10), "length of learning rate doesn't match epochs"
         assert len(gd.history.epoch_log.get('theta')) == 10, "number of thetas in log doesn't match epochs"
         assert len(gd.history.epoch_log.get('train_cost')) == 10, "length of train_cost doesn't match epochs"
         assert gd.history.epoch_log.get('train_score') is None, "Train score should be none"
@@ -193,6 +197,7 @@ class GradientDescentTests:
         # Test epoch history
         assert gd.history.total_epochs == 10, "total_epochs from history doesn't match epochs"
         assert len(gd.history.epoch_log.get('epoch')) == 10, "number of epochs in log doesn't match epochs"
+        assert (len(gd.history.epoch_log.get("learning_rate")) == 10), "length of learning rate doesn't match epochs"
         assert len(gd.history.epoch_log.get('theta')) == 10, "number of thetas in log doesn't match epochs"
         assert all(np.isclose(gd.history.epoch_log.get('theta')[0], theta_init, rtol=1e-1)), "Theta[0] not equal to theta_init"
         assert len(gd.history.epoch_log.get('train_cost')) == 10, "length of train_cost doesn't match epochs"
