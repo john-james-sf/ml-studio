@@ -3,7 +3,7 @@
 # =========================================================================== #
 from ml_studio.utils.misc import randomString, proper
 from ml_studio.supervised_learning.regression import GradientDescent
-from ml_studio.operations.callbacks import History, Benchmark
+from ml_studio.operations.callbacks import History
 from ml_studio.utils.filemanager import save_fig
 import seaborn as sns
 import pandas as pd

@@ -29,15 +29,14 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
     """Defines base behavior for gradient-based regression and classification."""
 
     def __init__(self, learning_rate=0.01, theta_init=None, epochs=1000,
-                 cost='quadratic', monitor='val_score',
-                 metric='root_mean_squared_error', val_size=0.3,
-                 verbose=False, checkpoint=100, name=None, seed=None):
+                 cost='quadratic', metric='root_mean_squared_error', 
+                 val_size=0.3, verbose=False, checkpoint=100, name=None, 
+                 seed=None):
 
         self.learning_rate = learning_rate
         self.theta_init = theta_init
         self.epochs = epochs
         self.cost = cost
-        self.monitor = monitor
         self.metric = metric
         self.val_size = val_size
         self.verbose = verbose
@@ -60,26 +59,6 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self.best_coef = None
         self.best_intercept = None
 
-    def get_params(self, deep=True):
-        """Returns the parameters for the estimator."""
-
-        return {"learning_rate": self.learning_rate,
-                'theta_init': self.theta_init,
-                "epochs": self.epochs,
-                "cost": self.cost,
-                "monitor": self.monitor,
-                "metric": self.metric,
-                "val_size": self.val_size,
-                'verbose': self.verbose,
-                'checkpoint': self.checkpoint,
-                "name": self.name,
-                "seed": self.seed}
-
-    def set_params(self, **parameters):
-        for parameter, value in parameters.items():
-            setattr(self, parameter, value)
-        return self
-
     def _validate_params(self):
         """Validate parameters."""
         if not isinstance(self.learning_rate, (int, float)):
@@ -92,38 +71,24 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         if self.batch_size is not None:
             if not isinstance(self.batch_size, int):
                 raise ValueError("batch size must be an integer.")
-        if self.monitor is not None:
-            if self.monitor not in ('train_cost', 'val_cost',
-                                    'train_score', 'val_score'):
-                raise ValueError("monitor must be 'train_cost', 'train_score', "
-                                 " 'val_cost' or 'val_score'.")        
         if self.metric is not None:
-            if self.metric not in ('mean_squared_error',
+            if self.metric not in ('r2',
+                                   'var_explained',
+                                   'mean_absolute_error',
+                                   'mean_squared_error',
                                    'neg_mean_squared_error',
                                    'root_mean_squared_error',
-                                   'neg_log_root_mean_squared_error',
                                    'neg_root_mean_squared_error',
+                                   'mean_squared_log_error',
+                                   'root_mean_squared_log_error',
+                                   'median_absolute_error',
                                    'binary_accuracy',
                                    'categorical_accuracy'):
                 raise ValueError("Metric %s is not support. " % self.metric)
-        if 'score' in self.monitor:
-            if self.metric is None:
-                raise ValueError(
-                    "If monitoring scores, a valid metric must be provided.")
         if not isinstance(self.val_size, (int,float)):
             raise ValueError("val_size must be an 0 or a float")
         if not (0.0 <= self.val_size < 1):
             raise ValueError("val_size must be in [0, 1]")
-        if 'val' in self.monitor:
-            if self.val_size is None:
-                raise ValueError(
-                    "If monitoring a validation metric, val_size must be between 0 and 1")
-            elif self.val_size == 0.0:
-                raise ValueError(
-                    "If monitoring a validation metric, val_size must be between 0 and 1")
-            elif self.val_size < 0 or self.val_size >= 1:
-                raise ValueError(
-                    "val_size must be greater than 0 and less than 1.")
         if not isinstance(self.verbose, bool):
             raise ValueError("verbose must be either True or False")
         if self.checkpoint is not None:
@@ -139,26 +104,28 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
 
     def set_name(self, name=None):
         """Sets name for model."""
-        raise NotImplementedError()
+        self.name = name or 'Gradient Descent Base Class'
 
     def _compile(self):
         self.cost_function = CostFunctions()(cost=self.cost)
         if self.metric:
             self.scorer = Scorer()(metric=self.metric)
 
-    def _format_data(self, X, y=None):
-        """Reformats dataframes into numpy arrays."""
-        X = X.values if isinstance(X, pd.core.frame.DataFrame) else X
+    def _validate_data(self, X, y=None):
+        """Confirms data are numpy arrays."""
+        if not isinstance(X, (np.ndarray)):
+            raise TypeError("X must be of type np.ndarray")
         if y is not None:
-            y = y.values.flatten() if isinstance(y, pd.core.frame.DataFrame) else y
-        return X, y
+            if not isinstance(y, (np.ndarray)):
+                raise TypeError("y must be of type np.ndarray")            
+            if X.shape[0] != len(y):
+                raise ValueError("X and y have incompatible shapes")
 
     def _prepare_data(self, X, y):
         """Prepares training (and validation) data."""
-        # Reformat dataframes into numpy arrays
-        self.X, self.y = self._format_data(X, y)
         # Add a column of ones to train the intercept term
         self.X = np.insert(X, 0, 1, axis=1)  
+        self.y = y
         # Set aside val_size training observations for validation set 
         if self.val_size is not None:
             if self.val_size > 0:
@@ -184,8 +151,9 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
     def _begin_training(self, log=None):
         """Performs initializations required at the beginning of training."""
         self._validate_params()
-        self._compile()
+        self._validate_data(log.get('X'), log.get('y'))        
         self._prepare_data(log.get('X'), log.get('y'))
+        self._compile()
         self._init_weights()
         self.set_name()
 
@@ -281,19 +249,26 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
 
     def _predict(self, X):
         """Private predict method that computes predictions with current weights."""
+        assert X.shape[1] == len(self.theta), "Shape of X is incompatible with shape of theta"
         y_pred = X.dot(self.theta)
         return y_pred
 
     def predict(self, X):
         """Public predict method that computes predictions on 'best' weights."""
-        X, _, = self._format_data(X)
+        if self.final_coef is None:
+            raise Exception("Unable to compute score. Model has not been fit.")        
+        self._validate_data(X)
+        if X.shape[1] != len(self.final_coef):
+            raise ValueError("Shape of X is incompatible with shape of theta")        
         y_pred = self.final_intercept + X.dot(self.final_coef)
         return y_pred
 
     def score(self, X, y):
         if self.final_coef is None:
             raise Exception("Unable to compute score. Model has not been fit.")
-        X, y, = self._format_data(X, y)
+        self._validate_data(X, y)
+        if X.shape[1] != len(self.final_coef):
+            raise ValueError("Shape of X is incompatible with shape of theta")        
         y_pred = self.final_intercept + X.dot(self.final_coef)
         score = self.scorer(y=y, y_pred=y_pred)
         return score
