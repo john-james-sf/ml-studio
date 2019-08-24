@@ -17,13 +17,16 @@ class LinearRegression(GradientDescent):
     """Performs linear regression with gradient descent."""
 
     def __init__(self, learning_rate=0.01, theta_init=None, epochs=1000,
-                 cost='quadratic', monitor='val_score',
-                 metric='root_mean_squared_error',  val_size=0.3,
-                 verbose=False, checkpoint=100, name=None, seed=None):
+                 cost='quadratic',  metric='root_mean_squared_error',
+                 val_size=0.3, verbose=False, checkpoint=100, name=None,
+                 seed=None):
         super(LinearRegression, self).__init__(learning_rate=learning_rate,
-                                               theta_init=theta_init, epochs=epochs,
-                                               cost=cost, monitor=monitor, metric=metric, val_size=val_size,
-                                               verbose=verbose, checkpoint=checkpoint, name=name, seed=seed)
+                                               theta_init=theta_init,
+                                               epochs=epochs, cost=cost,
+                                               metric=metric, val_size=val_size,
+                                               verbose=verbose,
+                                               checkpoint=checkpoint, name=name,
+                                               seed=seed)
 
     def set_name(self, name=None):
         self.name = name or 'Linear Regression with Batch Gradient Descent'
@@ -37,12 +40,12 @@ class LassoRegression(GradientDescent):
     """Performs lasso regression with gradient descent."""
 
     def __init__(self, learning_rate=0.01, theta_init=None, alpha=1.0, epochs=1000,
-                 cost='quadratic', monitor='val_score',
+                 cost='quadratic',
                  metric='root_mean_squared_error',  val_size=0.3,
                  verbose=False, checkpoint=100, name=None, seed=None):
         super(LassoRegression, self).__init__(learning_rate=learning_rate,
                                               theta_init=theta_init, epochs=epochs,
-                                              cost=cost, monitor=monitor,
+                                              cost=cost,
                                               metric=metric, val_size=val_size, verbose=verbose,
                                               checkpoint=checkpoint, name=name, seed=seed)
         self.alpha = alpha
@@ -74,12 +77,12 @@ class RidgeRegression(GradientDescent):
     """Performs ridge regression with gradient descent."""
 
     def __init__(self, learning_rate=0.01, theta_init=None, alpha=1.0, epochs=1000,
-                 cost='quadratic', monitor='val_score',
+                 cost='quadratic',
                  metric='root_mean_squared_error',  val_size=0.3,
                  verbose=False, checkpoint=100, name=None, seed=None):
         super(RidgeRegression, self).__init__(learning_rate=learning_rate,
                                               theta_init=theta_init, epochs=epochs,
-                                              cost=cost, monitor=monitor,
+                                              cost=cost,
                                               metric=metric, val_size=val_size, verbose=verbose,
                                               checkpoint=checkpoint, name=name, seed=seed)
         self.alpha = alpha
@@ -113,12 +116,12 @@ class ElasticNetRegression(GradientDescent):
 
     def __init__(self, learning_rate=0.01, theta_init=None, alpha=1.0, ratio=0.5,
                  epochs=1000,  cost='quadratic',
-                 monitor='val_score',  metric='root_mean_squared_error',
+                 metric='root_mean_squared_error',
                  val_size=0.3, verbose=False, checkpoint=100,
                  name=None, seed=None):
         super(ElasticNetRegression, self).__init__(learning_rate=learning_rate,
                                                    theta_init=theta_init, epochs=epochs,
-                                                   cost=cost, monitor=monitor,
+                                                   cost=cost,
                                                    metric=metric, val_size=val_size, verbose=verbose,
                                                    checkpoint=checkpoint, name=name, seed=seed)
         self.alpha = alpha
@@ -153,13 +156,12 @@ class PolynomialRegression(GradientDescent):
     """The relationship between x and y is modelled as an nth degree polynomial."""
 
     def __init__(self, degree, learning_rate=0.01, theta_init=None,
-                 epochs=1000,  cost='quadratic',
-                 monitor='val_score',  metric='root_mean_squared_error',
+                 epochs=1000,  cost='quadratic', metric='root_mean_squared_error',
                  val_size=0.3, verbose=False, checkpoint=100,
                  name=None, seed=None):
         super(PolynomialRegression, self).__init__(learning_rate=learning_rate,
                                                    theta_init=theta_init, epochs=epochs,
-                                                   cost=cost, monitor=monitor, metric=metric,
+                                                   cost=cost, metric=metric,
                                                    val_size=val_size, verbose=verbose,
                                                    checkpoint=checkpoint, name=name, seed=seed)
         self.degree = degree
@@ -202,14 +204,14 @@ class SGDRegression(LinearRegression):
     """The relationship between x and y is modelled as an nth degree polynomial."""
 
     def __init__(self, learning_rate=0.01, batch_size=1, theta_init=None, epochs=1000,
-                 cost='quadratic', monitor='val_score',
-                 metric='root_mean_squared_error',  val_size=0.3,
+                 cost='quadratic', metric='root_mean_squared_error',  val_size=0.3,
                  verbose=False, checkpoint=100, name=None, seed=None):
         super(SGDRegression, self).__init__(learning_rate=learning_rate,
                                             theta_init=theta_init, epochs=epochs,
-                                            cost=cost, monitor=monitor,
-                                            metric=metric, val_size=val_size, verbose=verbose,
-                                            checkpoint=checkpoint, name=name, seed=seed)
+                                            cost=cost, metric=metric, 
+                                            val_size=val_size, verbose=verbose,
+                                            checkpoint=checkpoint, name=name, 
+                                            seed=seed)
         self.batch_size = batch_size
 
     def set_name(self, name=None):
@@ -242,14 +244,14 @@ class SGDLassoRegression(LassoRegression):
     """The relationship between x and y is modelled as an nth degree polynomial."""
 
     def __init__(self, learning_rate=0.01, batch_size=1, theta_init=None, alpha=1.0,
-                 epochs=1000,  monitor='val_score',
-                 metric='root_mean_squared_error',  val_size=0.3,
+                 epochs=1000, metric='root_mean_squared_error',  val_size=0.3,
                  verbose=False, checkpoint=100, name=None, seed=None):
         super(SGDLassoRegression, self).__init__(learning_rate=learning_rate,
-                                                 theta_init=theta_init, alpha=alpha, epochs=epochs,
-                                                 monitor=monitor,
-                                                 metric=metric, val_size=val_size, verbose=verbose,
-                                                 checkpoint=checkpoint, name=name, seed=seed)
+                                                 theta_init=theta_init, alpha=alpha, 
+                                                 epochs=epochs, metric=metric, 
+                                                 val_size=val_size, verbose=verbose,
+                                                 checkpoint=checkpoint, name=name, 
+                                                 seed=seed)
         self.batch_size = batch_size
 
     def set_name(self, name=None):
@@ -283,15 +285,16 @@ class SGDRidgeRegression(RidgeRegression):
     """Performs ridge regression with gradient descent."""
 
     def __init__(self, learning_rate=0.01, batch_size=1, theta_init=None, alpha=1.0,
-                 epochs=1000, cost='quadratic',
-                 monitor='val_score',  metric='root_mean_squared_error',
+                 epochs=1000, cost='quadratic', metric='root_mean_squared_error',
                  val_size=0.3, verbose=False, checkpoint=100, name=None,
                  seed=None):
         super(SGDRidgeRegression, self).__init__(learning_rate=learning_rate,
-                                                 theta_init=theta_init, alpha=alpha, epochs=epochs,
-                                                 cost=cost, monitor=monitor,
-                                                 metric=metric, val_size=val_size, verbose=verbose,
-                                                 checkpoint=checkpoint, name=name, seed=seed)
+                                                 theta_init=theta_init, alpha=alpha, 
+                                                 epochs=epochs,
+                                                 cost=cost, metric=metric, 
+                                                 val_size=val_size, verbose=verbose,
+                                                 checkpoint=checkpoint, name=name, 
+                                                 seed=seed)
         self.batch_size = batch_size
 
     def set_name(self, name=None):
@@ -326,14 +329,18 @@ class SGDElasticNetRegression(ElasticNetRegression):
 
     def __init__(self, learning_rate=0.01, batch_size=1, theta_init=None, alpha=1.0,
                  ratio=0.5, epochs=1000,  cost='quadratic',
-                 monitor='val_score',  metric='root_mean_squared_error',
+                 metric='root_mean_squared_error',
                  val_size=0.3, verbose=False, checkpoint=100,
                  name=None, seed=None):
         super(SGDElasticNetRegression, self).__init__(learning_rate=learning_rate,
-                                                      theta_init=theta_init, alpha=alpha, ratio=ratio, epochs=epochs,
-                                                      cost=cost, monitor=monitor,
-                                                      metric=metric, val_size=val_size, verbose=verbose,
-                                                      checkpoint=checkpoint, name=name, seed=seed)
+                                                      theta_init=theta_init, 
+                                                      alpha=alpha, ratio=ratio, 
+                                                      epochs=epochs, cost=cost,
+                                                      metric=metric, 
+                                                      val_size=val_size,
+                                                      verbose=verbose,
+                                                      checkpoint=checkpoint,
+                                                      name=name, seed=seed)
         self.batch_size = batch_size
 
     def set_name(self, name=None):
@@ -368,15 +375,17 @@ class SGDPolynomialRegression(PolynomialRegression):
     """The relationship between x and y is modelled as an nth degree polynomial."""
 
     def __init__(self, degree, learning_rate=0.01, batch_size=1, theta_init=None,
-                 epochs=1000,  cost='quadratic',
-                 monitor='val_score',  metric='root_mean_squared_error',
+                 epochs=1000,  cost='quadratic', metric='root_mean_squared_error',
                  val_size=0.3, verbose=False, checkpoint=100,
                  name=None, seed=None):
         super(SGDPolynomialRegression, self).__init__(learning_rate=learning_rate,
-                                                      degree=degree, theta_init=theta_init, epochs=epochs,
-                                                      cost=cost, monitor=monitor,
-                                                      metric=metric, val_size=val_size, verbose=verbose,
-                                                      checkpoint=checkpoint, name=name, seed=seed)
+                                                      degree=degree, 
+                                                      theta_init=theta_init, epochs=epochs,
+                                                      cost=cost, metric=metric, 
+                                                      val_size=val_size, 
+                                                      verbose=verbose,
+                                                      checkpoint=checkpoint, 
+                                                      name=name, seed=seed)
         self.batch_size = batch_size
 
     def set_name(self, name=None):
