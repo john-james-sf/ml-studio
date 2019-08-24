@@ -115,15 +115,17 @@ class ElasticNetRegression(GradientDescent):
     """Performs elastic net regression with gradient descent."""
 
     def __init__(self, learning_rate=0.01, theta_init=None, alpha=1.0, ratio=0.5,
-                 epochs=1000,  cost='quadratic',
-                 metric='root_mean_squared_error',
+                 epochs=1000,  cost='quadratic', metric='root_mean_squared_error',
                  val_size=0.3, verbose=False, checkpoint=100,
                  name=None, seed=None):
         super(ElasticNetRegression, self).__init__(learning_rate=learning_rate,
-                                                   theta_init=theta_init, epochs=epochs,
-                                                   cost=cost,
-                                                   metric=metric, val_size=val_size, verbose=verbose,
-                                                   checkpoint=checkpoint, name=name, seed=seed)
+                                                   theta_init=theta_init, 
+                                                   epochs=epochs, cost=cost,
+                                                   metric=metric, 
+                                                   val_size=val_size, 
+                                                   verbose=verbose,
+                                                   checkpoint=checkpoint, 
+                                                   name=name, seed=seed)
         self.alpha = alpha
         self.ratio = ratio
         self.regularizer = ElasticNet(alpha=alpha, ratio=ratio)

@@ -12,7 +12,7 @@ class Regularizer(ABC):
         self.callback = "Regularizer"
 
     def _validate_hyperparam(self, p):
-        assert isinstance(p, (int,float)), "Regularization hyperparameter must be numeric."
+        assert isinstance(p, float), "Regularization hyperparameter must be numeric."
         assert p >= 0 and p <= 1, "Regularization parameter must be between zero and 1."
     
     @abstractmethod
@@ -80,15 +80,14 @@ class ElasticNet(Regularizer):
         self._validate_hyperparam(self._ratio)
         l1_contr = self._ratio * np.linalg.norm(w, ord=1)
         l2_contr = (1 - self._ratio) * 0.5 * np.linalg.norm(w)**2
-        print("l1 contr %f l2 contr %f" %(l1_contr, l2_contr))
         return self._alpha * (l1_contr + l2_contr)
 
     def gradient(self, w):
         self._validate_hyperparam(self._alpha)
         l1_contr = self._ratio * np.sign(w)
         l2_contr = (1 - self._ratio) * w
-        self._alpha = np.asarray(self._alpha, dtype='float64')
-        return np.multiply(self._alpha, np.add(l1_contr, l2_contr))
+        alpha = np.asarray(self._alpha, dtype='float64')
+        return np.multiply(alpha, np.add(l1_contr, l2_contr))
 
     def config(self):
         c = {'Regularizer': self.name,
