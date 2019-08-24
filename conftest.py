@@ -6,6 +6,7 @@ import xlrd
 
 from sklearn import datasets
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.model_selection import train_test_split
 
 from ml_studio.operations.callbacks import History
 from ml_studio.supervised_learning.estimator import GradientDescent
@@ -28,6 +29,23 @@ def get_regression_data():
     y = np.log(y)
     return X, y
 
+@fixture(scope="session")
+def get_regression_data_w_validation(get_regression_data):
+    X, y = get_regression_data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=50)
+    return X_train, X_test, y_train, y_test
+
+@fixture(scope='module')
+def train_linear_regression(get_regression_data):
+    X, y = get_regression_data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=50)
+    gd = LinearRegression(epochs=2000, val_size=0, seed=50)
+    gd.fit(X_train, y_train)
+    return gd, X_train, X_test, y_train, y_test
+
+
 @fixture(scope='session', params=['r2',
                                   'var_explained',
                                   'mean_absolute_error',
@@ -43,13 +61,23 @@ def regression_metric(request):
 def get_learning_rate(request):
     return request.param
 
+def least_squares(X,y):    
+    X = np.insert(X, 0, 1, axis=1)
+    w = np.linalg.lstsq(X,y)[0]
+    return w
 
 @fixture(scope='session')
 def analytical_solution(get_regression_data):
     X, y = get_regression_data
-    X = np.insert(X, 0, 1, axis=1)
-    w = np.linalg.lstsq(X,y)[0]
+    w = least_squares(X,y)    
     return w
+
+@fixture(scope='session')
+def analytical_solution_training_data(get_regression_data_w_validation):
+    X_train, _, y_train, _ = get_regression_data_w_validation
+    train_solution = least_squares(X_train, y_train)
+    return train_solution
+
 
 @fixture(scope='session')
 def predict_y():
@@ -60,7 +88,6 @@ def predict_y():
     gd.fit(X, y)
     y_pred = gd.predict(X)
     return y, y_pred
-
 
 @fixture(scope='session')
 def get_figure_path():
