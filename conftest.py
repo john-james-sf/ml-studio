@@ -65,6 +65,17 @@ def train_ridge_regression(get_regression_data):
     gd.fit(X_train, y_train)
     return gd, X_train, X_test, y_train, y_test   
 
+@fixture(scope='module')
+def train_elasticnet_regression(get_regression_data):
+    X, y = get_regression_data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=50)
+    gd = ElasticNetRegression(alpha = 0.01, ratio=0.5,
+                              epochs=2000, val_size=0, 
+                              seed=50)
+    gd.fit(X_train, y_train)
+    return gd, X_train, X_test, y_train, y_test       
+
 @fixture(scope='session', params=['r2',
                                   'var_explained',
                                   'mean_absolute_error',
