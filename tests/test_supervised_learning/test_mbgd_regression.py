@@ -10,23 +10,23 @@ from pytest import mark
 
 from ml_studio.operations.metrics import Scorer
 
-class BGDLinearRegressionTests:
+class MBGDLinearRegressionTests:
 
-    @mark.bgd
+    @mark.mbgd
     @mark.linear_regression    
-    def test_bgd_linear_regression_training_solution(self, train_linear_regression,
+    def test_mbgd_linear_regression_training_solution(self, train_mbgd_regression,
                                                  analytical_solution_training_data):
         train_solution = analytical_solution_training_data
-        gd, X_train, _, y_train, _ = train_linear_regression
+        gd, X_train, _, y_train, _ = train_mbgd_regression
         y_pred = gd.predict(X_train)        
         assert all(np.isclose(gd.theta, train_solution, rtol=1e1)), "Solution is not close to analytical solution."
         assert all(np.isclose(y_train, y_pred, rtol=1e1)), "Train predictions are not close to true values."  
 
-    @mark.bgd
+    @mark.mbgd
     @mark.linear_regression
-    def test_bgd_linear_regression_test_scores(self, train_linear_regression, 
+    def test_mbgd_linear_regression_test_scores(self, train_mbgd_regression, 
                                            regression_metric):        
-        gd, _, X_test, _, y_test = train_linear_regression
+        gd, _, X_test, _, y_test = train_mbgd_regression
         y_pred = gd.predict(X_test)        
         score = gd.score(X_test, y_test)
         assert all(np.isclose(y_test, y_pred, rtol=1e1)), "Test predictions are not close to true values."  
@@ -48,23 +48,23 @@ class BGDLinearRegressionTests:
             assert score < 5, "median_absolute_error > 5"                 
 
                                
-class BGDLassoRegressionTests:
+class MBGDLassoRegressionTests:
 
-    @mark.bgd
+    @mark.mbgd
     @mark.lasso_regression    
-    def test_bgd_lasso_regression_training_solution(self, train_lasso_regression,
+    def test_mbgd_lasso_regression_training_solution(self, train_mbgd_lasso_regression,
                                                  analytical_solution_training_data):
         train_solution = analytical_solution_training_data
-        gd, X_train, _, y_train, _ = train_lasso_regression
+        gd, X_train, _, y_train, _ = train_mbgd_lasso_regression
         y_pred = gd.predict(X_train)        
         assert all(np.isclose(gd.theta, train_solution, rtol=1e1)), "Solution is not close to analytical solution."
         assert all(np.isclose(y_train, y_pred, rtol=1e1)), "Train predictions are not close to true values."  
 
-    @mark.bgd
+    @mark.mbgd
     @mark.lasso_regression
-    def test_bgd_lasso_regression_test_scores(self, train_lasso_regression, 
+    def test_mbgd_lasso_regression_test_scores(self, train_mbgd_lasso_regression, 
                                            regression_metric):        
-        gd, _, X_test, _, y_test = train_lasso_regression
+        gd, _, X_test, _, y_test = train_mbgd_lasso_regression
         y_pred = gd.predict(X_test)        
         score = gd.score(X_test, y_test)
         assert all(np.isclose(y_test, y_pred, rtol=1e1)), "Test predictions are not close to true values."  
@@ -85,23 +85,23 @@ class BGDLassoRegressionTests:
         elif regression_metric == 'median_absolute_error':
             assert score < 5, "median_absolute_error > 5"                 
 
-class BGDRidgeRegressionTests:
+class MBGDRidgeRegressionTests:
 
-    @mark.bgd
+    @mark.mbgd
     @mark.ridge_regression    
-    def test_bgd_ridge_regression_training_solution(self, train_ridge_regression,
+    def test_mbgd_ridge_regression_training_solution(self, train_mbgd_ridge_regression,
                                                  analytical_solution_training_data):
         train_solution = analytical_solution_training_data
-        gd, X_train, _, y_train, _ = train_ridge_regression
+        gd, X_train, _, y_train, _ = train_mbgd_ridge_regression
         y_pred = gd.predict(X_train)        
         assert all(np.isclose(gd.theta, train_solution, rtol=1e1)), "Solution is not close to analytical solution."
         assert all(np.isclose(y_train, y_pred, rtol=1e1)), "Train predictions are not close to true values."  
 
-    @mark.bgd
+    @mark.mbgd
     @mark.ridge_regression
-    def test_bgd_ridge_regression_test_scores(self, train_ridge_regression, 
+    def test_mbgd_ridge_regression_test_scores(self, train_mbgd_ridge_regression, 
                                            regression_metric):        
-        gd, _, X_test, _, y_test = train_ridge_regression
+        gd, _, X_test, _, y_test = train_mbgd_ridge_regression
         y_pred = gd.predict(X_test)        
         score = gd.score(X_test, y_test)
         assert all(np.isclose(y_test, y_pred, rtol=1e1)), "Test predictions are not close to true values."  
@@ -122,23 +122,23 @@ class BGDRidgeRegressionTests:
         elif regression_metric == 'median_absolute_error':
             assert score < 5, "median_absolute_error > 5"    
 
-class BGDElasticNetRegressionTests:
+class MBGDElasticNetRegressionTests:
 
-    @mark.bgd
+    @mark.mbgd
     @mark.elasticnet_regression    
-    def test_bgd_elasticnet_regression_training_solution(self, train_elasticnet_regression,
+    def test_mbgd_elasticnet_regression_training_solution(self, train_mbgd_elasticnet_regression,
                                                  analytical_solution_training_data):
         train_solution = analytical_solution_training_data
-        gd, X_train, _, y_train, _ = train_elasticnet_regression
+        gd, X_train, _, y_train, _ = train_mbgd_elasticnet_regression
         y_pred = gd.predict(X_train)        
         assert all(np.isclose(gd.theta, train_solution, rtol=1e1)), "Solution is not close to analytical solution."
         assert all(np.isclose(y_train, y_pred, rtol=1e1)), "Train predictions are not close to true values."  
 
-    @mark.bgd
+    @mark.mbgd
     @mark.elasticnet_regression
-    def test_bgd_elasticnet_regression_test_scores(self, train_elasticnet_regression, 
+    def test_mbgd_elasticnet_regression_test_scores(self, train_mbgd_elasticnet_regression, 
                                            regression_metric):        
-        gd, _, X_test, _, y_test = train_elasticnet_regression
+        gd, _, X_test, _, y_test = train_mbgd_elasticnet_regression
         y_pred = gd.predict(X_test)        
         score = gd.score(X_test, y_test)
         assert all(np.isclose(y_test, y_pred, rtol=1e1)), "Test predictions are not close to true values."  

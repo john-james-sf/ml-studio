@@ -8,19 +8,9 @@ import pandas as pd
 import pytest
 from pytest import mark
 
-from ml_studio.supervised_learning.regression import LinearRegression
-from ml_studio.supervised_learning.regression import LassoRegression
-from ml_studio.supervised_learning.regression import RidgeRegression
-from ml_studio.supervised_learning.regression import ElasticNetRegression
-from ml_studio.supervised_learning.regression import SGDRegression
-from ml_studio.supervised_learning.regression import SGDLassoRegression
-from ml_studio.supervised_learning.regression import SGDRidgeRegression
-from ml_studio.supervised_learning.regression import SGDRidgeRegression
-from ml_studio.supervised_learning.regression import SGDElasticNetRegression
-
 from ml_studio.operations.metrics import Scorer
 
-class LinearRegressionTests:
+class SGDLinearRegressionTests:
 
     @mark.sgd
     @mark.linear_regression    
@@ -58,7 +48,7 @@ class LinearRegressionTests:
             assert score < 5, "median_absolute_error > 5"                 
 
                                
-class LassoRegressionTests:
+class SGDLassoRegressionTests:
 
     @mark.sgd
     @mark.lasso_regression    
@@ -95,7 +85,7 @@ class LassoRegressionTests:
         elif regression_metric == 'median_absolute_error':
             assert score < 5, "median_absolute_error > 5"                 
 
-class RidgeRegressionTests:
+class SGDRidgeRegressionTests:
 
     @mark.sgd
     @mark.ridge_regression    
@@ -132,7 +122,7 @@ class RidgeRegressionTests:
         elif regression_metric == 'median_absolute_error':
             assert score < 5, "median_absolute_error > 5"    
 
-class ElasticNetRegressionTests:
+class SGDElasticNetRegressionTests:
 
     @mark.sgd
     @mark.elasticnet_regression    

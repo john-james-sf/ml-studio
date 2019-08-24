@@ -125,6 +125,52 @@ def train_sgd_elasticnet_regression(get_regression_data):
     return gd, X_train, X_test, y_train, y_test  
 
 
+
+@fixture(scope='module')
+def train_mbgd_regression(get_regression_data):
+    X, y = get_regression_data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=50)
+    gd = SGDRegression(batch_size=32, epochs=200, val_size=0, 
+                              seed=50)
+    gd.fit(X_train, y_train)
+    return gd, X_train, X_test, y_train, y_test  
+
+@fixture(scope='module')
+def train_mbgd_lasso_regression(get_regression_data):
+    X, y = get_regression_data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=50)
+    gd = SGDLassoRegression(batch_size=32, epochs=200, val_size=0, 
+                          alpha = 0.01, seed=50)
+    gd.fit(X_train, y_train)
+    return gd, X_train, X_test, y_train, y_test    
+
+@fixture(scope='module')
+def train_mbgd_ridge_regression(get_regression_data):
+    X, y = get_regression_data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=50)
+    gd = SGDRidgeRegression(batch_size=32, epochs=200, val_size=0, 
+                          alpha = 0.01, seed=50)
+    gd.fit(X_train, y_train)
+    return gd, X_train, X_test, y_train, y_test   
+
+@fixture(scope='module')
+def train_mbgd_elasticnet_regression(get_regression_data):
+    X, y = get_regression_data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=50)
+    gd = SGDElasticNetRegression(batch_size=32,
+                              alpha = 0.01, ratio=0.5,
+                              epochs=200, val_size=0, 
+                              seed=50)
+    gd.fit(X_train, y_train)
+    return gd, X_train, X_test, y_train, y_test  
+
+
+
+
 @fixture(scope='session', params=['r2',
                                   'var_explained',
                                   'mean_absolute_error',
