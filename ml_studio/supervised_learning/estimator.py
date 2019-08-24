@@ -230,13 +230,13 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
                 y_pred = self._predict(X_batch)
                 # Compute costs
                 J = self.cost_function(
-                    y=y_batch, y_pred=y_pred) + self.regularizer(self.theta[1:])
+                    y=y_batch, y_pred=y_pred) + self.regularizer(self.theta)
                 # Update batch log with weights and cost
                 batch_log = {'batch': self.batch, 'batch_size': X_batch.shape[0],
                              'theta': self.theta.copy(), 'train_cost': J.copy()}
                 # Compute gradient and update weights
                 gradient = self.cost_function.gradient(
-                    X_batch, y_batch, y_pred) - self.regularizer.gradient(self.theta[1:])
+                    X_batch, y_batch, y_pred) - self.regularizer.gradient(self.theta)
                 self.theta -= self.learning_rate * gradient
                 # Update batch log
                 self._end_batch(batch_log)
