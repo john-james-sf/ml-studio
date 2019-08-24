@@ -26,120 +26,51 @@ class Plots():
     """Plot class"""
 
     def __init__(self):
-        self.history = {}
+        self.log = pd.DataFrame()
+        self.inventory = {}
 
-    def _log_plot(self, algorithm, title, fig, directory, filename):
-        """Stores the plot and algorithm to history."""
-        # Create unique 5 character string plot id and timestamp
-        pid = randomString(stringLength=5)
-        timestamp = datetime.datetime.now
-        # Format the plot dictionary and add to history
-        plot = {'title': title, 'algorithm': algorithm, 'fig': fig,
-                'directory': directory, 'filename': filename,
-                'timestamp': timestamp}
-        self.history[pid] = plot
-        return self.history[pid]
-
-    def list_plots(self):
-        """Returns a dataframe of plot metadata"""
-        plots = []
-        for pid, plot in self.history.items():
-            plots.append([pid, plot.title, plot.directory,
-                          plot.filename, plot.timestamp])
-        df = pd.DataFrame(
-            plots, columns=['ID', 'Title', 'Directory', 'Filename', 'TimeStamp'])
-        return df
-
-    def show_plot(self, x):
+    def show_plot(self, pid=None, fig=None):
         """Renders a plot given the plot id, or figure object"""
-        if isinstance(x, str):
+        if isinstance(pid, str):
             try:
-                fig = self.history[x].fig
+                fig = self.log[pid].fig
             except KeyError:
-                print("x is not a valid plot id")
-        else:
-            fig = x
-
+                print("pid is not a valid plot id")
         try:
             fig.tight_layout()
             plt.show()
         except ValueError:
-            print("x is not a valid figure object")
+            print("Unable to render plot")
 
-    def save_plot(self, fig, directory=None, filename=None, title=None):
+    def get_plot(self, pid):
+        """Returns plot object associated with pid."""
+        return self.inventory[pid]
+
+    def show_log(self):
+        """Prints the log including plot metadata to stdout"""
+        print(self.log)
+
+    def _log_plot(self, pid, model, title, fig):
+        """Stores a plot object along with its metadata and model."""
+        # Create plot object w/ metadata, model and fig, then add to inventory 
+        metadata = {'pid': pid, 'title': title.replace('\n', " "),
+                    'directory': "", 'filename': "", 
+                    'datetime': datetime.datetime.now()}
+        plot = {'metadata': metadata, 'model': model, 'fig': fig}
+        self.inventory[pid] = plot
+        # Store metadata in log dataframe and add to log
+        df = pd.DataFrame(data = metadata, index=['0'])                
+        self.log = pd.concat([self.log, df], axis=0)
+        return plot
+
+    def save_plot(self, plot, directory, filename=None):
         """Save plot with title to designated directory and filename."""
-        if directory is not None:
-            if filename is None:
-                filename = title.strip('\n') + '.png'
-            save_fig(fig, directory, filename)
+        title = plot.metadata.get('title')
+        fig = plot.get('fig')
+        if filename is None:
+            filename = title + '.png'
+        save_fig(fig, directory, filename)
         return directory, filename
-
-    def _distplot(self, data, x, y, z=None, title=None,
-                  log=False, xlim=None, ylim=None, figsize=(12, 4)):
-        """Renders a univariate distribution of observations."""
-
-        # Initialize axis aesthetics, labels, title, scale and limits
-        fig, ax = self._init_image(x, y, figsize, xlim, ylim, log)
-        # Call seaborn method for plot
-        ax = sns.distplot(a=data[x])
-
-        return fig, ax
-
-    def _scatterplot(self, data, x, y, z=None, title=None,
-                     log=False, xlim=None, ylim=None, figsize=(12, 4)):
-        """Renders and optionally saves a scatterplot."""
-
-        # Initialize axis aesthetics, labels, title, scale and limits
-        fig, ax = self._init_image(x, y, figsize, xlim, ylim, log)
-        # Call seaborn method for plot
-        ax = sns.scatterplot(x=x, y=y, hue=z, data=data, ax=ax, legend='full')
-
-        return fig, ax
-
-    def _barplot(self, data, x, y, z=None, title=None,
-                 log=False, xlim=None, ylim=None, figsize=(12, 4)):
-        """Renders and optionally saves a barplot."""
-
-        # Initialize axis aesthetics, labels, title, scale and limits
-        fig, ax = self._init_image(x, y, figsize, xlim, ylim, log)
-        # Call seaborn method for plot
-        ax = sns.barplot(x=x, y=y, hue=z, data=data, ax=ax)
-
-        return fig, ax
-
-    def _boxplot(self, data, x, y, z=None, title=None,
-                 log=False, xlim=None, ylim=None, figsize=(12, 4)):
-        """Renders and optionally saves a boxplot."""
-
-        # Initialize axis aesthetics, labels, title, scale and limits
-        fig, ax = self._init_image(x, y, figsize, xlim, ylim, log)
-        # Call seaborn method for plot
-        ax = sns.boxplot(x=x, y=y, hue=z, data=data, ax=ax)
-
-        return fig, ax
-
-    def _lineplot(self, data, x, y, z=None, title=None,
-                  log=False, xlim=None, ylim=None, figsize=(12, 4)):
-        """Renders and optionally saves a lineplot."""
-
-        # Initialize axis aesthetics, labels, title, scale and limits
-        fig, ax = self._init_image(x, y, figsize, xlim, ylim, log)
-        # Call seaborn method for plot
-        ax = sns.lineplot(x=x, y=y, hue=z, data=data, legend='full', ax=ax)
-
-        return fig, ax
-
-    def _catplot(self, data, x, y, z=None, title=None,
-                 log=False, xlim=None, ylim=None, directory=None,
-                 filename=None, figsize=(12, 4)):
-        """Renders and optionally saves a catplot."""
-
-        # Initialize axis aesthetics, labels, title, scale and limits
-        fig, ax = self._init_image(x, y, figsize, xlim, ylim, log)
-        # Call seaborn method for plot
-        ax = sns.catplot(x=x, y=y, hue=z, kind='bar', data=data, ax=ax)
-
-        return fig, ax
 
     def _init_image(self, x, y, figsize=(12, 4), xlim=None, ylim=None, title=None, log=False):
         """Creates and sets the axis aesthetics, labels, scale, and limits."""
@@ -173,105 +104,90 @@ class Plots():
 
 
 class TrainingPlots(Plots):
-
-    def _validate(self, algorithm, directory, filename,
-                  xlim, ylim, figsize, show):
-        """Validates parameters for learning rate plots."""
-        if not isinstance(algorithm, (GradientDescent)):
-            raise TypeError("model is not a valid model object")
-        if directory is not None:
-            if not isinstance(directory, str):
-                raise TypeError("directory must be a string object")
-        if filename is not None:
-            if not isinstance(filename, str):
-                raise TypeError("filename must be a string object")
-        if directory is None and filename is not None:
-            print(filename)
-            raise ValueError("directory not provided")
-        if xlim is not None:
-            if not isinstance(xlim, (int, tuple)):
-                raise TypeError(
-                    "xlim must be an integer or a tuple of integers")
-        if ylim is not None:
-            if not isinstance(ylim, (int, tuple)):
-                raise TypeError(
-                    "ylim must be an integer or a tuple of integers")
-        if not isinstance(figsize, tuple):
-            raise TypeError("figsize must be a tuple")
-        if not isinstance(show, bool):
-            raise TypeError("show must be a boolean object")
-
-    def cost_plot(self, algorithm, directory=None, filename=None,
-                  xlim=None, ylim=None, figsize=(12, 4), show=True):
-        """Renders optimization learning curves for training and validation"""
-        # Validate parameters
-        self._validate(algorithm, directory, filename,
-                       xlim, ylim, figsize, show)
-
-        # Extract data to be plotted in wide format
-        d = {'Epoch': algorithm.history.epoch_log['epoch'],
-             'Training Cost': algorithm.history.epoch_log['train_cost'],
-             'Validation Cost': algorithm.history.epoch_log.get('val_cost')}
-        # Create data in dataframe, then convert wide to long format.
+    def _plot_train_loss(self, pid, model, title=None, figsize=(12,4)):
+        """Plots training loss."""
+        # Extract training loss                    
+        d = {'Epoch': model.history.epoch_log['epoch'],
+             'Training': model.history.epoch_log['train_cost']}
         df = pd.DataFrame(data=d)
-        df = pd.melt(df, id_vars='Epoch', value_vars=['Training Cost',
-                                                      'Validation Cost'],
-                     var_name=['Dataset'], value_name='Cost')
-        # Format title
-        title = algorithm.history.params.get('name') + "\n" + "Cost Plot" + \
-            '\n' + proper(algorithm.history.params.get('cost')) + " Cost"
-
-        # Render (and save plot if necessary)
-        fig, _ = self._lineplot(data=df, x=df.columns[0], y='Cost',
-                                z='Dataset', title=title, log=False,
-                                xlim=xlim, ylim=ylim, figsize=figsize)
+        # Extract row with minimum cost by dataset for scatterplot
+        min_cost = df.loc[df.Cost.idxmin()]
+        # Extract learning rate data for plotting along secondary y-axis
+        lr = {'Epoch': model.history.epoch_log['epoch'],
+              'Learning Rate': model.history.epoch_log['learning_rate']}
+        lr = pd.DataFrame(data=lr)
+        # Initialize figure and axes with appropriate figsize and title
+        fig, ax = self._init_image(x='Epoch', y='Cost', figsize=figsize,
+                                       title=title)
+        ax2 = ax.twinx()
+        # Render cost lineplot
+        ax = sns.lineplot(x='Epoch', y='Cost', data=df, ax=ax)
+        # Render scatterplot showing minimum cost points
+        ax = sns.scatterplot(x='Epoch', y='Cost', data=min_cost, ax=ax)
+        # Show learning rate along secondary y-axis
+        ax2 = sns.lineplot(x='Epoch', y='Learning Rate', data=lr, ax=ax2) 
+        # Add pid to footnote of plot
+        ax.text(0.8, 0.1, pid)
         # Show plot
         fig.tight_layout()
-        if show:
-            plt.show()
+        plt.show()        
+        return fig, ax    
 
-        # Save plot if directory is not null
-        directory, filename = self.save_plot(fig=fig, directory=directory,
-                                             filename=filename, title=title)
-
-        # Log the plot
-        plot=self._log_plot(algorithm, title, fig, directory, filename)
-
-        return plot
-
-    def score_plot(self, algorithm, directory = None, filename = None,
-                   xlim = None, ylim = None, figsize = (12, 4), show = True):
-        """Renders optimization learning curves for training and validation"""
-        # Validate parameters
-        self._validate(algorithm, directory, filename,
-                       xlim, ylim, figsize, show)
-
-        # Extract data to be plotted in wide format
-        d={'Epoch': algorithm.history.epoch_log['epoch'],
-             'Training Score': algorithm.history.epoch_log['train_score'],
-             'Validation Score': algorithm.history.epoch_log.get('val_score')}
-        # Create data in dataframe, then convert wide to long format.
+    def _plot_train_val_loss(self, pid, model, title=None, figsize=(12,4)):
+        """Plots training and validation loss on single plot."""
+        # Extract training and validation loss                    
+        d = {'Epoch': model.history.epoch_log['epoch'],
+                'Training': model.history.epoch_log['train_cost'],
+                'Validation': model.history.epoch_log.get('val_cost')}
         df = pd.DataFrame(data=d)
-        df = pd.melt(df, id_vars='Epoch', value_vars=['Training Score',
-                                                      'Validation Score'],
-                     var_name=['Dataset'], value_name='Score')
-        # Format title
-        title = algorithm.history.params.get('name') + "\n" + "Performance Plot" + \
-            '\n' + proper(algorithm.history.params.get('metric')) + " Score"
-
-        # Render (and save plot if necessary)
-        fig, _ = self._lineplot(data=df, x=df.columns[0], y='Score',
-                                z='Dataset', title=title, log=False,
-                                xlim=xlim, ylim=ylim, figsize=figsize)
+        df = pd.melt(df, id_vars='Epoch', value_vars=['Training',
+                                                    'Validation'],
+                    var_name=['Dataset'], value_name='Cost')  
+        # Extract row with minimum cost by dataset for scatterplot
+        min_cost = df.loc[df.groupby('Dataset').Cost.idxmin()]
+        # Extract learning rate data for plotting along secondary y-axis
+        lr = {'Epoch': model.history.epoch_log['epoch'],
+              'Learning Rate': model.history.epoch_log['learning_rate']}
+        lr = pd.DataFrame(data=lr)
+        # Initialize figure and axes with appropriate figsize and title
+        fig, ax = self._init_image(x='Epoch', y='Cost', figsize=figsize,
+                                       title=title)
+        ax2 = ax.twinx()
+        # Render cost lineplot
+        ax = sns.lineplot(x='Epoch', y='Cost', hue='Dataset', data=df, 
+                          legend='full', ax=ax)
+        # Render scatterplot showing minimum cost points
+        ax = sns.scatterplot(x='Epoch', y='Cost', hue='Dataset', 
+                                data=min_cost, legend=False, ax=ax)
+        # Show learning rate along secondary y-axis
+        ax2 = sns.lineplot(x='Epoch', y='Learning Rate', data=lr, ax=ax2)                                                
         # Show plot
         fig.tight_layout()
-        if show:
-            plt.show()
-            
-        # Save plot if directory is not null
-        directory, filename = self.save_plot(fig=fig, directory=directory,
-                                             filename=filename, title=title)        
-        # Log the plot
-        plot = self._log_plot(algorithm, title, fig, directory, filename)
+        plt.show()        
+        return fig, ax
+        
 
+    def plot_loss(self, model, figsize=(12,4)):
+        """Plots training loss (and optionally validation loss) by epoch."""
+        # Create plot id
+        pid = randomString(5)
+        # Format plot title
+        title = model.history.params.get('name') + "\n" + \
+            "Training Plot with Learning Rate" +\
+            '\n' + proper(model.history.params.get('cost')) + " Cost"
+        # If val loss is on the log, plot both training and validation loss
+        if 'val_cost' in model.history.epoch_log:
+            fig, _ = self._plot_train_val_loss(pid, model, 
+                                                title=title, figsize=figsize)
+        else:
+            fig, _ = self._plot_train_loss(pid, model, title=title, 
+                                            figsize=figsize)
+        # Create and log the plot object into inventory
+        plot = self._log_plot(pid, model, title, fig)
         return plot
+        
+
+        
+
+        
+         

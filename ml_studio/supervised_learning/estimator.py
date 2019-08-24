@@ -187,6 +187,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         y_pred = self._predict(self.X)
         # Compute final epoch training cost (and scores)
         log['epoch'] = self.epoch
+        log['learning_rate'] = self.learning_rate
         log['theta'] = self.theta.copy()        
         log['train_cost'] = self.cost_function(y=self.y, y_pred=y_pred)
         if self.metric is not None:
