@@ -21,13 +21,11 @@ class HistoryTests:
         assert history.total_epochs == 0, "total_epochs is not zero"
         assert history.total_batches == 0, "total_batches is not zero"
         assert isinstance(
-            history.start, datetime.datetime), "start is not a datetime object"
-        assert isinstance(history.epochs, list), "history.epochs is not a list"
+            history.start, datetime.datetime), "start is not a datetime object"        
         assert isinstance(history.epoch_log,
                           dict), "history.epoch_log is not a dictionary object"
         assert isinstance(history.batch_log,
                           dict), "history.batch_log is not a dictionary object"
-        assert len(history.epochs) == 0, "history.epochs has a non-zero length"
         assert len(
             history.epoch_log) == 0, "history.epoch_log has a non-zero length"
         assert len(
@@ -116,7 +114,6 @@ class HistoryTests:
         log = {'epoch':epoch, 'train_cost': train_cost, 'train_score': train_score,
                'val_cost': val_cost, 'val_score': val_score, 'theta': theta}
         history.on_epoch_end(epoch, logs=log)
-        assert history.epochs[0] == 1, "epochs is not 1 on first iteration"
         assert history.epoch_log['train_cost'][0] == train_cost, "train_cost 1st iteration not correct"
         assert history.epoch_log['train_score'][0] == train_score, "train_score 1st iteration not correct"
         assert history.epoch_log['val_cost'][0] == val_cost, "val_cost 1st iteration not correct"
