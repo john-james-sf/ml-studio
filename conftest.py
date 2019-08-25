@@ -168,9 +168,6 @@ def train_mbgd_elasticnet_regression(get_regression_data):
     gd.fit(X_train, y_train)
     return gd, X_train, X_test, y_train, y_test  
 
-
-
-
 @fixture(scope='session', params=['r2',
                                   'var_explained',
                                   'mean_absolute_error',
