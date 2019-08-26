@@ -21,19 +21,18 @@ from ml_studio.operations.cost import Cost, CostFunctions
 from ml_studio.utils import reports
 from ml_studio.utils.data import make_polynomial_features
 
-import warnings
 # --------------------------------------------------------------------------- #
-
 
 class GradientDescent(ABC, BaseEstimator, RegressorMixin):
     """Defines base behavior for gradient-based regression and classification."""
 
-    def __init__(self, learning_rate=0.01, theta_init=None, epochs=1000,
-                 cost='quadratic', metric='root_mean_squared_error', 
-                 val_size=0.3, verbose=False, checkpoint=100, name=None, 
+    def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
+                 epochs=1000, cost='quadratic', metric='root_mean_squared_error', 
+                 val_size=0.0, verbose=False, checkpoint=100, name=None, 
                  seed=None):
 
         self.learning_rate = learning_rate
+        self.batch_size = batch_size
         self.theta_init = theta_init
         self.epochs = epochs
         self.cost = cost
@@ -46,7 +45,6 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         # Various state variables
         self.epoch = 0
         self.batch = 0
-        self.batch_size = None
         self.theta = None
         self.scorer = lambda y, y_pred: 0
         self.cost_function = None
@@ -54,15 +52,26 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self.X = self.y = self.X_val = self.y_val = None
         self.regularizer = lambda x: 0
         self.regularizer.gradient = lambda x: 0
-        self.final_coef = None
-        self.final_intercept = None
-        self.best_coef = None
-        self.best_intercept = None
+        self.coef = None
+        self.intercept = None
+        # Set name, task, and algorithm name for reporting purposes
+        if self.batch_size is None:
+            self.algorithm = 'Batch Gradient Descent'
+        elif self.batch_size == 1:
+            self.algorithm = 'Stochastic Gradient Descent'
+        else:
+            self.algorithm = 'Minibatch Gradient Descent'
+        self.task = "Linear Regression"
+        self.name = name or self.task + ' with ' + self.algorithm
+
 
     def _validate_params(self):
         """Validate parameters."""
         if not isinstance(self.learning_rate, (int, float)):
             raise ValueError("learning_rate must provide a float.")
+        if self.batch_size is not None:
+            if not isinstance(self.batch_size, int):
+                raise ValueError("batch_size must provide an integer.")            
         if self.theta_init is not None:
             if not isinstance(self.theta_init, (list, pd.core.series.Series, np.ndarray)):
                 raise ValueError("theta must be an array like object.")
@@ -101,10 +110,6 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         if self.seed is not None:
             if not isinstance(self.seed, int):
                 raise ValueError("seed must be a positive integer.")
-
-    def set_name(self, name=None):
-        """Sets name for model."""
-        self.name = name or 'Gradient Descent Base Class'
 
     def _compile(self):
         self.cost_function = CostFunctions()(cost=self.cost)
@@ -155,8 +160,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self._prepare_data(log.get('X'), log.get('y'))
         self._compile()
         self._init_weights()
-        self.set_name()
-
+        
         # Initialize history object
         self.history = cbks.History()
         self.history.set_params(self.get_params())
@@ -170,8 +174,8 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
     def _end_training(self, log=None):
         """Closes history callout and assign final and best weights."""
         self.history.on_train_end()
-        self.final_intercept = self.theta[0]
-        self.final_coef = self.theta[1:]        
+        self.intercept = self.theta[0]
+        self.coef = self.theta[1:]        
 
     def _begin_epoch(self):
         """Increment the epoch count and shuffle the data."""
@@ -256,21 +260,21 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
 
     def predict(self, X):
         """Public predict method that computes predictions on 'best' weights."""
-        if self.final_coef is None:
+        if self.coef is None:
             raise Exception("Unable to compute score. Model has not been fit.")        
         self._validate_data(X)
-        if X.shape[1] != len(self.final_coef):
+        if X.shape[1] != len(self.coef):
             raise ValueError("Shape of X is incompatible with shape of theta")        
-        y_pred = self.final_intercept + X.dot(self.final_coef)
+        y_pred = self.intercept + X.dot(self.coef)
         return y_pred
 
     def score(self, X, y):
-        if self.final_coef is None:
+        if self.coef is None:
             raise Exception("Unable to compute score. Model has not been fit.")
         self._validate_data(X, y)
-        if X.shape[1] != len(self.final_coef):
+        if X.shape[1] != len(self.coef):
             raise ValueError("Shape of X is incompatible with shape of theta")        
-        y_pred = self.final_intercept + X.dot(self.final_coef)
+        y_pred = self.intercept + X.dot(self.coef)
         score = self.scorer(y=y, y_pred=y_pred)
         return score
 

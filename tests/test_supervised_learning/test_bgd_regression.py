@@ -18,7 +18,7 @@ class BGDLinearRegressionTests:
                                                  analytical_solution_training_data):
         train_solution = analytical_solution_training_data
         gd, X_train, _, y_train, _ = train_linear_regression
-        y_pred = gd.predict(X_train)        
+        y_pred = gd.predict(X_train)                
         assert all(np.isclose(gd.theta, train_solution, rtol=1e1)), "Solution is not close to analytical solution."
         assert all(np.isclose(y_train, y_pred, rtol=1e1)), "Train predictions are not close to true values."  
 

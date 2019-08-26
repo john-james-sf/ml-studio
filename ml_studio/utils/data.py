@@ -21,7 +21,7 @@ def batch_iterator(X, y=None, batch_size=None):
         else:
             yield X[i:i+batch_size]
 
-def binarize(x, n_col=None):
+def one_hot(x, n_col=None):
     """ One-hot encoding of nominal values """
     if not n_col:
         n_col = np.amax(x) + 1
