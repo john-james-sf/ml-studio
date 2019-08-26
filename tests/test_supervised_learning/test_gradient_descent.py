@@ -63,16 +63,9 @@ class GradientDescentTests:
         assert params['val_size'] == 0.3, "val_size is invalid"
         assert params['verbose'] == False, "verbose is invalid"
         assert params['checkpoint'] == 100, "checkpoint is invalid"
-        assert params['name'] is None, "name is invalid"        
+        assert params['name'] == "Linear Regression with Batch Gradient Descent", "name is invalid"        
         assert params['seed'] == 50, "seed is invalid"
 
-
-    @mark.gradient_descent
-    @mark.gradient_descent_set_name
-    def test_gradient_descent_set_name(self):
-        gd = GradientDescent()
-        gd.set_name("Alex")
-        assert gd.name == 'Alex', "name not successfully set"
 
     @mark.gradient_descent
     @mark.gradient_descent_fit
