@@ -43,6 +43,19 @@ class TimeDecay(LearningRateSchedule):
                 / (1 + self.decay_rate * logs.get('epoch') / self.decay_steps)
         return learning_rate
 
+class StepDecay(LearningRateSchedule):
+    """Method for step (logs.get('epoch')) based learning rate schedule."""
+
+    def __init__(self, learning_rate=0.01, decay_steps=5, decay_rate=0.1):
+        super(StepDecay, self).__init__(learning_rate=learning_rate)
+        self.decay_steps = decay_steps
+        self.decay_rate = decay_rate
+
+    def __call__(self, logs):
+        learning_rate = self.learning_rate * self.decay_rate ** \
+            math.floor((1+logs.get('epoch'))/self.decay_steps)
+
+        return learning_rate
 
 class NaturalExponentialDecay(LearningRateSchedule):
     """Exponential decay based learning rate schedule."""
