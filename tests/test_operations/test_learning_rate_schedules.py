@@ -8,6 +8,7 @@ import pytest
 from pytest import mark
 
 from ml_studio.operations.learning_rate_schedules import TimeDecay
+from ml_studio.operations.learning_rate_schedules import StepDecay
 from ml_studio.operations.learning_rate_schedules import NaturalExponentialDecay
 from ml_studio.operations.learning_rate_schedules import ExponentialDecay
 from ml_studio.operations.learning_rate_schedules import InverseScaling
@@ -72,6 +73,28 @@ class LearningRateScheduleTests:
         model = LinearRegression(learning_rate=lrs, epochs=6)
         model.fit(X,y)
         assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Time decay with step and staircase not working in model"        
+
+    # ----------------------------------------------------------------------- #
+    #                             Step Decay                                  #
+    # ----------------------------------------------------------------------- #
+
+    @mark.step_decay_learning_rate
+    @mark.learning_rate_schedules
+    def test_step_decay_learning_rate_schedule(self, get_regression_data):
+        logs = {}
+        exp_result = [0.05,0.05,0.025,0.025,0.0125]
+        act_result = []        
+        lrs = StepDecay(learning_rate=0.1, decay_rate=0.5, decay_steps=2)
+        iterations =  [i+1 for i in range(5)]
+        for i in iterations:
+            logs['epoch'] = i
+            act_result.append(lrs(logs))
+        assert all(np.isclose(exp_result,act_result,rtol=1e-1)), "Step decay not working"
+        exp_result.insert(0, 0.1)
+        X, y = get_regression_data
+        model = LinearRegression(learning_rate=lrs, epochs=6)
+        model.fit(X,y)
+        assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Step decay not working in model"        
 
     # ----------------------------------------------------------------------- #
     #                     Natural Exponential Decay                           #
