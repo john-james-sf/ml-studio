@@ -214,7 +214,7 @@ class LearningRateScheduleTests:
         logs = {}
         exp_result = [0.1,0.070710678,0.057735027,0.05,0.04472136]
         act_result = []        
-        lrs = InverseScaling(learning_rate=0.1, power=0.5)  
+        lrs = InverseScaling(learning_rate=0.1, power=0.5)    
         iterations =  [i+1 for i in range(5)]
         for i in iterations:
             logs['epoch'] = i
