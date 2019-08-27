@@ -186,7 +186,6 @@ def plot_score(model, figsize=(12,4), directory=None, filename=None):
     # Confirm scores exist in the model
     if model.history.params.get('metric') is None:
         raise UserWarning("val_size must be an 0 or a float")
-        return 
     
     # Format plot title
     title = model.history.params.get('name') + "\n" + \
@@ -208,6 +207,28 @@ def plot_score(model, figsize=(12,4), directory=None, filename=None):
     # Show plot
     fig.tight_layout()
     plt.show()                                                     
+
+# --------------------------------------------------------------------------- #
+#                            GRIDSEARCHCV PLOTS                               #
+# --------------------------------------------------------------------------- #    
+def gscv_line_plot(x, y, gscv, directory=None, filename=None):
+    """Creates line plot from dictionary of GridSearchCV objects."""
+    # Extract data from dictionary of GridSearchCV objects
+    data = pd.DataFrame()
+    for name, gs in gscv.items():      
+        results = pd.DataFrame(data=gs.cv_results_)
+        x_data = results.filter(like=x, axis=1).values.flatten()
+        y_data = results.filter(like=y, axis=1).values.flatten()
+        df = pd.DataFrame({proper(x):x_data, proper(y): y_data, 'Model':name})
+        data = pd.concat([data,df], axis=0)
+    # Initialize and render plot
+    fig, ax = _init_image(x, y)
+    ax = sns.lineplot(x=proper(x), y=proper(y), hue='Model', data=data, ax=ax)
+    # Show plot
+    fig.tight_layout()
+    plt.show() 
+
+
 # --------------------------------------------------------------------------- #
 #                            VARIOUS ROUTINES                                 #
 # --------------------------------------------------------------------------- #
