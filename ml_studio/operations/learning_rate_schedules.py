@@ -16,7 +16,7 @@ class LearningRateSchedule():
             (eg. batch size, number of epochs...).
     """
 
-    def __init__(self, learning_rate=0.01):
+    def __init__(self, learning_rate=0.1):
         self.learning_rate = learning_rate        
 
     def __call__(self, logs):
@@ -26,7 +26,7 @@ class LearningRateSchedule():
 class TimeDecay(LearningRateSchedule):
     """Method for time (logs.get('epoch')) based learning rate schedule."""
 
-    def __init__(self, learning_rate=0.01, decay_steps=1.0, decay_rate=0.5,
+    def __init__(self, learning_rate=0.1, decay_steps=1.0, decay_rate=0.5,
                  staircase=False):
         super(TimeDecay, self).__init__(learning_rate=learning_rate)
         self.decay_steps = decay_steps
@@ -46,7 +46,7 @@ class TimeDecay(LearningRateSchedule):
 class StepDecay(LearningRateSchedule):
     """Method for step (logs.get('epoch')) based learning rate schedule."""
 
-    def __init__(self, learning_rate=0.01, decay_steps=5, decay_rate=0.1):
+    def __init__(self, learning_rate=0.1, decay_steps=10, decay_rate=0.5):
         super(StepDecay, self).__init__(learning_rate=learning_rate)
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
@@ -60,7 +60,7 @@ class StepDecay(LearningRateSchedule):
 class NaturalExponentialDecay(LearningRateSchedule):
     """Exponential decay based learning rate schedule."""
 
-    def __init__(self, learning_rate=0.01, decay_steps=1.0, decay_rate=0.5,
+    def __init__(self, learning_rate=0.1, decay_steps=5, decay_rate=0.5,
                  staircase=False):
         super(NaturalExponentialDecay, self).__init__(learning_rate=learning_rate)
         self.decay_steps = decay_steps
@@ -83,7 +83,7 @@ class NaturalExponentialDecay(LearningRateSchedule):
 class ExponentialDecay(LearningRateSchedule):
     """Exponential decay based learning rate schedule based upon TensorFlow"""
 
-    def __init__(self, learning_rate=0.01, decay_steps=1.0, decay_rate=0.5,
+    def __init__(self, learning_rate=0.1, decay_steps=1000, decay_rate=0.96,
                  staircase=False):
         super(ExponentialDecay, self).__init__(learning_rate=learning_rate)
         self.decay_steps = decay_steps
@@ -103,7 +103,7 @@ class ExponentialDecay(LearningRateSchedule):
 
 class InverseScaling(LearningRateSchedule):
     """Inverse scaling learning rate implemented in sklearn's SGD optimizers"""
-    def __init__(self, learning_rate=0.01, power=0.5):
+    def __init__(self, learning_rate=0.1, power=0.5):
         super(InverseScaling, self).__init__(learning_rate=learning_rate)        
         self.power = power
 
@@ -116,7 +116,7 @@ class InverseScaling(LearningRateSchedule):
 class PolynomialDecay(LearningRateSchedule):
     """Polynomial decay based learning rate schedule based upon TensorFlow"""
 
-    def __init__(self, learning_rate=0.01, decay_steps=1.0, power=0.5,
+    def __init__(self, learning_rate=0.1, decay_steps=100, power=0.5,
                  end_learning_rate=0.0001, cycle=False):
         super(PolynomialDecay, self).__init__(learning_rate=learning_rate)
         self.decay_steps = decay_steps
@@ -142,7 +142,7 @@ class PolynomialDecay(LearningRateSchedule):
 class Adaptive(LearningRateSchedule):
     """Decays learning rate based upon improvement in training cost"""
 
-    def __init__(self, learning_rate=0.01, decay_rate=0.2, precision=0.01, patience=5):
+    def __init__(self, learning_rate=0.1, decay_rate=0.2, precision=0.1, patience=5):
         super(Adaptive, self).__init__(learning_rate=learning_rate)
         self.decay_rate = decay_rate
         self.precision = precision
