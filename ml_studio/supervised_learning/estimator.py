@@ -17,6 +17,7 @@ from ml_studio.operations import callbacks as cbks
 from ml_studio.operations.metrics import Metric, Scorer
 from ml_studio.operations.regularizers import Regularizer, L1, L2, ElasticNet
 from ml_studio.operations.cost import Cost, CostFunctions
+from ml_studio.operations.learning_rate_schedules import LearningRateSchedule
 
 from ml_studio.utils import reports
 from ml_studio.utils.data import make_polynomial_features
@@ -26,14 +27,12 @@ from ml_studio.utils.data import make_polynomial_features
 class GradientDescent(ABC, BaseEstimator, RegressorMixin):
     """Defines base behavior for gradient-based regression and classification."""
 
-    def __init__(self, learning_rate=0.01, learning_rate_sched=None, 
-                 batch_size=None, theta_init=None, 
+    def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
                  epochs=1000, cost='quadratic', metric='root_mean_squared_error', 
                  val_size=0.0, verbose=False, checkpoint=100, name=None, 
                  seed=None):
 
         self.learning_rate = learning_rate
-        self.learning_rate_sched = learning_rate_sched
         self.batch_size = batch_size
         self.theta_init = theta_init
         self.epochs = epochs
@@ -48,8 +47,8 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self.epoch = 0
         self.batch = 0
         self.theta = None
+        self.eta = None
         self.scorer = lambda y, y_pred: 0
-        self.update_learning_rate = lambda x: x
         self.cost_function = None
         self.val_set = False
         self.X = self.y = self.X_val = self.y_val = None
@@ -70,8 +69,8 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
 
     def _validate_params(self):
         """Validate parameters."""
-        if not isinstance(self.learning_rate, (int, float)):
-            raise ValueError("learning_rate must provide a float.")
+        if not isinstance(self.learning_rate, (int, float, LearningRateSchedule)):
+            raise ValueError("learning_rate must provide an int, float or a LearningRateSchedule object.")
         if self.batch_size is not None:
             if not isinstance(self.batch_size, int):
                 raise ValueError("batch_size must provide an integer.")            
@@ -123,10 +122,6 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self.history.set_params(self.get_params())
         self.progress = cbks.Progress()
         self.progress.set_params(self.get_params())
-        # Initialize learning rate schedule if designated
-        if self.learning_rate_sched:
-            self.learning_rate_sched.set_params(self.get_params())
-            self.update_learning_rate = self.learning_rate_sched
 
     def _validate_data(self, X, y=None):
         """Confirms data are numpy arrays."""
@@ -173,6 +168,12 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self._compile()
         self._init_weights()   
         self.history.on_train_begin()      
+        # Initialize eta, the learning rate used in calculations
+        if isinstance(self.learning_rate, LearningRateSchedule):
+            self.eta = self.learning_rate.learning_rate
+        else:
+            self.eta = self.learning_rate
+
 
     def _end_training(self, log=None):
         """Closes history callout and assign final and best weights."""
@@ -194,7 +195,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         y_pred = self._predict(self.X)
         # Compute final epoch training cost (and scores)
         log['epoch'] = self.epoch
-        log['learning_rate'] = self.learning_rate
+        log['learning_rate'] = self.eta
         log['theta'] = self.theta.copy()        
         log['train_cost'] = self.cost_function(y=self.y, y_pred=y_pred)
         if self.metric is not None:
@@ -213,7 +214,8 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         if self.verbose and self.epoch % self.checkpoint == 0:
             self.progress.on_epoch_end(self.epoch, log)
         # Update learning rate 
-        self.learning_rate = self.update_learning_rate(logs=log)
+        if isinstance(self.learning_rate, LearningRateSchedule):
+            self.eta = self.learning_rate(log)
 
     def _begin_batch(self, log=None):
         """Placeholder for batch initialization functionality."""
@@ -246,7 +248,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
                 # Compute gradient and update weights
                 gradient = self.cost_function.gradient(
                     X_batch, y_batch, y_pred) - self.regularizer.gradient(self.theta)
-                self.theta -= self.learning_rate * gradient
+                self.theta -= self.eta * gradient
                 # Update batch log
                 self._end_batch(batch_log)
 
