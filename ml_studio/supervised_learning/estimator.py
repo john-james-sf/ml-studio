@@ -26,12 +26,14 @@ from ml_studio.utils.data import make_polynomial_features
 class GradientDescent(ABC, BaseEstimator, RegressorMixin):
     """Defines base behavior for gradient-based regression and classification."""
 
-    def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
+    def __init__(self, learning_rate=0.01, learning_rate_sched=None, 
+                 batch_size=None, theta_init=None, 
                  epochs=1000, cost='quadratic', metric='root_mean_squared_error', 
                  val_size=0.0, verbose=False, checkpoint=100, name=None, 
                  seed=None):
 
         self.learning_rate = learning_rate
+        self.learning_rate_sched = learning_rate_sched
         self.batch_size = batch_size
         self.theta_init = theta_init
         self.epochs = epochs
@@ -47,6 +49,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self.batch = 0
         self.theta = None
         self.scorer = lambda y, y_pred: 0
+        self.update_learning_rate = lambda x: x
         self.cost_function = None
         self.val_set = False
         self.X = self.y = self.X_val = self.y_val = None
@@ -115,6 +118,15 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self.cost_function = CostFunctions()(cost=self.cost)
         if self.metric:
             self.scorer = Scorer()(metric=self.metric)
+        # Initialize callbacks
+        self.history = cbks.History()
+        self.history.set_params(self.get_params())
+        self.progress = cbks.Progress()
+        self.progress.set_params(self.get_params())
+        # Initialize learning rate schedule if designated
+        if self.learning_rate_sched:
+            self.learning_rate_sched.set_params(self.get_params())
+            self.update_learning_rate = self.learning_rate_sched
 
     def _validate_data(self, X, y=None):
         """Confirms data are numpy arrays."""
@@ -159,17 +171,8 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self._validate_data(log.get('X'), log.get('y'))        
         self._prepare_data(log.get('X'), log.get('y'))
         self._compile()
-        self._init_weights()
-        
-        # Initialize history object
-        self.history = cbks.History()
-        self.history.set_params(self.get_params())
-        self.history.on_train_begin()
-
-        # Initialize progress object 
-        self.progress = cbks.Progress()
-        self.progress.set_params(self.get_params())        
-        self.progress.on_train_begin()
+        self._init_weights()   
+        self.history.on_train_begin()      
 
     def _end_training(self, log=None):
         """Closes history callout and assign final and best weights."""
@@ -184,10 +187,10 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         if self.seed:
             self.seed += 1
 
-    def _end_epoch(self):
+    def _end_epoch(self, log=None):
         """Performs end-of-epoch evaluation and scoring."""
         # Compute final epoch training prediction
-        log = {}
+        log = log or {}
         y_pred = self._predict(self.X)
         # Compute final epoch training cost (and scores)
         log['epoch'] = self.epoch
@@ -206,10 +209,11 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
 
         # Update history callback
         self.history.on_epoch_end(self.epoch, log)
-        # Execute progress callback if verbose        
-        if self.verbose:
-            del log['theta']
+        # Report progress if verbose
+        if self.verbose and self.epoch % self.checkpoint == 0:
             self.progress.on_epoch_end(self.epoch, log)
+        # Update learning rate 
+        self.learning_rate = self.update_learning_rate(logs=log)
 
     def _begin_batch(self, log=None):
         """Placeholder for batch initialization functionality."""
@@ -238,7 +242,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
                     y=y_batch, y_pred=y_pred) + self.regularizer(self.theta)
                 # Update batch log with weights and cost
                 batch_log = {'batch': self.batch, 'batch_size': X_batch.shape[0],
-                             'theta': self.theta.copy(), 'train_cost': J.copy()}
+                             'theta': self.theta.copy(), 'train_cost': J}
                 # Compute gradient and update weights
                 gradient = self.cost_function.gradient(
                     X_batch, y_batch, y_pred) - self.regularizer.gradient(self.theta)
