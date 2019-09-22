@@ -20,6 +20,10 @@ class EarlyStop(Callback):
         self.converged = False
         self.best_weights = None
 
+    def _validate(self):
+        if not isinstance(self.val_size, (int,float)):
+            raise TypeError('val_size must be an integer or float')
+
     def on_train_begin(self, logs=None):        
         self.converged = False
 
@@ -37,39 +41,43 @@ class EarlyStopPlateau(EarlyStop):
         self.metric = None  
 
     def _validate(self):
-        if self.metric is not None:
+        super(EarlyStopPlateau, self)._validate()
+        if self.metric:
+            if not isinstance(self.metric, str):
+                raise TypeError("metric must be None or a valid string.")
             if self.metric not in ('r2',
-                                   'var_explained',
-                                   'mean_absolute_error',
-                                   'mean_squared_error',
-                                   'neg_mean_squared_error',
-                                   'root_mean_squared_error',
-                                   'neg_root_mean_squared_error',
-                                   'mean_squared_log_error',
-                                   'root_mean_squared_log_error',
-                                   'median_absolute_error',
-                                   'binary_accuracy',
-                                   'categorical_accuracy'):
+                                    'var_explained',
+                                    'mean_absolute_error',
+                                    'mean_squared_error',
+                                    'neg_mean_squared_error',
+                                    'root_mean_squared_error',
+                                    'neg_root_mean_squared_error',
+                                    'mean_squared_log_error',
+                                    'root_mean_squared_log_error',
+                                    'median_absolute_error',
+                                    'binary_accuracy',
+                                    'categorical_accuracy'):
                 raise ValueError("Metric %s is not support. " % self.metric)
-        if self.precision < -1 or self.precision > 1:        
-            raise ValueError("precision must be between -1 and 1.")
-        if not isinstance(self.patience, (int, float)):
-            raise ValueError("patience must be an integer.")
+        if not isinstance(self.precision, float):
+            raise TypeError("precision must be a float between -1 and 1")
+        if abs(self.precision) >= 1:
+            raise ValueError("precision must have an absolute value less than 1")
+        if not isinstance(self.patience, (int)):
+            raise TypeError("patience must be an integer.")
         if self.val_size is not None:
-            if not isinstance(self.val_size, float):
-                raise ValueError("val_size must be a float.")
-            elif self.val_size < 0 or self.val_size > 1:
-                raise ValueError("val_size must be None or between 0 and 1.")
+            if not isinstance(self.val_size, (int,float)):
+                raise ValueError("val_size must be an int or a float.")
 
     def on_train_begin(self, logs=None):        
         """Initializes performance and improvement function."""
         super(EarlyStopPlateau, self).on_train_begin()
+        logs = logs or {}
         self.metric = logs.get('metric')
         self._validate()
         # We evaluate improvement against the prior metric plus or minus a
         # margin given by precision * the metric. Whether we add or subtract the margin
         # is based upon the metric. For metrics that increase as they improve
-        # We add the margin, otherwise we subtract the margin.  Each metric
+        # we add the margin, otherwise we subtract the margin.  Each metric
         # has a bit called a precision factor that is -1 if we subtract the 
         # margin and 1 if we add it. The following logic extracts the precision
         # factor for the metric and multiplies it by the precision for the 
