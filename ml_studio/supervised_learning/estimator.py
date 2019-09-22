@@ -10,10 +10,12 @@ from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
+import warnings
 
 from ml_studio.utils.data import batch_iterator
 
 from ml_studio.operations import callbacks as cbks
+from ml_studio.operations.early_stop import EarlyStop, EarlyStopPlateau
 from ml_studio.operations.metrics import Metric, Scorer
 from ml_studio.operations.regularizers import Regularizer, L1, L2, ElasticNet
 from ml_studio.operations.cost import Cost, CostFunctions
@@ -28,8 +30,8 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
     """Defines base behavior for gradient-based regression and classification."""
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
-                 epochs=1000, cost='quadratic', metric='root_mean_squared_error', 
-                 val_size=0.0, verbose=False, checkpoint=100, name=None, 
+                 epochs=1000, cost='quadratic', metric='mean_squared_error', 
+                 early_stop=None, verbose=False, checkpoint=100, name=None, 
                  seed=None):
 
         self.learning_rate = learning_rate
@@ -38,7 +40,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self.epochs = epochs
         self.cost = cost
         self.metric = metric
-        self.val_size = val_size
+        self.early_stop = early_stop
         self.verbose = verbose
         self.checkpoint = checkpoint
         self.name = name
@@ -46,11 +48,10 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         # Various state variables
         self.epoch = 0
         self.batch = 0
+        self.converged = False
         self.theta = None
         self.eta = None
-        self.scorer = lambda y, y_pred: 0
         self.cost_function = None
-        self.val_set = False
         self.X = self.y = self.X_val = self.y_val = None
         self.regularizer = lambda x: 0
         self.regularizer.gradient = lambda x: 0
@@ -63,65 +64,55 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
             self.algorithm = 'Stochastic Gradient Descent'
         else:
             self.algorithm = 'Minibatch Gradient Descent'
-        self.task = "Linear Regression"
-        self.name = name or self.task + ' with ' + self.algorithm
 
 
     def _validate_params(self):
         """Validate parameters."""
         if not isinstance(self.learning_rate, (int, float, LearningRateSchedule)):
-            raise ValueError("learning_rate must provide an int, float or a LearningRateSchedule object.")
+            raise TypeError("learning_rate must provide an int, float or a LearningRateSchedule object.")
         if self.batch_size is not None:
             if not isinstance(self.batch_size, int):
-                raise ValueError("batch_size must provide an integer.")            
+                raise TypeError("batch_size must provide an integer.")            
         if self.theta_init is not None:
             if not isinstance(self.theta_init, (list, pd.core.series.Series, np.ndarray)):
-                raise ValueError("theta must be an array like object.")
+                raise TypeError("theta must be an array like object.")            
         if not isinstance(self.epochs, int):
-            raise ValueError("epochs must be an integer.")
-        if self.batch_size is not None:
-            if not isinstance(self.batch_size, int):
-                raise ValueError("batch size must be an integer.")
+            raise TypeError("epochs must be an integer.")
+        if self.cost:
+            if not CostFunctions()(cost=self.cost):
+                msg = self.cost + ' is not a supported cost function.'
+                raise ValueError(msg)        
+        else:
+            raise ValueError("cost must be a string containing the name of the cost function.")
+
+        if self.early_stop:
+            if not isinstance(self.early_stop, EarlyStop):
+                raise TypeError("early stop is not a valid EarlyStop callable.")
         if self.metric is not None:
-            if self.metric not in ('r2',
-                                   'var_explained',
-                                   'mean_absolute_error',
-                                   'mean_squared_error',
-                                   'neg_mean_squared_error',
-                                   'root_mean_squared_error',
-                                   'neg_root_mean_squared_error',
-                                   'mean_squared_log_error',
-                                   'root_mean_squared_log_error',
-                                   'median_absolute_error',
-                                   'binary_accuracy',
-                                   'categorical_accuracy'):
-                raise ValueError("Metric %s is not support. " % self.metric)
-        if not isinstance(self.val_size, (int,float)):
-            raise ValueError("val_size must be an 0 or a float")
-        if not (0.0 <= self.val_size < 1):
-            raise ValueError("val_size must be in [0, 1]")
+            if not isinstance(self.metric, str):
+                raise TypeError("metric must be string containing name of metric for scoring")            
+            if not Scorer()(metric=self.metric):            
+                msg = self.metric + ' is not a supported metric.'
+                raise ValueError(msg)        
+        if self.early_stop:
+            if isinstance(self.early_stop, EarlyStopPlateau):
+                if self.metric is None:
+                    raise ValueError("metric must be provided for EarlyStopPlateau callback.")
         if not isinstance(self.verbose, bool):
-            raise ValueError("verbose must be either True or False")
+            raise TypeError("verbose must be either True or False")
         if self.checkpoint is not None:
             if not isinstance(self.checkpoint, int):
-                raise ValueError(
+                raise TypeError(
                     "checkpoint must be a positive integer or None.")
             elif self.checkpoint < 0:
                 raise ValueError(
                     "checkpoint must be a positive integer or None.")
+            elif self.checkpoint > self.epochs:
+                warnings.warn(UserWarning(
+                    "checkpoint must not be greater than the number of epochs."))
         if self.seed is not None:
             if not isinstance(self.seed, int):
-                raise ValueError("seed must be a positive integer.")
-
-    def _compile(self):
-        self.cost_function = CostFunctions()(cost=self.cost)
-        if self.metric:
-            self.scorer = Scorer()(metric=self.metric)
-        # Initialize callbacks
-        self.history = cbks.History()
-        self.history.set_params(self.get_params())
-        self.progress = cbks.Progress()
-        self.progress.set_params(self.get_params())
+                raise TypeError("seed must be a positive integer.")
 
     def _validate_data(self, X, y=None):
         """Confirms data are numpy arrays."""
@@ -135,18 +126,27 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
 
     def _prepare_data(self, X, y):
         """Prepares training (and validation) data."""
+        self.X = self.X_val = self.y = self.y_val = None
         # Add a column of ones to train the intercept term
         self.X = np.insert(X, 0, 1, axis=1)  
         self.y = y
         # Set aside val_size training observations for validation set 
-        if self.val_size is not None:
-            if self.val_size > 0:
-                self.val_set = True
+        if self.early_stop:
+            if self.early_stop.val_size:
                 self.X, self.X_val, self.y, self.y_val = \
-                    train_test_split(self.X, self.y, test_size=self.val_size,
-                                                      random_state=self.seed)
+                    train_test_split(self.X, self.y, 
+                    test_size=self.early_stop.val_size, random_state=self.seed)
 
-
+    def _compile(self):
+        self.cost_function = CostFunctions()(cost=self.cost)        
+        if self.metric:
+            self.scorer = Scorer()(metric=self.metric)
+        # Initialize callbacks
+        self.history = cbks.History()
+        self.history.set_params(self.get_params())
+        self.progress = cbks.Progress()
+        self.progress.set_params(self.get_params())
+        
     def _init_weights(self):
         """Initializes weights"""        
         if self.theta_init is None:
@@ -162,6 +162,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
 
     def _begin_training(self, log=None):
         """Performs initializations required at the beginning of training."""
+        self.converged = False
         self._validate_params()
         self._validate_data(log.get('X'), log.get('y'))        
         self._prepare_data(log.get('X'), log.get('y'))
@@ -173,6 +174,11 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
             self.eta = self.learning_rate.learning_rate
         else:
             self.eta = self.learning_rate
+        # Initialize early stopping callback
+        if self.early_stop:
+            early_stop_log = {}
+            early_stop_log['metric'] = self.metric
+            self.early_stop.on_train_begin(early_stop_log)
 
 
     def _end_training(self, log=None):
@@ -199,23 +205,28 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         log['theta'] = self.theta.copy()        
         log['train_cost'] = self.cost_function(y=self.y, y_pred=y_pred)
         if self.metric is not None:
-            log['train_score'] = self.scorer(y=self.y, y_pred=y_pred)
+            log['train_score'] = self.scorer(y=self.y, y_pred=y_pred)        
 
         # Compute final epoch validation cost (and scores)        
-        if self.val_set:
-            y_pred = self._predict(self.X_val)
-            log['val_cost'] = self.cost_function(y=self.y_val, y_pred=y_pred)
-            if self.metric is not None:
-                log['val_score'] = self.scorer(y=self.y_val, y_pred=y_pred)
+        if self.early_stop:
+            if self.early_stop.val_size:
+                y_pred = self._predict(self.X_val)
+                log['val_cost'] = self.cost_function(y=self.y_val, y_pred=y_pred)
+                if self.metric:
+                    log['val_score'] = self.scorer(y=self.y_val, y_pred=y_pred)
 
         # Update history callback
         self.history.on_epoch_end(self.epoch, log)
         # Report progress if verbose
         if self.verbose and self.epoch % self.checkpoint == 0:
             self.progress.on_epoch_end(self.epoch, log)
-        # Update learning rate 
+        # Update learning rate of learning_rate is a callable
         if isinstance(self.learning_rate, LearningRateSchedule):
             self.eta = self.learning_rate(log)
+        # Evaluate early stopping criteria if early stop is callable
+        if self.early_stop:
+            self.early_stop.on_epoch_end(self.epoch, log)
+            self.converged = self.early_stop.converged
 
     def _begin_batch(self, log=None):
         """Placeholder for batch initialization functionality."""
@@ -228,9 +239,9 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
     def fit(self, X, y):
         """Trains model until stop condition is met."""
         train_log = {'X': X, 'y': y}
-        self._begin_training(train_log)
+        self._begin_training(train_log)        
 
-        while (self.epoch < self.epochs):
+        while (self.epoch < self.epochs and not self.converged):
 
             self._begin_epoch()
 

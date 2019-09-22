@@ -31,6 +31,7 @@ class SSE(Metric):
         self.best = np.min
         self.better = np.less
         self.worst = np.Inf
+        self.precision_factor = -1
 
     
     def __call__(self, y, y_pred):
@@ -48,11 +49,12 @@ class SST(Metric):
         self.best = np.min
         self.better = np.less
         self.worst = np.Inf
+        self.precision_factor = -1
 
     
     def __call__(self, y, y_pred):
         y_avg = np.mean(y)
-        e = (y-y_avg)                
+        e = y-y_avg                
         return np.sum(e**2)
 
 class R2(Metric):
@@ -66,12 +68,13 @@ class R2(Metric):
         self.best = np.max
         self.better = np.greater
         self.worst = -np.Inf
+        self.precision_factor = 1
 
     
     def __call__(self, y, y_pred):
         self._sse = SSE()
         self._sst = SST()
-        r2 = 1 - self._sse(y, y_pred)/self._sst(y, y_pred)        
+        r2 = 1 - (self._sse(y, y_pred)/self._sst(y, y_pred))        
         return r2
 
 class VarExplained(Metric):
@@ -85,6 +88,7 @@ class VarExplained(Metric):
         self.best = np.max
         self.better = np.greater
         self.worst = -np.Inf
+        self.precision_factor = 1
 
     
     def __call__(self, y, y_pred):
@@ -102,6 +106,7 @@ class MAE(Metric):
         self.best = np.min
         self.better = np.less
         self.worst = np.Inf
+        self.precision_factor = -1
     
     def __call__(self, y, y_pred):
         e = abs(y-y_pred)
@@ -119,6 +124,7 @@ class MSE(Metric):
         self.best = np.min
         self.better = np.less
         self.worst = np.Inf
+        self.precision_factor = -1
     
     def __call__(self, y, y_pred):
         e = y-y_pred
@@ -135,6 +141,7 @@ class NMSE(Metric):
         self.best = np.max
         self.better = np.greater
         self.worst = -np.Inf
+        self.precision_factor = 1
 
     
     def __call__(self, y, y_pred):
@@ -152,7 +159,7 @@ class RMSE(Metric):
         self.best = np.min
         self.better = np.less
         self.worst = np.Inf
-
+        self.precision_factor = -1
     
     def __call__(self, y, y_pred):
         e = y-y_pred
@@ -169,6 +176,7 @@ class NRMSE(Metric):
         self.best = np.max
         self.better = np.greater
         self.worst = -np.Inf
+        self.precision_factor = 1
 
     
     def __call__(self, y, y_pred):
@@ -186,6 +194,7 @@ class MSLE(Metric):
         self.best = np.min
         self.better = np.less
         self.worst = np.Inf
+        self.precision_factor = -1
     
     def __call__(self, y, y_pred):
         e = np.log(y+1)-np.log(y_pred+1)
@@ -202,6 +211,7 @@ class RMSLE(Metric):
         self.best = np.min
         self.better = np.less
         self.worst = np.Inf
+        self.precision_factor = -1
     
     def __call__(self, y, y_pred):
         e = np.log(y+1)-np.log(y_pred+1)
@@ -218,6 +228,7 @@ class MEDAE(Metric):
         self.best = np.min
         self.better = np.less
         self.worst = np.Inf
+        self.precision_factor = -1
     
     def __call__(self, y, y_pred):        
         return np.median(np.abs(y_pred-y))
@@ -234,6 +245,7 @@ class BinaryAccuracy(Metric):
         self.best = np.max
         self.better = np.greater
         self.worst = -np.Inf
+        self.precision_factor = 1
     
     def __call__(self, y, y_pred):        
         return np.mean(np.equal(y, np.round(y_pred)), axis=-1)  
@@ -249,6 +261,7 @@ class CategoricalAccuracy(Metric):
         self.best = np.max
         self.better = np.greater
         self.worst = -np.Inf
+        self.precision_factor = 1
     
     def __call__(self, y, y_pred):        
         return np.equal(np.argmax(y, axis=-1),
@@ -271,4 +284,4 @@ class Scorer:
                       'median_absolute_error': MEDAE(),
                       'binary_accuracy': BinaryAccuracy(),
                       'categorical_accuracy': CategoricalAccuracy()}
-        return(dispatcher[metric])
+        return(dispatcher.get(metric,False))
