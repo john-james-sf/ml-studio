@@ -24,11 +24,11 @@ class LearningRateScheduleTests:
 
     @mark.time_decay_learning_rate
     @mark.learning_rate_schedules
-    def test_time_decay_learning_rate_schedule_wo_steps_wo_staircase(self, get_regression_data):
+    def test_time_decay_learning_rate_schedule_wo_staircase(self, get_regression_data):
         logs = {}
-        exp_result = [0.066666667,0.05,0.04,0.033333333,0.028571429]
+        exp_result = [0.0909090909,	0.0833333333,	0.0769230769,	0.0714285714,	0.0666666667]
         act_result = []        
-        lrs = TimeDecay(learning_rate=0.1, decay_rate=0.5)
+        lrs = TimeDecay(learning_rate=0.1, decay_rate=0.5, decay_steps=5)
         iterations =  [i+1 for i in range(5)]
         for i in iterations:
             logs['epoch'] = i
@@ -41,11 +41,11 @@ class LearningRateScheduleTests:
         assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Time decay not working in model"
 
     @mark.learning_rate_schedules
-    def test_time_decay_learning_rate_schedule_w_steps_wo_staircase(self, get_regression_data):
+    def test_time_decay_learning_rate_schedule_w_staircase(self, get_regression_data):
         logs = {}
-        exp_result = [0.08,0.066666667,0.057142857,0.05,0.044444444]
+        exp_result = [0.1000000000,	0.1000000000,	0.1000000000,	0.1000000000,	0.0666666667]
         act_result = []        
-        lrs = TimeDecay(learning_rate=0.1, decay_steps=2, decay_rate=0.5)
+        lrs = TimeDecay(learning_rate=0.1, decay_steps=5, decay_rate=0.5, staircase=True)
         iterations =  [i+1 for i in range(5)]
         for i in iterations:
             logs['epoch'] = i
@@ -57,23 +57,6 @@ class LearningRateScheduleTests:
         model.fit(X,y)
         assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Time decay with step not working in model"
 
-    @mark.learning_rate_schedules
-    def test_time_decay_learning_rate_schedule_w_steps_w_staircase(self, get_regression_data):
-        logs = {}
-        exp_result = [0.1,0.066666667,0.066666667,0.05,0.05]
-        act_result = []        
-        lrs = TimeDecay(learning_rate=0.1, decay_steps=2, decay_rate=0.5, staircase=True)
-        iterations =  [i+1 for i in range(5)]
-        for i in iterations:
-            logs['epoch'] = i
-            act_result.append(lrs(logs))
-        assert all(np.isclose(exp_result,act_result,rtol=1e-1)), "Time decay with step and staircase not working"
-        exp_result.insert(0, 0.1)
-        X, y = get_regression_data
-        model = LinearRegression(learning_rate=lrs, epochs=6)
-        model.fit(X,y)
-        assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Time decay with step and staircase not working in model"        
-
     # ----------------------------------------------------------------------- #
     #                             Step Decay                                  #
     # ----------------------------------------------------------------------- #
@@ -82,9 +65,9 @@ class LearningRateScheduleTests:
     @mark.learning_rate_schedules
     def test_step_decay_learning_rate_schedule(self, get_regression_data):
         logs = {}
-        exp_result = [0.05,0.05,0.025,0.025,0.0125]
+        exp_result = [0.1000000000,	0.1000000000,	0.1000000000,	0.0500000000,	0.0500000000]
         act_result = []        
-        lrs = StepDecay(learning_rate=0.1, decay_rate=0.5, decay_steps=2)
+        lrs = StepDecay(learning_rate=0.1, decay_rate=0.5, decay_steps=5)
         iterations =  [i+1 for i in range(5)]
         for i in iterations:
             logs['epoch'] = i
@@ -101,11 +84,11 @@ class LearningRateScheduleTests:
     # ----------------------------------------------------------------------- #
 
     @mark.learning_rate_schedules
-    def test_nat_exp_decay_learning_rate_schedule_wo_steps_wo_staircase(self, get_regression_data):
+    def test_nat_exp_decay_learning_rate_schedule_wo_staircase(self, get_regression_data):
         logs = {}
-        exp_result = [0.060653066,0.036787944,0.022313016,0.013533528,0.0082085]
+        exp_result = [0.0904837418,0.0818730753,0.0740818221,0.0670320046,0.0606530660]
         act_result = []        
-        lrs = NaturalExponentialDecay(learning_rate=0.1, decay_rate=0.5)
+        lrs = NaturalExponentialDecay(learning_rate=0.1, decay_rate=0.5, decay_steps=5)
         iterations =  [i+1 for i in range(5)]
         for i in iterations:
             logs['epoch'] = i
@@ -118,11 +101,12 @@ class LearningRateScheduleTests:
         assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Natural exp decay not working in model"        
 
     @mark.learning_rate_schedules
-    def test_nat_exp_decay_learning_rate_schedule_w_steps_wo_staircase(self, get_regression_data):
+    def test_nat_exp_decay_learning_rate_schedule_w_staircase(self, get_regression_data):
         logs = {}
-        exp_result = [0.0778800783071,0.0606530659713,0.0472366552741,0.0367879441171,0.0286504796860]
+        exp_result = [0.1000000000,	0.1000000000,	0.1000000000,	0.1000000000,	0.0606530660]
         act_result = []        
-        lrs = NaturalExponentialDecay(learning_rate=0.1, decay_steps=2, decay_rate=0.5)
+        lrs = NaturalExponentialDecay(learning_rate=0.1, decay_steps=5, decay_rate=0.5,
+                                      staircase=True)
         iterations =  [i+1 for i in range(5)]
         for i in iterations:
             logs['epoch'] = i
@@ -134,32 +118,16 @@ class LearningRateScheduleTests:
         model.fit(X,y)
         assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Natural exp decay with steps not working in model"                
 
-    @mark.learning_rate_schedules
-    def test_nat_exp_decay_learning_rate_schedule_w_steps_w_staircase(self, get_regression_data):
-        logs = {}
-        exp_result = [0.1000000000000,0.0606530659713,0.0606530659713,0.0367879441171,0.0367879441171]
-        act_result = []        
-        lrs = NaturalExponentialDecay(learning_rate=0.1, decay_steps=2, decay_rate=0.5, staircase=True)
-        iterations =  [i+1 for i in range(5)]
-        for i in iterations:
-            logs['epoch'] = i
-            act_result.append(lrs(logs))
-        assert all(np.isclose(exp_result,act_result,rtol=1e-1)), "Natural exponential decay with steps and staircase not working"        
-        exp_result.insert(0, 0.1)
-        X, y = get_regression_data
-        model = LinearRegression(learning_rate=lrs, epochs=6)
-        model.fit(X,y)
-        assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Natural exp decay with steps and staircase not working in model"            
     # ----------------------------------------------------------------------- #
     #                           Exponential Decay                             #
     # ----------------------------------------------------------------------- #
 
     @mark.learning_rate_schedules
-    def test_exp_decay_learning_rate_schedule_wo_steps_wo_staircase(self, get_regression_data):
+    def test_exp_decay_learning_rate_schedule_wo_staircase(self, get_regression_data):
         logs = {}
-        exp_result = [0.05,0.025,0.0125,0.00625,0.003125]
+        exp_result = [0.0870550563,	0.0757858283,	0.0659753955,	0.0574349177,	0.0500000000]
         act_result = []        
-        lrs = ExponentialDecay(learning_rate=0.1, decay_rate=0.5)
+        lrs = ExponentialDecay(learning_rate=0.1, decay_rate=0.5, decay_steps=5)
         iterations =  [i+1 for i in range(5)]
         for i in iterations:
             logs['epoch'] = i
@@ -172,28 +140,11 @@ class LearningRateScheduleTests:
         assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Exponential decay not working in model"                
 
     @mark.learning_rate_schedules
-    def test_exp_decay_learning_rate_schedule_w_steps_wo_staircase(self, get_regression_data):
+    def test_exp_decay_learning_rate_schedule_w_staircase(self, get_regression_data):
         logs = {}
-        exp_result = [0.070710678,0.05,0.035355339,0.025,0.01767767]
+        exp_result = [0.1,0.1,0.1,0.1,0.05]
         act_result = []        
-        lrs = ExponentialDecay(learning_rate=0.1, decay_rate=0.5, decay_steps=2)
-        iterations =  [i+1 for i in range(5)]
-        for i in iterations:
-            logs['epoch'] = i
-            act_result.append(lrs(logs))
-        assert all(np.isclose(exp_result,act_result,rtol=1e-1)), "Exponential decay with steps not working"
-        exp_result.insert(0, 0.1)
-        X, y = get_regression_data
-        model = LinearRegression(learning_rate=lrs, epochs=6)
-        model.fit(X,y)
-        assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Exponential decay with steps not working in model"                        
-
-    @mark.learning_rate_schedules
-    def test_exp_decay_learning_rate_schedule_w_steps_w_staircase(self, get_regression_data):
-        logs = {}
-        exp_result = [0.1,0.05,0.05,0.025,0.025]
-        act_result = []        
-        lrs = ExponentialDecay(learning_rate=0.1, decay_rate=0.5, decay_steps=2, staircase=True)
+        lrs = ExponentialDecay(learning_rate=0.1, decay_rate=0.5, decay_steps=5, staircase=True)
         iterations =  [i+1 for i in range(5)]
         for i in iterations:
             logs['epoch'] = i
@@ -251,18 +202,18 @@ class LearningRateScheduleTests:
     @mark.learning_rate_schedules
     def test_polynomial_decay_learning_rate_schedule_w_cycle(self, get_regression_data):
         logs = {}
-        exp_result = [0.0895,0.0775,0.0633,0.0448,0.0001,0.0633]
+        exp_result = [0.0895,0.0775,0.0633,0.0448,0.0001]
         act_result = []        
         lrs = PolynomialDecay(learning_rate=0.1, decay_steps=5, power=0.5,
                               end_learning_rate=0.0001, cycle=True)
-        iterations =  [i+1 for i in range(6)]
+        iterations =  [i+1 for i in range(5)]
         for i in iterations:
             logs['epoch'] = i
             act_result.append(lrs(logs))
         assert all(np.isclose(exp_result,act_result,rtol=1e-1)), "Polynomial decay with cycle not working"   
         exp_result.insert(0, 0.1)
         X, y = get_regression_data
-        model = LinearRegression(learning_rate=lrs, epochs=7)
+        model = LinearRegression(learning_rate=lrs, epochs=6)
         model.fit(X,y)
         assert all(np.isclose(exp_result,model.history.epoch_log.get('learning_rate'),rtol=1e-1)), "Polynomial decay with cycle not working in model"        
 

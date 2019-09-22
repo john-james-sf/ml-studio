@@ -90,4 +90,4 @@ class CostFunctions():
         dispatcher = {'quadratic': Quadratic(),
                       'binary_crossentropy': BinaryCrossEntropy(),
                       'categorical_crossentropy': CategoricalCrossEntropy()}
-        return(dispatcher[cost])
+        return(dispatcher.get(cost))
