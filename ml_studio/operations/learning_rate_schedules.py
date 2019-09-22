@@ -83,7 +83,7 @@ class NaturalExponentialDecay(LearningRateSchedule):
 class ExponentialDecay(LearningRateSchedule):
     """Exponential decay based learning rate schedule based upon TensorFlow"""
 
-    def __init__(self, learning_rate=0.1, decay_steps=1000, decay_rate=0.96,
+    def __init__(self, learning_rate=0.1, decay_steps=5, decay_rate=0.96,
                  staircase=False):
         super(ExponentialDecay, self).__init__(learning_rate=learning_rate)
         self.decay_steps = decay_steps
@@ -167,5 +167,6 @@ class Adaptive(LearningRateSchedule):
     def __call__(self, logs):
         if not self._improvement(logs):
             if self._iter_no_improvement == self.patience:
+                self._iter_no_improvement = 0
                 return logs.get('learning_rate') * self.decay_rate
         return logs.get('learning_rate')

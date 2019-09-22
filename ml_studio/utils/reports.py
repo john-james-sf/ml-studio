@@ -10,7 +10,6 @@ center = 25
 
 def summary(history):
     monitor = history.params.get('monitor')
-    val_size = history.params.get('val_size')
     metric = history.params.get('metric', "")
 
     print("\nOptimization Summary")
@@ -26,10 +25,10 @@ def summary(history):
     if 'score' in monitor:
         print("  Final Training Score: " + str(history.epoch_log.get('train_score')[-1])
               + " " + history.params.get('metric'))
-    if val_size > 0:
+    if history.early_stop:
         print(" Final Validation Loss: " +
               str(history.epoch_log.get('val_cost')[-1]))
-        if monitor == 'val_score':
+        if history.metric:
             print("Final Validation Score: " + str(history.epoch_log.get('val_score')[-1])
                   + " " + metric)
     print("         Final Weights: " + str(history.epoch_log.get('theta')[-1]))

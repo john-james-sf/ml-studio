@@ -9,6 +9,7 @@ from pytest import mark
 from sklearn import datasets
 from sklearn.preprocessing import StandardScaler
 
+from ml_studio.operations.early_stop import EarlyStopGeneralizationLoss
 from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.supervised_learning.regression import LassoRegression
 from ml_studio.supervised_learning.regression import RidgeRegression
@@ -22,7 +23,7 @@ class TrainingPlotTests:
     def test_training_plots_train_loss_only(self, get_regression_data):
         X, y = get_regression_data
         model = LinearRegression(learning_rate=0.01, epochs=50, metric=None, 
-                              val_size=0, seed=50)
+                              seed=50)
         model.fit(X,y)
         # Render Plots
         plot_loss(model=model, directory=directory)
@@ -33,8 +34,9 @@ class TrainingPlotTests:
     @pytest.mark.skip(reason="working: avoid pop-ups")
     def test_training_plots_train_val_loss_only(self, get_regression_data):
         X, y = get_regression_data
+        es = EarlyStopGeneralizationLoss()
         model = LassoRegression(learning_rate=0.01, epochs=50, verbose=True,
-                                   alpha=0.01, metric=None, val_size=0.33, seed=50)
+                                   alpha=0.01, early_stop=es, seed=50)
         model.fit(X,y)
         # Render Plots
         plot_loss(model=model, directory=directory)
@@ -47,7 +49,7 @@ class TrainingPlotTests:
         X, y = get_regression_data
         model = RidgeRegression(learning_rate=0.01, epochs=50, verbose=True, 
                                    alpha=0.01, metric='root_mean_squared_error',
-                                   val_size=0.0, seed=50)
+                                   seed=50)
         model.fit(X,y)
         # Render Plots
         plot_loss(model=model, directory=directory)
@@ -57,9 +59,10 @@ class TrainingPlotTests:
     @pytest.mark.skip(reason="working: avoid pop-ups")
     def test_training_plots_train_val_loss_and_scores(self, get_regression_data):
         X, y = get_regression_data
+        es = EarlyStopGeneralizationLoss()
         model = LinearRegression(learning_rate=0.01, epochs=50, verbose=True, 
                               batch_size=32, metric='root_mean_squared_error',
-                              val_size=0.33, seed=50)
+                              early_stop=es, seed=50)
         model.fit(X,y)
         # Render Plots
         plot_loss(model=model, directory=directory)
