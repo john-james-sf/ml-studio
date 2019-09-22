@@ -46,6 +46,15 @@ def get_regression_data_w_validation(get_regression_data):
         X, y, test_size=0.33, random_state=50)
     return X_train, X_test, y_train, y_test
 
+@fixture(scope='session', params=[GradientDescent,
+                                  LinearRegression,
+                                  LassoRegression,
+                                  RidgeRegression,
+                                  ElasticNetRegression])
+def estimator(request):
+    return request.param
+
+
 
 @fixture(scope='session', params=[TimeDecay(),
                                   StepDecay(),
@@ -67,6 +76,21 @@ def learning_rate_schedules(request):
                                   'median_absolute_error'])
 def regression_metric(request):
     return request.param
+
+@fixture(scope='session', params=['r2',
+                                  'var_explained',
+                                  'neg_mean_squared_error',
+                                  'neg_root_mean_squared_error'])
+def regression_metric_greater_is_better(request):
+    return request.param
+
+@fixture(scope='session', params=['mean_absolute_error',
+                                  'mean_squared_error',
+                                  'root_mean_squared_error',                                  
+                                  'median_absolute_error'])
+def regression_metric_lower_is_better(request):
+    return request.param    
+
 
 @fixture(scope='session', params=[EarlyStopPlateau(precision=0.1, patience=2),
                                   EarlyStopGeneralizationLoss(threshold=1.5),
