@@ -178,19 +178,19 @@ def plot_score(model, figsize=(12,4), directory=None, filename=None):
     """Plots training score (and optionally validation score) by epoch."""
 
     # Validate request
+    if not model.history.early_stop:
+        raise Exception("No early stop callback designated, so no score available.")
+    elif not model.history.early_stop.metric:
+        raise Exception("No metric designated for score.")
     if not isinstance(model, GradientDescent):
         raise ValueError("Model is not a valid GradientDescent or subclass object.")
     if not isinstance(figsize, tuple):
         raise TypeError("figsize is not a valid tuple.")
-
-    # Confirm scores exist in the model
-    if model.history.params.get('metric') is None:
-        raise UserWarning("val_size must be an 0 or a float")
     
     # Format plot title
     title = model.history.params.get('name') + "\n" + \
         "Evaluation Plot with Learning Rate" +\
-        '\n' + proper(model.history.params.get('metric')) + " Score"
+        '\n' + proper(model.history.early_stop.metric) + " Score"
     
     # If val score is on the log, plot both training and validation score
     if 'val_score' in model.history.epoch_log:
