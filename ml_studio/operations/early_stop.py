@@ -134,26 +134,31 @@ class EarlyStopGeneralizationLoss(EarlyStop):
         super(EarlyStopGeneralizationLoss,self).__init__(val_size=val_size)        
         self.threshold=threshold
         self.best_val_cost = np.Inf    
+        self.best_weights = None
 
     def _validate(self):
         if self.val_size is not None:
-            if not isinstance(self.val_size, float):
-                raise ValueError("val_size must be a float.")
-            elif self.val_size < 0 or self.val_size > 1:
-                raise ValueError("val_size must be None or between 0 and 1.")        
+            if not isinstance(self.val_size, (int, float)):
+                raise TypeError("val_size must be a float.")
+            if self.val_size == 0:
+                raise ValueError("val_size must be greater than zero")
 
-    def _generalization_loss(self, logs):        
-        val_cost = logs.get('val_cost')
-        if val_cost < self.best_val_cost:
-            self.best_val_cost = val_cost
-            self.best_weights = logs.get('theta')
-        gl = 100 * ((val_cost/self.best_val_cost)-1)        
-        return gl
+    def on_train_begin(self, logs=None):
+        super(EarlyStopGeneralizationLoss, self).on_train_begin()
+        logs = logs or {}        
+        self._validate()
+       
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
-        self._validate()
-        gl = self._generalization_loss(logs)
+        val_cost = logs.get('val_cost')
+        if not isinstance(val_cost, (int,float)):
+            msg = str(val_cost) + " must be a float"
+            raise TypeError(msg)
+        gl = 100 * ((val_cost/self.best_val_cost)-1)        
+        if val_cost < self.best_val_cost:
+            self.best_val_cost = val_cost
+            self.best_weights = logs.get('theta')
         self.converged = (gl > self.threshold)
 
 # --------------------------------------------------------------------------- #
@@ -162,31 +167,30 @@ class EarlyStopGeneralizationLoss(EarlyStop):
 class EarlyStopProgress(EarlyStop):
     """Early stopping criteria based upon progress of training."""
 
-    def __init__(self, val_size=0.2, threshold=2, strip_size=5):
+    def __init__(self, val_size=0.2, threshold=0.25, strip_size=5):
         super(EarlyStopProgress,self).__init__(val_size=val_size)        
         self.threshold = threshold
         self.strip_size = strip_size
         self.best_val_cost = np.Inf
         self.strip = deque([], strip_size)
+        self.progress_threshold = 0.1
 
     def _validate(self):
 
-        if self.val_size is not None:
-            if not isinstance(self.val_size, float):
-                raise ValueError("val_size must be a float.")
-            elif self.val_size < 0 or self.val_size > 1:
-                raise ValueError("val_size must be None or between 0 and 1.") 
+        if not isinstance(self.val_size, (int,float)):
+            raise TypeError("val_size must be an int or a float.")
         if not isinstance(self.threshold, (int, float)):
-            raise ValueError("threshold must be an integer or float.")                    
+            raise TypeError("threshold must be an integer or float.")                    
         if not isinstance(self.strip_size, int):
-            raise ValueError("strip_size must be an integer.")                                
+            raise TypeError("strip_size must be an integer.")     
+
 
     def _generalization_loss(self, logs):        
         val_cost = logs.get('val_cost')
+        gl = 100 * ((val_cost/self.best_val_cost)-1)
         if val_cost < self.best_val_cost:
             self.best_val_cost = val_cost
-            self.best_weights = logs.get('theta')
-        gl = 100 * ((val_cost/self.best_val_cost)-1)        
+            self.best_weights = logs.get('theta')                
         return gl      
 
     def _progress(self, logs):
@@ -198,13 +202,61 @@ class EarlyStopProgress(EarlyStop):
             progress = 1000 * ((sum(self.strip)/ \
                                 (self.strip_size * min(self.strip)))-1)
         return progress
-   
-    def on_epoch_end(self, epoch, logs=None):
+
+    def on_train_begin(self, logs=None):
         logs = logs or {}        
         self._validate()
+   
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}                
         progress = self._progress(logs)
-        if progress:
-            gl = self._generalization_loss(logs)
-            self.converged = ((progress/gl) > self.threshold)
+        if progress:            
+            if progress < self.progress_threshold:
+                self.converged = True
+            else:
+                gl = self._generalization_loss(logs)
+                self.converged = ((gl/progress) > self.threshold)
+
+# --------------------------------------------------------------------------- #
+#                         EARLY STOP STRIP                                    #
+# --------------------------------------------------------------------------- #
+class EarlyStopStrips(EarlyStop):
+    """Stop when validation error has not improved over 'patience' successive strips."""
+
+    def __init__(self, val_size=0.2, strip_size=5, patience=5):
+        super(EarlyStopStrips,self).__init__(val_size=val_size)        
+        self.strip_size = strip_size
+        self.strip = deque([], strip_size)
+        self.patience = patience
+        self._strips_no_improvement = 0
+
+    def _validate(self):
+
+        if not isinstance(self.val_size, (int,float)):
+            raise TypeError("val_size must be an int or a float.")                   
+        if not isinstance(self.strip_size, int):
+            raise TypeError("strip_size must be an integer.")      
+        if not isinstance(self.patience, int):
+            raise TypeError("patience must be an integer")
+        if self.patience == 0:
+            raise ValueError("patience must be an integer > 0")
+
+    def on_train_begin(self, logs=None):
+        logs = logs or {}        
+        self._validate()
+   
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+        val_cost = logs.get('val_cost')
+        self.strip.append(val_cost)
+        if len(self.strip) == self.strip_size:
+            if self.strip[0] < self.strip[-1]:
+                self._strips_no_improvement += 1
+            else:
+                self._strips_no_improvement = 0
+            if self._strips_no_improvement == self.patience:
+                self.converged = True
+   
+
 
 
