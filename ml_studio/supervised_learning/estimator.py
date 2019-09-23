@@ -29,6 +29,8 @@ from ml_studio.utils.data import make_polynomial_features
 class GradientDescent(ABC, BaseEstimator, RegressorMixin):
     """Defines base behavior for gradient-based regression and classification."""
 
+    DEFAULT_METRIC = 'mean_squared_error'
+
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
                  epochs=1000, cost='quadratic', metric='mean_squared_error', 
                  early_stop=None, verbose=False, checkpoint=100, name=None, 
@@ -94,10 +96,6 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
             if not Scorer()(metric=self.metric):            
                 msg = self.metric + ' is not a supported metric.'
                 raise ValueError(msg)        
-        if self.early_stop:
-            if isinstance(self.early_stop, EarlyStopPlateau):
-                if self.metric is None:
-                    raise ValueError("metric must be provided for EarlyStopPlateau callback.")
         if not isinstance(self.verbose, bool):
             raise TypeError("verbose must be either True or False")
         if self.checkpoint is not None:
@@ -292,7 +290,10 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         if X.shape[1] != len(self.coef):
             raise ValueError("Shape of X is incompatible with shape of theta")        
         y_pred = self.intercept + X.dot(self.coef)
-        score = self.scorer(y=y, y_pred=y_pred)
+        if self.metric:
+            score = self.scorer(y=y, y_pred=y_pred)    
+        else:
+            score = Scorer()(metric=self.DEFAULT_METRIC)(y=y, y_pred=y_pred)        
         return score
 
     def summary(self):
