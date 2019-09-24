@@ -40,11 +40,11 @@ setup(
     include_package_data=True,
     keywords='deep learning machine learning gradient descent',
     name='ml-studio',
-    packages=find_packages(include=['ml-studio']),
+    packages=find_packages(include=['ml_studio']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/scientanalytics/ml-studio',
-    version='0.1.3',
+    version='0.1.2',
     zip_safe=False,
 )
