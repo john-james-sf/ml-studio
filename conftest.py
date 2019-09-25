@@ -53,8 +53,20 @@ def get_regression_data_w_validation(get_regression_data):
                                   ElasticNetRegression])
 def estimator(request):
     return request.param
-
-
+    
+@fixture(scope='session')
+def fit_multiple_models(get_regression_data):
+        X, y = get_regression_data
+        X = X[:,5]
+        X = np.reshape(X, (-1,1))
+        models = {}
+        bgd = LinearRegression(epochs=200, seed=50)
+        sgd = LinearRegression(epochs=200, seed=50, batch_size=1)
+        mgd = LinearRegression(epochs=200, seed=50, batch_size=32)
+        models= {'Batch Gradient Descent': bgd.fit(X,y),
+                 'Stochastic Gradient Descent': sgd.fit(X,y),
+                 'Mini-batch Gradient Descent': mgd.fit(X,y)}
+        return models
 
 @fixture(scope='session', params=[TimeDecay(),
                                   StepDecay(),
