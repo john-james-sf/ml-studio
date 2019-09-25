@@ -205,7 +205,7 @@ def plot_score(model, title=None, figsize=(12,4), directory=None, filename=None)
 
     # Save figure if directory is not None
     if directory is not None:        
-        title = title.replace('\n', ' ') + '.png'
+        title = title.replace('\n', ' ')
         save_plot(fig, directory, filename, title)
 
     # Show plot
@@ -260,7 +260,7 @@ def gscv_line_plot(x, y, gscv, title=None, directory=None, filename=None):
     ax = sns.lineplot(x=proper(x), y=proper(y), hue='Model', data=data, ax=ax)
     # Save figure if requested
     if directory is not None:
-        title = title.replace('\n', ' ') + '.png'
+        title = title.replace('\n', ' ')
         save_plot(fig, directory=directory, filename=filename, title=title)    
     # Show plot
     fig.tight_layout()
