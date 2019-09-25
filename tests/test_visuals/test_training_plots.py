@@ -70,6 +70,7 @@ class TrainingPlotTests:
 
     @mark.plots
     @mark.learning_curves
+    @pytest.mark.skip(reason="working: avoid pop-ups")
     def test_learning_curves(self, get_regression_data):
         X, y = get_regression_data
         models = []
