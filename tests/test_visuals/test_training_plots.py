@@ -13,7 +13,7 @@ from ml_studio.operations.early_stop import EarlyStopGeneralizationLoss
 from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.supervised_learning.regression import LassoRegression
 from ml_studio.supervised_learning.regression import RidgeRegression
-from ml_studio.visual.plots import plot_loss, plot_score
+from ml_studio.visual.plots import plot_loss, plot_score, plot_learning_curves
 directory = "./tests/test_visuals/test_figures/"
 
 class TrainingPlotTests:
@@ -67,4 +67,18 @@ class TrainingPlotTests:
         # Render Plots
         plot_loss(model=model, directory=directory)
         plot_score(model=model, directory=directory)
+
+    @mark.plots
+    @mark.learning_curves
+    def test_learning_curves(self, get_regression_data):
+        X, y = get_regression_data
+        models = []
+        bgd = LinearRegression(epochs=200, seed=50)
+        sgd = LinearRegression(epochs=200, seed=50, batch_size=1)
+        mgd = LinearRegression(epochs=200, seed=50, batch_size=32)
+        models.append(bgd.fit(X,y))
+        models.append(sgd.fit(X,y))
+        models.append(mgd.fit(X,y))
+        plot_learning_curves(models=models, directory=directory)
+
 

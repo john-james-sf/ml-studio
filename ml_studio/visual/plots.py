@@ -75,7 +75,7 @@ def _plot_train_val_loss(model, title=None, figsize=(12,4)):
     return fig, ax
     
 
-def plot_loss(model, figsize=(12,4), directory=None, filename=None):
+def plot_loss(model, title=None, figsize=(12,4), directory=None, filename=None):
     """Plots training loss (and optionally validation loss) by epoch."""
     # Validate request
     if not isinstance(model, GradientDescent):
@@ -84,9 +84,10 @@ def plot_loss(model, figsize=(12,4), directory=None, filename=None):
         raise TypeError("figsize is not a valid tuple.")    
 
     # Format plot title
-    title = model.history.params.get('name') + "\n" + \
-        "Training Plot with Learning Rate" +\
-        '\n' + proper(model.history.params.get('cost')) + " Cost"
+    if title is None:
+        title = model.history.params.get('name') + "\n" + \
+            "Training Plot with Learning Rate" +\
+            '\n' + proper(model.history.params.get('cost')) + " Cost"
         
     # If val loss is on the log, plot both training and validation loss
     if 'val_cost' in model.history.epoch_log:
@@ -98,6 +99,7 @@ def plot_loss(model, figsize=(12,4), directory=None, filename=None):
 
     # Save figure if directory is not None
     if directory is not None:
+        title = title.replace('\n') + '.png'
         save_plot(fig, directory, filename, title)
 
     # Show plot
@@ -174,7 +176,7 @@ def _plot_train_val_score(model, title=None, figsize=(12,4)):
     return fig, ax
     
 
-def plot_score(model, figsize=(12,4), directory=None, filename=None):
+def plot_score(model, title=None, figsize=(12,4), directory=None, filename=None):
     """Plots training score (and optionally validation score) by epoch."""
 
     # Validate request
@@ -188,9 +190,10 @@ def plot_score(model, figsize=(12,4), directory=None, filename=None):
         raise TypeError("figsize is not a valid tuple.")
     
     # Format plot title
-    title = model.history.params.get('name') + "\n" + \
-        "Evaluation Plot with Learning Rate" +\
-        '\n' + proper(model.history.early_stop.metric) + " Score"
+    if title is None:
+        title = model.history.params.get('name') + "\n" + \
+            "Evaluation Plot with Learning Rate" +\
+            '\n' + proper(model.history.early_stop.metric) + " Score"
     
     # If val score is on the log, plot both training and validation score
     if 'val_score' in model.history.epoch_log:
@@ -201,7 +204,8 @@ def plot_score(model, figsize=(12,4), directory=None, filename=None):
                                         figsize=figsize)
 
     # Save figure if directory is not None
-    if directory is not None:
+    if directory is not None:        
+        title = title.replace('\n', ' ') + '.png'
         save_plot(fig, directory, filename, title)
 
     # Show plot
@@ -209,9 +213,37 @@ def plot_score(model, figsize=(12,4), directory=None, filename=None):
     plt.show()                                                     
 
 # --------------------------------------------------------------------------- #
+#                              LEARNING CURVES                                #
+# --------------------------------------------------------------------------- #    
+def plot_learning_curves(models, title=None, figsize=(12,4), directory=None, 
+                         filename=None):
+    # Obtain data
+    data = pd.DataFrame()
+    for m in models:
+        df = pd.DataFrame({'Model': m.name, 
+                           'Epoch': m.history.epoch_log['epoch'],
+                           'Cost': m.history.epoch_log['train_cost']})
+        data = pd.concat([data,df])
+    # Render seaborn line plot
+    if title is None:
+        title = 'Learning Curves'
+    fig, ax = _init_image(x='Epoch', y='Cost', title=title)
+    ax = sns.lineplot(x='Epoch', y='Cost', hue='Model', data=data, 
+                      legend='full', ax=ax)
+    # Save figure if requested
+    if directory is not None:
+        title = title.replace('\n', ' ')
+        save_plot(fig, directory=directory, filename=filename, title=title)
+
+    # Show plot
+    fig.tight_layout()
+    plt.show()  
+
+
+# --------------------------------------------------------------------------- #
 #                            GRIDSEARCHCV PLOTS                               #
 # --------------------------------------------------------------------------- #    
-def gscv_line_plot(x, y, gscv, directory=None, filename=None):
+def gscv_line_plot(x, y, gscv, title=None, directory=None, filename=None):
     """Creates line plot from dictionary of GridSearchCV objects."""
     # Extract data from dictionary of GridSearchCV objects
     data = pd.DataFrame()
@@ -221,9 +253,15 @@ def gscv_line_plot(x, y, gscv, directory=None, filename=None):
         y_data = results.filter(like=y, axis=1).values.flatten()
         df = pd.DataFrame({proper(x):x_data, proper(y): y_data, 'Model':name})
         data = pd.concat([data,df], axis=0)
+    if title is None:
+        title = 'Gridsearch Cross-validation Plot'
     # Initialize and render plot
     fig, ax = _init_image(x, y)
     ax = sns.lineplot(x=proper(x), y=proper(y), hue='Model', data=data, ax=ax)
+    # Save figure if requested
+    if directory is not None:
+        title = title.replace('\n', ' ') + '.png'
+        save_plot(fig, directory=directory, filename=filename, title=title)    
     # Show plot
     fig.tight_layout()
     plt.show() 
