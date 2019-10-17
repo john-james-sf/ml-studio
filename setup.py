@@ -19,7 +19,7 @@ test_requirements = ['pytest', ]
 
 setup(
     author="John James",
-    author_email='jjames@scientanalytics.com',
+    author_email='jjames@decisionscients.com',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
@@ -44,7 +44,7 @@ setup(
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/scientanalytics/ml-studio',
+    url='https://github.com/decisionscients/ml-studio',
     version='0.1.2',
     zip_safe=False,
 )
