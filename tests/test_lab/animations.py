@@ -25,7 +25,6 @@ X = scaler.fit_transform(X)
 X = X[:,5].reshape(-1,1)
 # Train data
 # --------------------------------------------------------------------------- #
-plot = MultiModelSearch3D()
 models = {}
 learning_rates = [0.0001, 0.001, 0.01, 0.1, 0.8]
 names = ['Very Low Learning Rate', 'Low Learning Rate', 'Good Learning Rate', 
@@ -35,6 +34,9 @@ for i in range(len(learning_rates)):
     bgd = LinearRegression(epochs=200, learning_rate=learning_rates[i],
                            theta_init=[0,0], name=names[i])
     models[names[i]] = bgd.fit(X,y)
+ani = MultiModelSearch3D()
+ani.search(models, directory=directory, filename='search_by_learning_rate.gif')
+ani = MultiModelFit2D()
+ani.fit(models, directory=directory, filename='fit_by_learning_rate.gif')
 
-plot.search(models, directory=directory, filename='search_by_learning_rate.gif')
 #%%
