@@ -8,24 +8,24 @@ from sklearn import datasets
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 
-from ml_studio.operations.callbacks import History
-from ml_studio.supervised_learning.gradient_descent import GradientDescent
+from ml_studio.supervised_learning.training.callbacks import History
+from ml_studio.supervised_learning.training.gradient_descent import GradientDescent
 from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.supervised_learning.regression import LassoRegression
 from ml_studio.supervised_learning.regression import RidgeRegression
 from ml_studio.supervised_learning.regression import ElasticNetRegression
 
-from ml_studio.operations.learning_rate_schedules import TimeDecay
-from ml_studio.operations.learning_rate_schedules import StepDecay
-from ml_studio.operations.learning_rate_schedules import NaturalExponentialDecay
-from ml_studio.operations.learning_rate_schedules import ExponentialDecay
-from ml_studio.operations.learning_rate_schedules import PolynomialDecay
-from ml_studio.operations.learning_rate_schedules import InverseScaling
-from ml_studio.operations.learning_rate_schedules import Adaptive
+from ml_studio.supervised_learning.training.learning_rate_schedules import TimeDecay
+from ml_studio.supervised_learning.training.learning_rate_schedules import StepDecay
+from ml_studio.supervised_learning.training.learning_rate_schedules import NaturalExponentialDecay
+from ml_studio.supervised_learning.training.learning_rate_schedules import ExponentialDecay
+from ml_studio.supervised_learning.training.learning_rate_schedules import PolynomialDecay
+from ml_studio.supervised_learning.training.learning_rate_schedules import InverseScaling
+from ml_studio.supervised_learning.training.learning_rate_schedules import Adaptive
 
-from ml_studio.operations.early_stop import EarlyStopPlateau
-from ml_studio.operations.early_stop import EarlyStopGeneralizationLoss
-from ml_studio.operations.early_stop import EarlyStopProgress
+from ml_studio.supervised_learning.training.early_stop import EarlyStopPlateau
+from ml_studio.supervised_learning.training.early_stop import EarlyStopGeneralizationLoss
+from ml_studio.supervised_learning.training.early_stop import EarlyStopProgress
 
 import warnings
 warnings.filterwarnings('ignore')

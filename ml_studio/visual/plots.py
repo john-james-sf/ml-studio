@@ -9,8 +9,8 @@ import pandas as pd
 import seaborn as sns
 import warnings
 
-from ml_studio.supervised_learning.gradient_descent import GradientDescent
-from ml_studio.operations.metrics import Scorer
+from ml_studio.supervised_learning.training.gradient_descent import GradientDescent
+from ml_studio.supervised_learning.training.metrics import Scorer
 from ml_studio.utils.misc import proper
 from ml_studio.utils.filemanager import save_fig
 

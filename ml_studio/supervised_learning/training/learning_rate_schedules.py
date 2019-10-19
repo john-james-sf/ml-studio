@@ -5,7 +5,7 @@
 from abc import ABC
 import math
 import numpy as np
-from ml_studio.operations.metrics import Scorer
+from ml_studio.supervised_learning.training.metrics import Scorer
 
 class LearningRateSchedule():
     """Abstract base class used to build new learning rate schedules.

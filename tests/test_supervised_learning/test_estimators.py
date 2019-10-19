@@ -14,11 +14,11 @@ from ml_studio.supervised_learning.regression import RidgeRegression
 from ml_studio.supervised_learning.regression import ElasticNetRegression
 
 
-from ml_studio.operations.callbacks import Callback
-from ml_studio.operations.cost import Cost, Quadratic, BinaryCrossEntropy
-from ml_studio.operations.cost import CategoricalCrossEntropy
-from ml_studio.operations.metrics import Metric
-from ml_studio.operations.early_stop import EarlyStopPlateau
+from ml_studio.supervised_learning.training.callbacks import Callback
+from ml_studio.supervised_learning.training.cost import Cost, Quadratic, BinaryCrossEntropy
+from ml_studio.supervised_learning.training.cost import CategoricalCrossEntropy
+from ml_studio.supervised_learning.training.metrics import Metric
+from ml_studio.supervised_learning.training.early_stop import EarlyStopPlateau
 
 class EstimatorTests:
 

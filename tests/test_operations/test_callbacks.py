@@ -8,8 +8,8 @@ import numpy as np
 import pytest
 from pytest import mark
 
-from ml_studio.operations.callbacks import History
-from ml_studio.operations.metrics import Scorer
+from ml_studio.supervised_learning.training.callbacks import History
+from ml_studio.supervised_learning.training.metrics import Scorer
 
 
 class HistoryTests:

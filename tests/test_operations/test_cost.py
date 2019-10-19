@@ -7,9 +7,9 @@ import numpy as np
 import pytest
 from pytest import mark
 
-from ml_studio.operations.cost import Quadratic
-from ml_studio.operations.cost import BinaryCrossEntropy
-from ml_studio.operations.cost import CategoricalCrossEntropy
+from ml_studio.supervised_learning.training.cost import Quadratic
+from ml_studio.supervised_learning.training.cost import BinaryCrossEntropy
+from ml_studio.supervised_learning.training.cost import CategoricalCrossEntropy
 
 class QuadraticCostTests:
 

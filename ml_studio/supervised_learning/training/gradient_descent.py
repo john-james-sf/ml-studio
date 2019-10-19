@@ -14,14 +14,14 @@ import warnings
 
 from ml_studio.utils.data import batch_iterator
 
-from ml_studio.operations import callbacks as cbks
-from ml_studio.operations.early_stop import EarlyStop, EarlyStopPlateau
-from ml_studio.operations.metrics import Metric, Scorer
-from ml_studio.operations.regularizers import Regularizer, L1, L2, ElasticNet
-from ml_studio.operations.cost import Cost, CostFunctions
-from ml_studio.operations.learning_rate_schedules import LearningRateSchedule
+from ml_studio.supervised_learning.training import callbacks as cbks
+from ml_studio.supervised_learning.training.early_stop import EarlyStop, EarlyStopPlateau
+from ml_studio.supervised_learning.training.metrics import Metric, Scorer
+from ml_studio.supervised_learning.training.regularizers import Regularizer, L1, L2, ElasticNet
+from ml_studio.supervised_learning.training.cost import Cost, CostFunctions
+from ml_studio.supervised_learning.training.learning_rate_schedules import LearningRateSchedule
 
-from ml_studio.utils import reports
+from ml_studio.supervised_learning.training import reports
 from ml_studio.utils.data import make_polynomial_features
 
 # --------------------------------------------------------------------------- #

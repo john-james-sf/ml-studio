@@ -5,12 +5,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml_studio.operations.learning_rate_schedules import TimeDecay
-from ml_studio.operations.learning_rate_schedules import StepDecay
-from ml_studio.operations.learning_rate_schedules import NaturalExponentialDecay
-from ml_studio.operations.learning_rate_schedules import ExponentialDecay
-from ml_studio.operations.learning_rate_schedules import InverseScaling
-from ml_studio.operations.learning_rate_schedules import PolynomialDecay
+from ml_studio.supervised_learning.training.learning_rate_schedules import TimeDecay
+from ml_studio.supervised_learning.training.learning_rate_schedules import StepDecay
+from ml_studio.supervised_learning.training.learning_rate_schedules import NaturalExponentialDecay
+from ml_studio.supervised_learning.training.learning_rate_schedules import ExponentialDecay
+from ml_studio.supervised_learning.training.learning_rate_schedules import InverseScaling
+from ml_studio.supervised_learning.training.learning_rate_schedules import PolynomialDecay
 
 def plot_schedule(schedule_fn, iterations=1500):
     # Iteration count starting at 1

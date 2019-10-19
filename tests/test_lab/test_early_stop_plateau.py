@@ -12,7 +12,7 @@ from sklearn import datasets
 from sklearn.preprocessing import StandardScaler
 
 from ml_studio.supervised_learning.regression import LinearRegression
-from ml_studio.operations.early_stop import EarlyStopPlateau
+from ml_studio.supervised_learning.training.early_stop import EarlyStopPlateau
 
 # Get data
 X, y = datasets.load_boston(return_X_y=True)
