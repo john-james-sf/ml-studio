@@ -11,8 +11,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from .basic_plots import BasicPlots
-from ..utils.filemanager import save_fig
+from ml_studio.utils.file_manager import save_fig
 # --------------------------------------------------------------------------- #
 def _format_string(s):
     if "__" in s:

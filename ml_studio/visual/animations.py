@@ -29,8 +29,8 @@ from sklearn.preprocessing import MinMaxScaler
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-from ml_studio.utils.data import todf
-from ml_studio.utils.filemanager import save_fig, save_csv, save_gif
+from ml_studio.utils.data_manager import todf
+from ml_studio.utils.file_manager import save_fig, save_csv, save_gif
 
 
 # --------------------------------------------------------------------------- #

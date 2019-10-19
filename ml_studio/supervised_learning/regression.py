@@ -4,7 +4,7 @@
 """Regression classes."""
 from ml_studio.supervised_learning.training.regularizers import L1, L2, ElasticNet
 from ml_studio.supervised_learning.training.gradient_descent import GradientDescent
-from ml_studio.utils.data import make_polynomial_features
+from ml_studio.utils.data_manager import make_polynomial_features
 
 import warnings
 

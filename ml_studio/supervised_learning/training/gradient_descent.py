@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 import warnings
 
-from ml_studio.utils.data import batch_iterator
+from ml_studio.utils.data_manager import batch_iterator
 
 from ml_studio.supervised_learning.training import callbacks as cbks
 from ml_studio.supervised_learning.training.early_stop import EarlyStop, EarlyStopPlateau
@@ -22,7 +22,7 @@ from ml_studio.supervised_learning.training.cost import Cost, CostFunctions
 from ml_studio.supervised_learning.training.learning_rate_schedules import LearningRateSchedule
 
 from ml_studio.supervised_learning.training import reports
-from ml_studio.utils.data import make_polynomial_features
+from ml_studio.utils.data_manager import make_polynomial_features
 
 # --------------------------------------------------------------------------- #
 
