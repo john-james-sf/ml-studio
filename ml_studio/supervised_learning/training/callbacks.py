@@ -13,7 +13,7 @@ import datetime
 import numpy as np
 import types
 
-from ml_studio.operations.metrics import Scorer
+from ml_studio.supervised_learning.training.metrics import Scorer
 
 # --------------------------------------------------------------------------- #
 #                             CALLBACK CLASS                                  #

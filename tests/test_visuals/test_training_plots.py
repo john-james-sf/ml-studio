@@ -9,7 +9,7 @@ from pytest import mark
 from sklearn import datasets
 from sklearn.preprocessing import StandardScaler
 
-from ml_studio.operations.early_stop import EarlyStopGeneralizationLoss
+from ml_studio.supervised_learning.training.early_stop import EarlyStopGeneralizationLoss
 from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.supervised_learning.regression import LassoRegression
 from ml_studio.supervised_learning.regression import RidgeRegression

@@ -10,7 +10,7 @@ from sklearn.metrics import explained_variance_score, mean_absolute_error
 from sklearn.metrics import mean_squared_error, mean_squared_log_error
 from sklearn.metrics import median_absolute_error, r2_score
 
-from ml_studio.operations import metrics 
+from ml_studio.supervised_learning.training import metrics 
 
 class MetricsTests:
 

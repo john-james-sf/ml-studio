@@ -12,7 +12,7 @@ from sklearn import datasets
 from sklearn.preprocessing import StandardScaler
 
 from ml_studio.supervised_learning.regression import LinearRegression
-from ml_studio.operations.learning_rate_schedules import Adaptive
+from ml_studio.supervised_learning.training.learning_rate_schedules import Adaptive
 
 # Get data
 X, y = datasets.load_boston(return_X_y=True)

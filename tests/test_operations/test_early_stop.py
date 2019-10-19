@@ -8,11 +8,11 @@ import pandas as pd
 import pytest
 from pytest import mark
 
-from ml_studio.operations.early_stop import EarlyStopPlateau
-from ml_studio.operations.early_stop import EarlyStopGeneralizationLoss
-from ml_studio.operations.early_stop import EarlyStopProgress
-from ml_studio.operations.early_stop import EarlyStopStrips
-from ml_studio.operations.metrics import Scorer
+from ml_studio.supervised_learning.training.early_stop import EarlyStopPlateau
+from ml_studio.supervised_learning.training.early_stop import EarlyStopGeneralizationLoss
+from ml_studio.supervised_learning.training.early_stop import EarlyStopProgress
+from ml_studio.supervised_learning.training.early_stop import EarlyStopStrips
+from ml_studio.supervised_learning.training.metrics import Scorer
 from ml_studio.supervised_learning.regression import LinearRegression
 # --------------------------------------------------------------------------- #
 #                        TEST EARLY STOP PLATEAU                              #

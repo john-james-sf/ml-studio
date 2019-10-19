@@ -5,7 +5,7 @@
 import numpy as np
 
 from ml_studio.supervised_learning.regression import Regression
-from ml_studio.operations.cost import BinaryCrossEntropy, CategoricalCrossEntropy
+from ml_studio.supervised_learning.training.cost import BinaryCrossEntropy, CategoricalCrossEntropy
 
 # --------------------------------------------------------------------------- #
 #                          CLASSIFICATION BASE CLASS                          #
