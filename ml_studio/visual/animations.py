@@ -91,11 +91,10 @@ class SingleModelSearch3D:
         # Set Title
         plt.rc('text', usetex=True)
         title = model.name + '\n' + r'$\alpha$' + " = " + str(round(params['learning_rate'],3))
-        if fontsize:
-            ax.set_title(title, color='k', pad=30, fontsize=fontsize)                            
+        ax.set_title(title, color='k', pad=30, fontsize=20)                            
+        if fontsize:            
             display = ax.text2D(0.1,0.92, '', transform=ax.transAxes, color='k', fontsize=fontsize)
-        else:
-            ax.set_title(title, color='k', pad=30)               
+        else:            
             display = ax.text2D(0.2,0.92, '', transform=ax.transAxes, color='k')             
         # Set face, tick,and label colors 
         ax.set_facecolor('w')
@@ -226,11 +225,10 @@ class SingleModelFit2D:
         line, = ax.plot([],[],'r-', lw=2)
         # Set Title, Annotations and label
         title = model.algorithm + '\n' + r'$\alpha$' + " = " + str(round(params['learning_rate'],3))
-        if fontsize:
-            ax.set_title(title, color='k', fontsize=fontsize)                                    
+        ax.set_title(title, color='k', fontsize=20)
+        if fontsize:            
             display = ax.text(0.1, 0.9, '', transform=ax.transAxes, color='k', fontsize=fontsize)
-        else:
-            ax.set_title(title, color='k')                                    
+        else:            
             display = ax.text(0.2, 0.9, '', transform=ax.transAxes, color='k')
         ax.set_xlabel('X')
         ax.set_ylabel('y')
@@ -349,7 +347,7 @@ class MultiModelSearch3D(animation.FuncAnimation):
 
         # Set Title
         title = 'Gradient Descent Trajectories'
-        self.ax.set_title(title, color='k', pad=30)                       
+        self.ax.set_title(title, color='k', pad=30, fontsize=20)                       
 
         # Set face, tick,and label colors 
         self.ax.set_facecolor('w')
@@ -454,7 +452,7 @@ class MultiModelFit2D(animation.FuncAnimation):
 
         # Set Title, Annotations and label
         title = 'Gradient Descent Model Fit'
-        self.ax.set_title(title, color='k')
+        self.ax.set_title(title, color='k', fontsize=20)
         self.ax.set_xlabel(x_label) if x_label is not None else self.ax.set_xlabel("X")
         self.ax.set_ylabel(y_label) if x_label is not None else self.ax.set_ylabel("y")
         self.fig.tight_layout()      

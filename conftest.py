@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 
 from ml_studio.operations.callbacks import History
-from ml_studio.supervised_learning.estimator import GradientDescent
+from ml_studio.supervised_learning.gradient_descent import GradientDescent
 from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.supervised_learning.regression import LassoRegression
 from ml_studio.supervised_learning.regression import RidgeRegression

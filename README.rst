@@ -17,7 +17,7 @@ ML Studio
         :target: https://codecov.io/gh/decisionscients/ml-studio
         :alt: Code Coverage
 
-.. image:: https://pyup.io/repos/github/decisionscients/ml_studio/shield.svg
+.. image:: https://pyup.io/repos/github/decisionscients/ml-studio/shield.svg
      :target: https://pyup.io/repos/github/decisionscients/ml-studio/
      :alt: Updates
 
