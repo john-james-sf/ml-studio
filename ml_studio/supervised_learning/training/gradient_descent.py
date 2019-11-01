@@ -257,6 +257,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
                 # Compute gradient and update weights
                 gradient = self.cost_function.gradient(
                     X_batch, y_batch, y_pred) - self.regularizer.gradient(self.theta)
+                # Update parameters
                 self.theta -= self.eta * gradient
                 # Update batch log
                 self._end_batch(batch_log)
@@ -266,21 +267,32 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
 
         self._end_training()
         return self
+    
+    def decision(self, X):
+        """Computes decision based upon data."""
+        if X.shape[1] == len(self.theta):
+            d = X.dot(self.theta)
+        else:
+            if not hasattr(self, 'coef') or self.coef is None:
+                raise Exception("This %(name)s instance is not fitted "
+                                 "yet" % {'name': type(self).__name__})              
+            d = self.intercept + X.dot(self.coef)  
+        return d            
 
     def _predict(self, X):
         """Private predict method that computes predictions with current weights."""
         assert X.shape[1] == len(self.theta), "Shape of X is incompatible with shape of theta"
-        y_pred = X.dot(self.theta)
+        y_pred = self.decision(X)
         return y_pred
 
     def predict(self, X):
         """Public predict method that computes predictions on 'best' weights."""
         if self.coef is None:
-            raise Exception("Unable to compute score. Model has not been fit.")        
+            raise Exception("Unable to predict. Model has not been fit.")        
         self._validate_data(X)
         if X.shape[1] != len(self.coef):
             raise ValueError("Shape of X is incompatible with shape of theta")        
-        y_pred = self.intercept + X.dot(self.coef)
+        y_pred = self.decision(X)
         return y_pred
 
     def score(self, X, y):
@@ -289,7 +301,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self._validate_data(X, y)
         if X.shape[1] != len(self.coef):
             raise ValueError("Shape of X is incompatible with shape of theta")        
-        y_pred = self.intercept + X.dot(self.coef)
+        y_pred = self.predict(X)
         if self.metric:
             score = self.scorer(y=y, y_pred=y_pred)    
         else:
