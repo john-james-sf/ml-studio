@@ -13,7 +13,7 @@ class StandardScalerTests:
 
     @mark.transformer
     def test_standard_scaler(self, get_regression_data):
-        X, y = get_regression_data
+        X, _ = get_regression_data
         ml_scaler = data_manager.StandardScaler()        
         sk_scaler = preprocessing.StandardScaler()
         
