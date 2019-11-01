@@ -23,6 +23,6 @@ deploy:
     branch: master
     repo: ml-studio
     python: 3.7
-    condition: $TRAVIS_PYTHON_VERSION = "3.7"
+    tags: true
 after_success:
 - codecov
