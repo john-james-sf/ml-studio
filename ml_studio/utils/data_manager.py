@@ -1,14 +1,39 @@
 # =========================================================================== #
 #                                 DATA                                        #
 # =========================================================================== #
+#%%
 """Data manipulation functions."""
 
 from itertools import combinations_with_replacement
 import numpy as np
 import pandas as pd
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 
 # --------------------------------------------------------------------------- #
+#                               Transformers                                  #
+# --------------------------------------------------------------------------- #
+class StandardScaler(BaseEstimator, TransformerMixin):
+    def __init__(self, with_mean=True, with_std=True):
+        self.with_mean = with_mean
+        self.with_std = with_std
+        self.mu=0
+        self.s=1
+
+    def fit(self, X):
+        if self.with_mean:
+            self.mu = np.mean(X,axis=0)
+        if self.with_std:
+            self.s = np.std(X,axis=0)
+
+    def transform(self, X):
+        z = (X-self.mu)/self.s
+        return z
+
+    def inverse_transform(self, X):
+        X = X * self.s
+        X = X + self.mu
+        return X
+
 
 def batch_iterator(X, y=None, batch_size=None):
     """ Batch generator """
@@ -55,3 +80,4 @@ def make_polynomial_features(X, degree):
 
     return X_new    
 
+#%%%
