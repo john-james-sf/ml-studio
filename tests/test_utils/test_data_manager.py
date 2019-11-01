@@ -17,7 +17,7 @@ class StandardScalerTests:
         ml_scaler = data_manager.StandardScaler()        
         sk_scaler = preprocessing.StandardScaler()
         
-        ml_scaler.fit(X)
+        ml_scaler.fit(X)  
         X_ml = ml_scaler.transform(X)
         
         sk_scaler.fit(X)
