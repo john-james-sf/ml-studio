@@ -55,7 +55,7 @@ class EarlyStopPlateau(EarlyStop):
                                     'mean_squared_log_error',
                                     'root_mean_squared_log_error',
                                     'median_absolute_error',
-                                    'binary_accuracy',
+                                    'accuracy',
                                     'categorical_accuracy'):
                 raise ValueError("Metric %s is not support. " % self.metric)
         if not isinstance(self.precision, float):

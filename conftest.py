@@ -45,7 +45,14 @@ def get_binary_classification_data():
     scaler = StandardScaler()    
     X = scaler.fit_transform(X)
     return X, y
-    
+
+@fixture(scope="session")
+def get_multinomial_classification_data():
+    X, y = datasets.load_wine(return_X_y=True)
+    scaler = StandardScaler()    
+    X = scaler.fit_transform(X)
+    return X, y
+
 @fixture(scope="session")
 def get_regression_data_w_validation(get_regression_data):
     X, y = get_regression_data
