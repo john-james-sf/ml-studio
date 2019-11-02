@@ -63,12 +63,12 @@ class CategoricalCrossEntropy(Cost):
         """Computes cross entropy (w/softmax) costs"""
         n_samples = y.shape[0]
         # Convert y to integer if one-hot encoded
-        if isinstance(y, np.ndarray):
+        if isinstance(y, np.ndarray) and len(y.shape)>1:
             if y.shape[1] > 1:
                 y = y.argmax(axis=1)
         # Prevent division by zero. Note y is NOT one-hot encoded
         y_pred = np.clip(y_pred, 1e-15, 1-1e-15)        
-        log_likelihood = -np.log(y_pred[np.arange(n_samples),y])
+        log_likelihood = -np.log(y_pred[range(n_samples),y])
         J = np.sum(log_likelihood) / n_samples
         return(J)
 

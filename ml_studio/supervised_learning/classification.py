@@ -25,7 +25,7 @@ class LogisticRegression(GradientDescent):
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
                  epochs=1000, cost='binary_crossentropy', 
-                 metric='binary_accuracy', 
+                 metric='accuracy', 
                  early_stop=None, verbose=False, checkpoint=100, 
                  name=None, seed=None):
         super(LogisticRegression,self).__init__(learning_rate=learning_rate, 
@@ -49,20 +49,28 @@ class LogisticRegression(GradientDescent):
         return y_pred
 
 # --------------------------------------------------------------------------- #
-#                           MULTICLASS REGRESSION                             #
+#                    MULTINOMIAL LOGISTIC REGRESSION                          #
 # --------------------------------------------------------------------------- #
-class MulticlassClassification(GradientDescent):
+class MultinomialLogisticRegression(GradientDescent):
     """Classification for n>2 classes."""
    
-    def __init__(self, *args, **kwargs):
-        super(MulticlassClassification,self).__init__(*args, **kwargs)
-        self._loss = CategoricalCrossEntropy()
+    def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
+                 epochs=1000, cost='categorical_crossentropy', 
+                 metric='accuracy', 
+                 early_stop=None, verbose=False, checkpoint=100, 
+                 name=None, seed=None):
+        super(MultinomialLogisticRegression,self).__init__(learning_rate=learning_rate, 
+                 batch_size=batch_size, theta_init=theta_init, 
+                 epochs=epochs, cost=cost, 
+                 metric=metric,  early_stop=early_stop, verbose=verbose, 
+                 checkpoint=checkpoint, 
+                 name=name, seed=seed)
 
-    def _init_weights(self, X, y):
-        n_features = X.shape[1]
-        n_outputs = len(np.unique(y))
+    def _init_weights(self):
+        n_features = self.X.shape[1]
+        n_outputs = len(np.unique(self.y))
         limit = 1 / np.sqrt(n_features)
-        self._weights = np.random.uniform(-limit, limit, (n_features, n_outputs))         
+        self.theta = np.random.uniform(-limit, limit, (n_features, n_outputs))         
 
     def _predict(self, X):        
         z = self.decision(X)
@@ -70,13 +78,9 @@ class MulticlassClassification(GradientDescent):
         return y_pred
 
     def predict(self, X):        
-        # Add intercept term if required
-        n_features = self._weights.shape[0]
-        if n_features == X.shape[1] + 1:
-            X = np.insert(X, 0, 1, axis=1)            
-        Z = X.dot(self._weights)
-        S = softmax(Z)        
-        y_pred = np.argmax(S, axis=1)        
+        z = self.decision(X)
+        s = softmax(z)        
+        y_pred = np.argmax(s, axis=1)        
         return y_pred
 
             

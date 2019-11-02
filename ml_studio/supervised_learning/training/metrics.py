@@ -234,38 +234,25 @@ class MEDAE(Metric):
         return np.median(np.abs(y_pred-y))
 
 
-class BinaryAccuracy(Metric):
-    """Computes binary accuracy."""
+class Accuracy(Metric):
+    """Computes accuracy."""
 
     def __init__(self):
         self.mode = 'max'
-        self.name = 'binary_accuracy'
-        self.label = "Binary Accuracy"
+        self.name = 'accuracy'
+        self.label = "Accuracy"
         self.stateful = False
         self.best = np.max
         self.better = np.greater
         self.worst = -np.Inf
         self.precision_factor = 1
     
-    def __call__(self, y, y_pred):        
-        return np.mean(np.equal(y, np.round(y_pred)), axis=-1)  
-
-class CategoricalAccuracy(Metric):
-    """Computes categorical accuracy."""
-
-    def __init__(self):
-        self.mode = 'max'
-        self.name = 'categorical_accuracy'
-        self.label = "Categorical Accuracy"
-        self.stateful = False
-        self.best = np.max
-        self.better = np.greater
-        self.worst = -np.Inf
-        self.precision_factor = 1
-    
-    def __call__(self, y, y_pred):        
-        return np.equal(np.argmax(y, axis=-1),
-                        np.argmax(y_pred, axis=-1))
+    def __call__(self, y, y_pred):
+        # If y_pred is a probability distribution, convert to class prediction
+        if len(y_pred.shape)>1:
+            if y_pred.shape[1]>1:
+                y_pred = np.argmax(y_pred, axis=1)        
+        return np.mean(np.equal(y, y_pred), axis=-1)  
 
 class Scorer:
     """Returns the requested score class."""
@@ -282,6 +269,5 @@ class Scorer:
                       'mean_squared_log_error': MSLE(),
                       'root_mean_squared_log_error': RMSLE(),
                       'median_absolute_error': MEDAE(),
-                      'binary_accuracy': BinaryAccuracy(),
-                      'categorical_accuracy': CategoricalAccuracy()}
+                      'accuracy': Accuracy()}
         return(dispatcher.get(metric,False))
