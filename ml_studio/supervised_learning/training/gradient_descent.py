@@ -27,7 +27,22 @@ from ml_studio.utils.data_manager import make_polynomial_features
 # --------------------------------------------------------------------------- #
 
 class GradientDescent(ABC, BaseEstimator, RegressorMixin):
-    """Defines base behavior for gradient-based regression and classification."""
+    """Base class gradient descent estimator.
+    
+    Gradient Descent is a first-order iterative optimization algorithm for 
+    finding the minimum of a real-valued, differentiable objective function. 
+    Parameterized by :math:`\\theta \\in \\mathbb{R}^n`, Gradient Descent 
+    iteratively updates the parameters in the direction opposite to the 
+    gradient of the objective function :math:`\\nabla_\\theta J(\\theta)`.
+
+    Methods
+    -------
+    fit(X,y) Fits the model to input X and output y
+    predict(X) Renders predictions for input X using learned parameters
+    score(X,y) Computes a score using metric designated in __init__.
+    summary() Prints a summary of the model to sysout.  
+
+    """
 
     DEFAULT_METRIC = 'mean_squared_error'
 
@@ -35,7 +50,74 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
                  epochs=1000, cost='quadratic', metric='mean_squared_error', 
                  early_stop=None, verbose=False, checkpoint=100, name=None, 
                  seed=None):
+        """Instantiates instance of class.
 
+        Parameters
+        ----------
+        learning_rate : float or LearningRateSchedule instance, optional (default=0.01)
+            Learning rate or learning rate schedule.
+
+        batch_size : None or int, optional (default=None)
+            The number of examples to include in a single batch.
+
+        theta_init : None or array_like, optional (default=None)
+            Initial values for the parameters :math:`\\theta`
+
+        epochs : int, optional (default=1000)
+            The number of epochs to execute during training
+
+        cost : str, optional (default='quadratic)
+            The string containing the name of the cost function:
+
+            'quadratic':
+                The least mean squares cost function for regression tasks
+            'binary_crossentropy':
+                Cost function for binary (sigmoid) classification
+            'categorical_crossentropy':
+                Cost function for multinomial logistic regression with softmax
+
+        metric : str, optional (default='mean_squared_error')
+            The metric to use when computing the score:
+
+            'r2': 
+                The coefficient of determination.
+            'var_explained': 
+                Proportion of variance explained by model.
+            'mean_absolute_error':
+                Mean absolute error.
+            'mean_squared_error': 
+                Mean squared error.
+            'neg_mean_squared_error':
+                Negative mean squared error.
+            'root_mean_squared_error': 
+                Root mean squared error.
+            'neg_root_mean_squared_error': 
+                Negative root mean squared error.
+            'mean_squared_log_error':
+                Log of mean squared.
+            'root_mean_squared_log_error': 
+                Log of root mean squared error.
+            'median_absolute_error': 
+                Mean absolute error.
+            'accuracy': 
+                Accuracy
+
+        early_stop : None or EarlyStop subclass, optional (default=None)
+            The early stopping algorithm to use during training.
+
+        verbose : bool, optional (default=False)
+            If true, performance during training is summarized to sysout.
+
+        checkpoint : None or int, optional (default=100)
+            If verbose, report performance each 'checkpoint' epochs
+
+        name : None or str, optional (default=None)
+            The name of the model used for plotting
+
+        seed : None or int, optional (default=None)
+            Random state seed
+
+        """
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.theta_init = theta_init
@@ -235,7 +317,20 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self.history.on_batch_end(self.batch, log)
 
     def fit(self, X, y):
-        """Trains model until stop condition is met."""
+        """Trains model until stop condition is met.
+        
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Training data
+
+        y : numpy array, shape (n_samples,)
+            Target values 
+
+        Returns
+        -------
+        self : returns instance of self.
+        """
         train_log = {'X': X, 'y': y}
         self._begin_training(train_log)        
 
@@ -268,7 +363,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
         self._end_training()
         return self
     
-    def decision(self, X):
+    def _decision(self, X):
         """Computes decision based upon data."""
         if X.shape[1] == len(self.theta):
             d = X.dot(self.theta)
@@ -282,20 +377,52 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin):
     def _predict(self, X):
         """Private predict method that computes predictions with current weights."""
         assert X.shape[1] == len(self.theta), "Shape of X is incompatible with shape of theta"
-        y_pred = self.decision(X)
+        y_pred = self._decision(X)
         return y_pred
 
     def predict(self, X):
-        """Public predict method that computes predictions on 'best' weights."""
+        """Predicts output as a linear function of inputs and final parameters.
+        
+        This method produces predictions using the linear regression hypothesis
+        function. It is overridden by classification subclasses.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            Feature matrix for which predictions will be rendered.
+
+        Returns
+        -------
+        array, shape(n_samples,)
+            Returns the linear regression prediction.        
+        """
         if self.coef is None:
             raise Exception("Unable to predict. Model has not been fit.")        
         self._validate_data(X)
         if X.shape[1] != len(self.coef):
             raise ValueError("Shape of X is incompatible with shape of theta")        
-        y_pred = self.decision(X)
+        y_pred = self._decision(X)
         return y_pred
 
     def score(self, X, y):
+        """Computes a score for the current model, given inputs X and output y.
+
+        The score uses the class associated the metric parameter from class
+        instantiation.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Feature matrix for which predictions will be rendered.
+
+        y : numpy array, shape (n_samples,)
+            Target values             
+
+        Returns
+        -------
+        float
+            Returns the score for the designated metric.
+        """
         if self.coef is None:
             raise Exception("Unable to compute score. Model has not been fit.")
         self._validate_data(X, y)
