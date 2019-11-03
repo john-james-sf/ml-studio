@@ -37,13 +37,13 @@ class LogisticRegression(GradientDescent):
 
     def _predict(self, X):
         """Computes sigmoid prediction during training."""        
-        z = self.decision(X) 
+        z = self._decision(X) 
         y_pred = sigmoid(z)
         return y_pred
 
     def predict(self, X):
         """Computes binary prediction. Public class used on unseen data."""        
-        z = self.decision(X) 
+        z = self._decision(X) 
         s = sigmoid(z)
         y_pred = np.round(s).astype(int)        
         return y_pred
@@ -73,12 +73,12 @@ class MultinomialLogisticRegression(GradientDescent):
         self.theta = np.random.uniform(-limit, limit, (n_features, n_outputs))         
 
     def _predict(self, X):        
-        z = self.decision(X)
+        z = self._decision(X)
         y_pred = softmax(z)        
         return y_pred
 
     def predict(self, X):        
-        z = self.decision(X)
+        z = self._decision(X)
         s = softmax(z)        
         y_pred = np.argmax(s, axis=1)        
         return y_pred
