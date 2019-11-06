@@ -5,6 +5,8 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
+from ml_studio.utils.data_manager import decode
+
 class Cost(ABC):
 
     @abstractmethod
@@ -15,6 +17,9 @@ class Cost(ABC):
     def gradient(self):
         pass
 
+# --------------------------------------------------------------------------- #
+#                      REGRESSION COST FUNCTIONS                              #
+# --------------------------------------------------------------------------- #
 class Quadratic(Cost):
     """Computes cost."""
 
@@ -30,9 +35,22 @@ class Quadratic(Cost):
     def gradient(self, X, y, y_pred):
         """Computes quadratic costs gradient with respect to weights"""
         n_samples = y.shape[0]
-        dW = 1/n_samples * (y_pred-y).dot(X)
-        return(dW)
+        y = np.atleast_2d(y).reshape(-1,1)
+        y_pred = np.atleast_2d(y_pred).reshape(-1,1)
+        dW = 1/n_samples * X.T.dot(y_pred-y)
+        return(dW)   
 
+class RegressionCostFunctions():
+    """Returns the requested cost class."""
+
+    def __call__(self,cost='quadratic'):
+
+        dispatcher = {'quadratic': Quadratic()}
+        return(dispatcher.get(cost, False))
+
+# --------------------------------------------------------------------------- #
+#               BINARY CLASSIFICATION COST FUNCTIONS                          #
+# --------------------------------------------------------------------------- #
 class BinaryCrossEntropy(Cost):
     """Computes cost and gradient w.r.t. weights and bias."""
     
@@ -49,10 +67,23 @@ class BinaryCrossEntropy(Cost):
 
     def gradient(self, X, y, y_pred):
         """Computes binary cross entropy (w/sigmoid) gradient w.r.t. weights."""
+        y = np.atleast_2d(y).reshape(-1,1)
+        y_pred = np.atleast_2d(y_pred).reshape(-1,1)
         n_samples = y.shape[0]
         dW = 1/n_samples * X.T.dot(y_pred-y)
         return(dW)
 
+class BinaryClassificationCostFunctions():
+    """Returns the requested cost class."""
+
+    def __call__(self,cost='binary_cross_entropy'):
+
+        dispatcher = {'binary_cross_entropy': BinaryCrossEntropy()}
+        return(dispatcher.get(cost, False))        
+
+# --------------------------------------------------------------------------- #
+#                MULTI CLASSIFICATION COST FUNCTIONS                          #
+# --------------------------------------------------------------------------- #
 class CategoricalCrossEntropy(Cost):
     """Computes softmax cross entropy (w/softmax) cost and gradient w.r.t. parameters."""
     
@@ -63,31 +94,31 @@ class CategoricalCrossEntropy(Cost):
         """Computes cross entropy (w/softmax) costs"""
         n_samples = y.shape[0]
         # Convert y to integer if one-hot encoded
-        if isinstance(y, np.ndarray) and len(y.shape)>1:
-            if y.shape[1] > 1:
-                y = y.argmax(axis=1)
+        if len(y.shape)>1:
+            y = decode(y, axis=1)
         # Prevent division by zero. Note y is NOT one-hot encoded
         y_pred = np.clip(y_pred, 1e-15, 1-1e-15)        
         log_likelihood = -np.log(y_pred[range(n_samples),y])
-        J = np.sum(log_likelihood) / n_samples
+        J = np.sum(log_likelihood) / n_samples        
         return(J)
 
     def gradient(self, X, y, y_pred):
         """Computes cross entropy (w/softmax) gradient w.r.t. parameters."""       
         n_samples = y.shape[0] 
+        # Convert y to integer if one-hot encoded
+        if len(y.shape) > 1:
+            y = decode(y, axis=1)
         # Prevent division by zero
         y_pred = np.clip(y_pred, 1e-15, 1-1e-15)
         y_pred[np.arange(n_samples), y] -= 1
         dy_pred = y_pred/n_samples
-        dW = X.T.dot(dy_pred)        
-        return dW        
-
-class CostFunctions():
+        dW = X.T.dot(dy_pred)              
+        return dW     
+        
+class MultiClassificationCostFunctions():
     """Returns the requested cost class."""
 
-    def __call__(self,cost='quadratic'):
+    def __call__(self,cost='categorical_cross_entropy'):
 
-        dispatcher = {'quadratic': Quadratic(),
-                      'binary_crossentropy': BinaryCrossEntropy(),
-                      'categorical_crossentropy': CategoricalCrossEntropy()}
-        return(dispatcher.get(cost))
+        dispatcher = {'categorical_cross_entropy': CategoricalCrossEntropy()}
+        return(dispatcher.get(cost, False))                

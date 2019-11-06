@@ -12,70 +12,188 @@ from collections import deque
 import datetime
 import numpy as np
 import types
+# --------------------------------------------------------------------------- #
+#                             CALLBACK LIST                                   #
+# --------------------------------------------------------------------------- #
+class CallbackList(object):
+    """Container of callbacks.
 
-from ml_studio.supervised_learning.training.metrics import Scorer
+    Parameters
+    ----------
+    callbacks : list
+        List of 'Callback' instances.        
+    """
+
+    def __init__(self, callbacks=None):
+        callbacks = callbacks or []
+        self.callbacks = [c for c in callbacks]        
+        self.params = {}
+        self.model = None
+
+    def append(self, callback):
+        """Appends callback to list of callbacks.
+        
+        Parameters
+        ----------
+        callback : Callback instance            
+        """
+        self.callbacks.append(callback)
+
+    def set_params(self, params):
+        """Sets the parameters variable, and in list of callbacks.
+        
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing model parameters
+        """
+        self.params = params
+        for callback in self.callbacks:
+            callback.set_params(params)
+
+    def set_model(self, model):
+        """Sets the model variable, and in the list of callbacks.
+        
+        Parameters
+        ----------
+        model : GradientDescent or subclass instance 
+        
+        """
+        self.model = model
+        for callback in self.callbacks:
+            callback.set_model(model)
+
+    def on_batch_begin(self, batch, logs=None):
+        """Calls the `on_batch_begin` methods of its callbacks.
+
+        Parameters
+        ----------
+        batch : int
+            Current training batch
+
+        logs: dict
+            Currently no data is set to this parameter for this class. This may
+            change in the future.
+        """
+        logs = logs or {}
+        for callback in self.callbacks:
+            callback.on_batch_begin(batch, logs)
+
+    def on_batch_end(self, batch, logs=None):
+        """Calls the `on_batch_end` methods of its callbacks.
+        
+        Parameters
+        ----------
+        batch : int
+            Current training batch
+        
+        logs: dict
+            Dictionary containing the data, cost, batch size and current weights
+        """
+        logs = logs or {}
+        for callback in self.callbacks:
+            callback.on_batch_end(batch, logs)
+
+    def on_epoch_begin(self, epoch, logs=None):
+        """Calls the `on_epoch_begin` methods of its callbacks.
+
+        Parameters
+        ----------        
+        epoch: integer
+            Current training epoch
+
+        logs: dict
+            Currently no data is passed to this argument for this method
+            but that may change in the future.
+        """
+        logs = logs or {}
+        for callback in self.callbacks:
+            callback.on_epoch_begin(epoch, logs)
+
+    def on_epoch_end(self, epoch, logs=None):
+        """Calls the `on_epoch_end` methods of its callbacks.
+        This function should only be called during train mode.
+
+        Parameters
+        ----------
+        epoch: int
+            Current training epoch
+        
+        logs: dict
+            Metric results for this training epoch, and for the
+            validation epoch if validation is performed.
+        """
+        logs = logs or {}
+        for callback in self.callbacks:
+            callback.on_epoch_end(epoch, logs)
+
+    def on_train_begin(self, logs=None):
+        """Calls the `on_train_begin` methods of its callbacks.
+
+        Parameters
+        ----------
+        logs: dict
+            Currently no data is passed to this argument for this method
+                but that may change in the future.
+        """
+        for callback in self.callbacks:
+            callback.on_train_begin(logs)
+
+    def on_train_end(self, logs=None):
+        """Calls the `on_train_end` methods of its callbacks.
+
+        Parameters
+        ----------
+        logs: dict
+            Currently no data is passed to this argument for this method
+                but that may change in the future.
+        """
+        for callback in self.callbacks:
+            callback.on_train_end(logs)
+
+    def __iter__(self):
+        return iter(self.callbacks)
 
 # --------------------------------------------------------------------------- #
 #                             CALLBACK CLASS                                  #
 # --------------------------------------------------------------------------- #
-class Callback():
+class Callback(object):
     """Abstract base class used to build new callbacks.
 
-    Properties
-    ----------
-        params: dict. Training parameters
-            (eg. batch size, number of epochs...).
-    """
+    The methods beginning with 'on_' should be overridden by subclasses.
 
+    Attributes
+    ----------
+    params: dict
+        Training parameters (eg. batch size, number of epochs...)
+        
+    model: instance of `GradientDescent` or subclass.
+        Reference of the model being trained.
+    """
     def __init__(self):
         self.params = None
+        self.model = None
 
     def set_params(self, params):
         self.params = params
 
+    def set_model(self, model):
+        self.model = model
 
-# --------------------------------------------------------------------------- #
-#                             HISTORY CLASS                                   #
-# --------------------------------------------------------------------------- #
-class History(Callback):
-    """Records history and metrics for training by epoch.
-    
-    Arguments
-    ---------
-        The callback is automatically attached to all model objects. The 
-        Log is returned by the 'fit' method of models.        
-    """
+    def on_batch_begin(self, batch, logs=None):
+        pass
+
+    def on_batch_end(self, batch, logs=None):   
+        pass
+
+    def on_epoch_begin(self, epoch, logs=None):
+        pass
+
+    def on_epoch_end(self, epoch, logs=None):
+        pass
+
     def on_train_begin(self, logs=None):
-        self.total_epochs = 0
-        self.total_batches = 0
-        self.start = datetime.datetime.now() 
-        self.epoch_log = {}
-        self.batch_log = {}
+        pass
 
-    def on_train_end(self, logs=None):        
-        self.end = datetime.datetime.now()
-        self.duration = (self.end-self.start).total_seconds() 
-
-    def on_batch_end(self, batch, logs=None):
-        self.total_batches = batch
-        for k,v in logs.items():
-            self.batch_log.setdefault(k,[]).append(v)        
-
-    def on_epoch_end(self, epoch, logs=None):
-        logs = logs or {}
-        self.total_epochs = epoch
-        for k,v in logs.items():
-            self.epoch_log.setdefault(k,[]).append(v)
-
-# --------------------------------------------------------------------------- #
-#                            PROGRESS CLASS                                   #
-# --------------------------------------------------------------------------- #              
-class Progress(Callback):
-
-    def on_epoch_end(self, epoch, logs=None):
-        items_to_report = ('epoch', 'train', 'val')
-        logs = {k:v for k,v in logs.items() if k.startswith(items_to_report)}
-        progress = "".join(str(key) + ': ' + str(round(value,4)) + ' ' \
-            for key, value in logs.items())
-        print(progress)
-
+    def on_train_end(self, logs=None):
+        pass

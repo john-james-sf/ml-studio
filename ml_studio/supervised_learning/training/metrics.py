@@ -5,7 +5,9 @@ from abc import ABC
 import math
 import numpy as np
 import sklearn.metrics
-# TODO: Add F1 and other 'stateful' scores
+
+from ml_studio.utils.data_manager import decode
+
 class Metric(ABC):
     """Abstract base class for all metrics."""
 
@@ -19,7 +21,9 @@ class Metric(ABC):
                                   "Must instantiate the class associated "
                                   "with the required.")
 
-
+# --------------------------------------------------------------------------- #
+#                           REGRESSION METRICS                                #
+# --------------------------------------------------------------------------- #
 class SSE(Metric):
     """Computes sum squared error given data and parameters"""
 
@@ -234,6 +238,26 @@ class MEDAE(Metric):
         return np.median(np.abs(y_pred-y))
 
 
+class RegressionMetrics:
+    """Returns the requested score class."""
+
+    def __call__(self, metric='neg_mean_squared_error'):
+
+        dispatcher = {'r2': R2(),
+                      'var_explained': VarExplained(),
+                      'mean_absolute_error': MAE(),
+                      'mean_squared_error': MSE(),                      
+                      'neg_mean_squared_error': NMSE(),
+                      'root_mean_squared_error': RMSE(),
+                      'neg_root_mean_squared_error': NRMSE(),
+                      'mean_squared_log_error': MSLE(),
+                      'root_mean_squared_log_error': RMSLE(),
+                      'median_absolute_error': MEDAE()}
+        return(dispatcher.get(metric,False))
+
+# --------------------------------------------------------------------------- #
+#                       CLASSIFICATION METRICS                                #
+# --------------------------------------------------------------------------- #
 class Accuracy(Metric):
     """Computes accuracy."""
 
@@ -248,26 +272,22 @@ class Accuracy(Metric):
         self.precision_factor = 1
     
     def __call__(self, y, y_pred):
-        # If y_pred is a probability distribution, convert to class prediction
-        if len(y_pred.shape)>1:
-            if y_pred.shape[1]>1:
-                y_pred = np.argmax(y_pred, axis=1)        
-        return np.mean(np.equal(y, y_pred), axis=-1)  
+        # If y and y_pred are probability distributions, convert to class prediction
+        if len(y.shape) > 1:
+            y = decode(y)
+        
+        if len(y_pred.shape) > 1:
+            y_pred = decode(y_pred)
 
-class Scorer:
+        y = np.atleast_2d(y).reshape(-1,1)
+        y_pred = np.atleast_2d(y_pred).reshape(-1,1)
+
+        return np.mean(np.equal(y[0], y_pred[0]), axis=-1) 
+
+class ClassificationMetrics:
     """Returns the requested score class."""
 
-    def __call__(self, metric='neg_mean_squared_error'):
+    def __call__(self, metric='accuracy'):
 
-        dispatcher = {'r2': R2(),
-                      'var_explained': VarExplained(),
-                      'mean_absolute_error': MAE(),
-                      'mean_squared_error': MSE(),                      
-                      'neg_mean_squared_error': NMSE(),
-                      'root_mean_squared_error': RMSE(),
-                      'neg_root_mean_squared_error': NRMSE(),
-                      'mean_squared_log_error': MSLE(),
-                      'root_mean_squared_log_error': RMSLE(),
-                      'median_absolute_error': MEDAE(),
-                      'accuracy': Accuracy()}
+        dispatcher = {'accuracy': Accuracy()}
         return(dispatcher.get(metric,False))

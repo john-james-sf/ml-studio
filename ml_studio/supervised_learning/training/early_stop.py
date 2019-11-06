@@ -7,7 +7,7 @@ from collections import deque
 import numpy as np
 
 from ml_studio.supervised_learning.training.callbacks import Callback
-from ml_studio.supervised_learning.training.metrics import Scorer
+from ml_studio.supervised_learning.training.metrics import RegressionMetrics
 
 # --------------------------------------------------------------------------- #
 #                          EARLY STOP PERFORMANCE                             #
@@ -15,64 +15,89 @@ from ml_studio.supervised_learning.training.metrics import Scorer
 
 class EarlyStop(Callback):
     """Abstact base class for all early stopping callbacks."""
-    def __init__(self, val_size=0.2):
-        self.val_size = val_size
+
+    def __init__(self):
+        super(EarlyStop, self).__init__()        
+        self.epochs_ = 0
         self.converged = False
-        self.best_weights = None
+        self.best_weights_ = None
+
+class EarlyStopPlateau(EarlyStop):
+    """Stops training if performance hasn't improved.
+    
+    Stops training if performance hasn't improved. Improvement is measured 
+    with a 'tolerance', so that performance must improve by a factor greater
+    than the tolerance, to be considered improved. A 'patience' parameter
+    indicates how long non-performance has to occur, in epochs, to stop
+    training.
+
+    Parameters
+    ----------
+    metric : str, optional (default='score')
+        Specifies which metric to use when evaluating performance
+
+        'train_cost': Training set costs
+        'train_score': Training set scores
+        'val_cost': Validation set costs
+        'val_score': Validation set scores
+
+    val_size : None, float, optional (default=0.2)
+        The proportion of the data to allocate to a validation set. If
+        metric is 'score', val_size must be in range (0,1)
+
+    precision : float, optional (default=0.01)
+        The factor by which performance is considered to have improved. For 
+        instance, a value of 0.01 means that performance must have improved
+        by a factor of 1% to be considered an improvement.
+
+    patience : int, optional (default=5)
+        The number of consecutive epochs of non-improvement that would 
+        stop training.    
+    """
+
+    def __init__(self, metric='val_score', val_size=0.2, precision=0.01, patience=5):
+        super(EarlyStopPlateau, self).__init__()
+        self.metric = metric
+        self.val_size = val_size        
+        self.precision = precision
+        self.patience = patience
+        # Instance variables
+        self._iter_no_improvement = 0
+        self._better = None    
+        # Attributes
+        self.best_performance_ = None
+        
 
     def _validate(self):
         if not isinstance(self.val_size, (int,float)):
-            raise TypeError('val_size must be an integer or float')
-
-    def on_train_begin(self, logs=None):        
-        self.converged = False
-
-
-class EarlyStopPlateau(EarlyStop):
-    """Stops training if performance hasn't improved."""
-
-    def __init__(self, val_size=0.2, precision=0.01, patience=5):
-        super(EarlyStopPlateau, self).__init__(val_size=val_size)
-        self.precision = precision
-        self.patience = patience
-        self._iter_no_improvement = 0
-        self._best_performance = None
-        self.better = None    
-        self.metric = None  
-
-    def _validate(self):
-        super(EarlyStopPlateau, self)._validate()
-        if self.metric:
-            if not isinstance(self.metric, str):
-                raise TypeError("metric must be None or a valid string.")
-            if self.metric not in ('r2',
-                                    'var_explained',
-                                    'mean_absolute_error',
-                                    'mean_squared_error',
-                                    'neg_mean_squared_error',
-                                    'root_mean_squared_error',
-                                    'neg_root_mean_squared_error',
-                                    'mean_squared_log_error',
-                                    'root_mean_squared_log_error',
-                                    'median_absolute_error',
-                                    'accuracy',
-                                    'categorical_accuracy'):
-                raise ValueError("Metric %s is not support. " % self.metric)
-        if not isinstance(self.precision, float):
-            raise TypeError("precision must be a float between -1 and 1")
-        if abs(self.precision) >= 1:
-            raise ValueError("precision must have an absolute value less than 1")
-        if not isinstance(self.patience, (int)):
+            raise TypeError("val_size must be an int=0, or a float.")         
+        elif self.metric not in ['train_cost', 'train_score', 'val_cost', 'val_score']:
+            raise ValueError("metric must in ['train_cost', 'train_score', 'val_cost', 'val_score']")
+        elif 'val' in self.metric and (self.val_size == 0 or self.val_size is None):
+            raise ValueError("val_size must be in range (0,0.5] if metric is 'score'.")
+        elif not isinstance(self.precision, float):
+            raise TypeError("precision must be a float.")
+        elif self.precision < 0 or self.precision > 1:
+            raise ValueError("precision must be between 0 and 1. A good default is 0.01 or 1%.")
+        elif not isinstance(self.patience, (int)):
             raise TypeError("patience must be an integer.")
-        if self.val_size is not None:
-            if not isinstance(self.val_size, (int,float)):
-                raise ValueError("val_size must be an int or a float.")
+        elif 'score' in self.metric and self.model.metric is None:
+            raise ValueError("'score' has been selected for evaluation; however"
+                             " no scoring metric has been provided for the model. "
+                             "Either change the metric in the EarlyStop class to "
+                             "'cost', or add a metric to the model.")
+
 
     def on_train_begin(self, logs=None):        
-        """Initializes performance and improvement function."""
+        """Sets key variables at beginning of training.
+        
+        Parameters
+        ----------
+        log : dict
+            Contains no information
+        """
         super(EarlyStopPlateau, self).on_train_begin()
         logs = logs or {}
-        self.metric = logs.get('metric')
         self._validate()
         # We evaluate improvement against the prior metric plus or minus a
         # margin given by precision * the metric. Whether we add or subtract the margin
@@ -82,84 +107,104 @@ class EarlyStopPlateau(EarlyStop):
         # margin and 1 if we add it. The following logic extracts the precision
         # factor for the metric and multiplies it by the precision for the 
         # improvement calculation.
-        if self.metric:
-            scorer = Scorer()(metric=self.metric)
-            self.better = scorer.better
-            self.best_performance = scorer.worst
+        if 'score' in self.metric:
+            scorer = self.model.scorer
+            self._better = scorer.better
+            self.best_performance_ = scorer.worst
             self.precision *= scorer.precision_factor
         else:
-            self.better = np.less
-            self.best_performance = np.Inf
+            self._better = np.less
+            self.best_performance_ = np.Inf
             self.precision *= -1 # Bit always -1 since it improves negatively
 
     def on_epoch_end(self, epoch, logs=None):
+        """Determines whether convergence has been achieved.
+
+        Parameters
+        ----------
+        epoch : int
+            The current epoch number
+
+        logs : dict
+            Dictionary containing training cost, (and if metric=score, 
+            validation cost)  
+
+        Returns
+        -------
+        Bool if True convergence has been achieved. 
+
+        """
         logs = logs or {}
         # Obtain current cost or score
-        if self.metric is None:
-            if self.val_size > 0:
-                current = logs.get('val_cost') 
-            else:
-                current = logs.get('train_cost') 
-        else:
-            if self.val_size > 0:
-                current = logs.get('val_score') 
-            else:
-                current = logs.get('train_score')  
+        current = logs.get(self.metric)
+
         # Handle the first iteration
-        if self.best_performance in [np.Inf,-np.Inf]:
+        if self.best_performance_ in [np.Inf,-np.Inf]:
             self._iter_no_improvement = 0
-            self.best_performance = current
-            self.best_weights = logs.get('theta')
+            self.best_performance_ = current
+            self.best_weights_ = logs.get('theta')
             self.converged = False
         # Evaluate performance
-        elif self.better(current, 
-                             (self.best_performance+self.best_performance \
+        elif self._better(current, 
+                             (self.best_performance_+self.best_performance_ \
                                  *self.precision)):            
             self._iter_no_improvement = 0
-            self.best_performance = current
-            self.best_weights = logs.get('theta')
+            self.best_performance_ = current
+            self.best_weights_ = logs.get('theta')
             self.converged=False
         else:
             self._iter_no_improvement += 1
             if self._iter_no_improvement == self.patience:
-                self.converged = True                                 
+                self.converged = True            
+        self.model.converged = self.converged                     
 
 # --------------------------------------------------------------------------- #
 #                      EARLY STOP GENERALIZATION LOSS                         #
 # --------------------------------------------------------------------------- #
 class EarlyStopGeneralizationLoss(EarlyStop):
-    """Early stopping criteria based upon generalization cost."""
+    """Early stopping criteria based upon generalization cost.
+
+    This technique is proposed by Lutz Prechelt in his paper 'Early Stopping
+    - but when?' Training stops when generalization loss exceeds a certain
+    threshold.
+
+    Parameters
+    ----------
+    val_size : float, optional (default=0.2)
+        The proportion of the data to allocate to a validation set. Must
+        be in range (0,1)
+
+    threshold : int, optional (default=2)
+        The threshold of generalization loss, above which training stops.
+    
+    """
 
     def __init__(self, val_size=0.2, threshold=2):
-        super(EarlyStopGeneralizationLoss,self).__init__(val_size=val_size)        
+        super(EarlyStopGeneralizationLoss,self).__init__()        
+        self.val_size = val_size
         self.threshold=threshold
         self.best_val_cost = np.Inf    
-        self.best_weights = None
 
     def _validate(self):
-        if self.val_size is not None:
-            if not isinstance(self.val_size, (int, float)):
-                raise TypeError("val_size must be a float.")
-            if self.val_size == 0:
-                raise ValueError("val_size must be greater than zero")
+        if not isinstance(self.val_size, float):
+            raise TypeError("val_size must be a float.")
+        if not isinstance(self.threshold,(int, float)):
+            raise TypeError("threshold must be an integer or float.")
 
     def on_train_begin(self, logs=None):
         super(EarlyStopGeneralizationLoss, self).on_train_begin()
         logs = logs or {}        
         self._validate()
        
-
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
         val_cost = logs.get('val_cost')
-        if not isinstance(val_cost, (int,float)):
-            msg = str(val_cost) + " must be a float"
-            raise TypeError(msg)
         gl = 100 * ((val_cost/self.best_val_cost)-1)        
         if val_cost < self.best_val_cost:
             self.best_val_cost = val_cost
             self.best_weights = logs.get('theta')
         self.converged = (gl > self.threshold)
+        self.model.converged = self.converged
 
 # --------------------------------------------------------------------------- #
 #                      EARLY STOP PROGRESS                                    #
@@ -168,7 +213,8 @@ class EarlyStopProgress(EarlyStop):
     """Early stopping criteria based upon progress of training."""
 
     def __init__(self, val_size=0.2, threshold=0.25, strip_size=5):
-        super(EarlyStopProgress,self).__init__(val_size=val_size)        
+        super(EarlyStopProgress,self).__init__()        
+        self.val_size = val_size
         self.threshold = threshold
         self.strip_size = strip_size
         self.best_val_cost = np.Inf
@@ -216,6 +262,7 @@ class EarlyStopProgress(EarlyStop):
             else:
                 gl = self._generalization_loss(logs)
                 self.converged = ((gl/progress) > self.threshold)
+        self.model.converged = self.converged
 
 # --------------------------------------------------------------------------- #
 #                         EARLY STOP STRIP                                    #
@@ -224,7 +271,8 @@ class EarlyStopStrips(EarlyStop):
     """Stop when validation error has not improved over 'patience' successive strips."""
 
     def __init__(self, val_size=0.2, strip_size=5, patience=5):
-        super(EarlyStopStrips,self).__init__(val_size=val_size)        
+        super(EarlyStopStrips,self).__init__()        
+        self.val_size = val_size
         self.strip_size = strip_size
         self.strip = deque([], strip_size)
         self.patience = patience
@@ -256,7 +304,11 @@ class EarlyStopStrips(EarlyStop):
                 self._strips_no_improvement = 0
             if self._strips_no_improvement == self.patience:
                 self.converged = True
+        self.model.converged = self.converged
    
 
 
 
+
+
+# %%

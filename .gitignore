@@ -28,6 +28,7 @@ wheels/
 # Ignore directory
 notes/
 tests/test_visuals/test_figures
+development_lab/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
