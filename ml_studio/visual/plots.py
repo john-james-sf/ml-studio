@@ -10,7 +10,7 @@ import seaborn as sns
 import warnings
 
 from ml_studio.supervised_learning.training.gradient_descent import GradientDescent
-from ml_studio.supervised_learning.training.metrics import Scorer
+from ml_studio.supervised_learning.training.metrics import RegressionMetrics
 from ml_studio.utils.misc import proper
 from ml_studio.utils.file_manager import save_fig
 
@@ -119,7 +119,7 @@ def _plot_train_score(model, title=None, figsize=(12,4)):
             'Score': model.history.epoch_log['train_score']}
     df = pd.DataFrame(data=d)
     # Extract row with best score for scatterplot    
-    if Scorer()(model.metric).mode == 'max': 
+    if RegressionMetrics()(model.metric).mode == 'max': 
         best_score = df.loc[df.Score.idxmax()]
     else:
         best_score = df.loc[df.Score.idxmin()]    
@@ -153,7 +153,7 @@ def _plot_train_val_score(model, title=None, figsize=(12,4)):
                                                 'Validation'],
                 var_name=['Dataset'], value_name='Score')  
     # Extract row with best score by dataset for scatterplot
-    if Scorer()(model.metric).mode == 'max': 
+    if RegressionMetrics()(model.metric).mode == 'max': 
         best_score = df.loc[df.groupby('Dataset').Score.idxmax()]
     else:
         best_score = df.loc[df.groupby('Dataset').Score.idxmin()]    

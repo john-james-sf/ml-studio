@@ -8,12 +8,15 @@ from sklearn import datasets
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 
-from ml_studio.supervised_learning.training.callbacks import History
+from ml_studio.supervised_learning.training.monitor import History
 from ml_studio.supervised_learning.training.gradient_descent import GradientDescent
 from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.supervised_learning.regression import LassoRegression
 from ml_studio.supervised_learning.regression import RidgeRegression
 from ml_studio.supervised_learning.regression import ElasticNetRegression
+
+from ml_studio.supervised_learning.training.cost import RegressionCostFunctions
+from ml_studio.supervised_learning.training.metrics import RegressionMetrics
 
 from ml_studio.supervised_learning.training.learning_rate_schedules import TimeDecay
 from ml_studio.supervised_learning.training.learning_rate_schedules import StepDecay
@@ -48,7 +51,7 @@ def get_binary_classification_data():
 
 @fixture(scope="session")
 def get_multinomial_classification_data():
-    X, y = datasets.load_wine(return_X_y=True)
+    X, y = datasets.load_iris(return_X_y=True)
     scaler = StandardScaler()    
     X = scaler.fit_transform(X)
     return X, y
@@ -60,12 +63,11 @@ def get_regression_data_w_validation(get_regression_data):
         X, y, test_size=0.33, random_state=50)
     return X_train, X_test, y_train, y_test
 
-@fixture(scope='session', params=[GradientDescent,
-                                  LinearRegression,
+@fixture(scope='session', params=[LinearRegression,
                                   LassoRegression,
                                   RidgeRegression,
                                   ElasticNetRegression])
-def estimator(request):
+def regression(request):
     return request.param
     
 @fixture(scope='session')
@@ -82,6 +84,40 @@ def fit_multiple_models(get_regression_data):
                  'Mini-batch Gradient Descent': mgd.fit(X,y)}
         return models
 
+@fixture(scope='session', params=['mean_absolute_error',
+                                  'mean_squared_error',
+                                  'root_mean_squared_error',
+                                  'median_absolute_error',
+                                  'r2',
+                                  'var_explained',
+                                  'neg_mean_squared_error',
+                                  'neg_root_mean_squared_error'])                                  
+def models_by_metric(request):
+    model = LinearRegression(metric=request.param)
+    model.cost_function = RegressionCostFunctions()(cost='quadratic')
+    model.scorer = RegressionMetrics()(metric=request.param)
+    return model        
+
+@fixture(scope='session', params=['mean_absolute_error',
+                                  'mean_squared_error',
+                                  'root_mean_squared_error',
+                                  'median_absolute_error'])                                  
+def model_lower_is_better(request):
+    model = LinearRegression(metric=request.param)
+    model.cost_function = RegressionCostFunctions()(cost='quadratic')
+    model.scorer = RegressionMetrics()(metric=request.param)
+    return model
+
+@fixture(scope='session', params=['r2',
+                                  'var_explained',
+                                  'neg_mean_squared_error',
+                                  'neg_root_mean_squared_error'])                                  
+def model_higher_is_better(request):
+    model = LinearRegression(metric=request.param)
+    model.cost_function = RegressionCostFunctions()(cost='quadratic')
+    model.scorer = RegressionMetrics()(metric=request.param)
+    return model
+
 @fixture(scope='session', params=[TimeDecay(),
                                   StepDecay(),
                                   NaturalExponentialDecay(),
@@ -90,6 +126,13 @@ def fit_multiple_models(get_regression_data):
                                   PolynomialDecay(),
                                   Adaptive()])
 def learning_rate_schedules(request):
+    return request.param
+
+@fixture(scope='session', params=['train_cost',
+                                  'train_score',
+                                  'val_cost',
+                                  'val_score'])
+def early_stop_metric(request):
     return request.param
 
 @fixture(scope='session', params=['r2',
@@ -116,13 +159,6 @@ def regression_metric_greater_is_better(request):
                                   'median_absolute_error'])
 def regression_metric_lower_is_better(request):
     return request.param    
-
-
-@fixture(scope='session', params=[EarlyStopPlateau(precision=0.1, patience=2),
-                                  EarlyStopGeneralizationLoss(threshold=1.5),
-                                  EarlyStopProgress()])
-def early_stop(request):
-    return request.param
 
 @fixture(scope='session', params=np.linspace(0.005,.01,5))
 def get_learning_rate(request):
@@ -151,7 +187,7 @@ def predict_y():
     X, y = datasets.load_boston(return_X_y=True)
     scaler = StandardScaler()    
     X = scaler.fit_transform(X)
-    gd = GradientDescent(epochs=5)
+    gd = LinearRegression(epochs=5)
     gd.fit(X, y)
     y_pred = gd.predict(X)
     return y, y_pred

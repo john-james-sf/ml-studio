@@ -12,7 +12,7 @@ from ml_studio.supervised_learning.training.early_stop import EarlyStopPlateau
 from ml_studio.supervised_learning.training.early_stop import EarlyStopGeneralizationLoss
 from ml_studio.supervised_learning.training.early_stop import EarlyStopProgress
 from ml_studio.supervised_learning.training.early_stop import EarlyStopStrips
-from ml_studio.supervised_learning.training.metrics import Scorer
+from ml_studio.supervised_learning.training.metrics import RegressionMetrics
 from ml_studio.supervised_learning.regression import LinearRegression
 # --------------------------------------------------------------------------- #
 #                        TEST EARLY STOP PLATEAU                              #
@@ -26,58 +26,71 @@ class EarlyStopPlateauTests:
         stop = EarlyStopPlateau()
         assert stop.val_size == 0.2, "val_size not correct"
         assert stop.precision == 0.01, "precision not correct"
-        assert stop.better is None, "better is not None on instantiation"
-        assert stop.metric is None, "metric is not None on instantiation"
+        assert stop.metric == 'val_score', "metric is initiated correctly"
         assert stop.converged is False, "converged is not False on instantiation"
-        assert stop.best_weights is None, "best weights is not None on instantiation"
+        assert stop.best_weights_ is None, "best weights is not None on instantiation"
 
     @mark.early_stop
     @mark.early_stop_plateau
+    @mark.early_stop_plateau_validation
     def test_early_stop_plateau_validation(self):
         with pytest.raises(TypeError):
             stop = EarlyStopPlateau(val_size='x')
+            stop.model = LinearRegression(metric=None)
             stop.on_train_begin({'metric': None})
-        with pytest.raises(TypeError):
-            stop = EarlyStopPlateau()
-            stop.on_train_begin({"metric": 9})
         with pytest.raises(ValueError):
-            stop = EarlyStopPlateau()
-            stop.on_train_begin({"metric": 'x'})
+            stop = EarlyStopPlateau(metric=9)
+            stop.model = LinearRegression(metric=None)
+            stop.on_train_begin()
+        with pytest.raises(ValueError):
+            stop = EarlyStopPlateau(metric='x')
+            stop.model = LinearRegression(metric=None)
+            stop.on_train_begin()
         with pytest.raises(TypeError):
             stop = EarlyStopPlateau(precision='x')
+            stop.model = LinearRegression(metric=None)
             stop.on_train_begin()              
         with pytest.raises(TypeError):
             stop = EarlyStopPlateau(precision=5)
+            stop.model = LinearRegression(metric=None)
             stop.on_train_begin()
         with pytest.raises(TypeError):
             stop = EarlyStopPlateau(patience='x')
+            stop.model = LinearRegression(metric=None)
             stop.on_train_begin()         
+        with pytest.raises(ValueError):
+            stop = EarlyStopPlateau(val_size=0)
+            stop.model = LinearRegression(metric=None)
+            stop.on_train_begin()            
+        with pytest.raises(ValueError):
+            stop = EarlyStopPlateau(metric='val_score')
+            stop.model = LinearRegression(metric=None)
+            stop.on_train_begin()                        
 
     @mark.early_stop
     @mark.early_stop_plateau
     @mark.early_stop_plateau_on_train_begin
-    def test_early_stop_plateau_on_train_begin(self, regression_metric):        
-        # Test with metric
-        stop=EarlyStopPlateau()
-        stop.on_train_begin({'metric': regression_metric})
-        assert stop.metric == regression_metric, "metric not set correctly"        
-        scorer = Scorer()(metric=regression_metric)
-        assert stop.better == scorer.better, "metric better not set correctly"
-        assert stop.best_performance == scorer.worst, "metric best_performance not set correctly"
-        assert stop.precision == abs(stop.precision) * scorer.precision_factor, "precision not set correctly"
-        # Test w/o metric
-        stop=EarlyStopPlateau()
+    def test_early_stop_plateau_on_train_begin(self, models_by_metric,
+                                               early_stop_metric):        
+        # Test with score        
+        stop=EarlyStopPlateau(metric=early_stop_metric)
+        stop.model = models_by_metric
         stop.on_train_begin()
-        assert stop.metric == None, "metric not set correctly when using cost as metric"
-        assert stop.better == np.less, "better not set correctly when using cost as metric"
-        assert stop.best_performance == np.Inf, "best performance not set correctly when using cost as metric"
-        assert stop.precision < 0, "precision not set correctly when using cost as metric"
+        assert stop.metric == early_stop_metric, "metric not set correctly" 
+        if 'score' in early_stop_metric:
+            assert stop.best_performance_ == models_by_metric.scorer.worst, "metric best_performance not set correctly"
+            assert stop.precision == abs(stop.precision) * models_by_metric.scorer.precision_factor, "precision not set correctly"
+        else:
+            assert stop.best_performance_ == np.Inf, "cost best_performance not set correctly"
+            assert stop.precision < 0, "precision not set correctly"
+
 
     @mark.early_stop
     @mark.early_stop_plateau
     @mark.early_stop_plateau_on_epoch_end
-    def test_early_stop_plateau_on_epoch_end_no_metric_no_val(self):
-        stop=EarlyStopPlateau(val_size=0, precision=0.1, patience=2)
+    def test_early_stop_plateau_on_epoch_end_train_cost(self):        
+        stop=EarlyStopPlateau(metric='train_cost', val_size=0, precision=0.1, patience=2)
+        stop.model = LinearRegression(metric=None)
         stop.on_train_begin()                
         logs = [{'train_cost': 100}, {'train_cost': 99},{'train_cost': 80},
                {'train_cost': 78},{'train_cost': 77}]
@@ -89,8 +102,9 @@ class EarlyStopPlateauTests:
     @mark.early_stop
     @mark.early_stop_plateau
     @mark.early_stop_plateau_on_epoch_end
-    def test_early_stop_plateau_on_epoch_end_no_metric_w_val(self):
-        stop=EarlyStopPlateau(precision=0.1, patience=2)
+    def test_early_stop_plateau_on_epoch_end_val_cost(self):
+        stop=EarlyStopPlateau(metric='val_cost', precision=0.1, patience=2)
+        stop.model = LinearRegression(metric=None)
         stop.on_train_begin()                
         logs = [{'val_cost': 100}, {'val_cost': 99},{'val_cost': 80},
                {'val_cost': 78},{'val_cost': 77}]
@@ -102,38 +116,44 @@ class EarlyStopPlateauTests:
     @mark.early_stop
     @mark.early_stop_plateau
     @mark.early_stop_plateau_on_epoch_end
-    def test_early_stop_plateau_on_epoch_end_metric_no_val_lower_is_better(self, 
-                            regression_metric_lower_is_better):
-        stop=EarlyStopPlateau(val_size=0, precision=0.1, patience=2)
-        stop.on_train_begin({'metric': regression_metric_lower_is_better})                
+    def test_early_stop_plateau_on_epoch_end_train_scores_lower_is_better(self, 
+                            model_lower_is_better):
+        stop=EarlyStopPlateau(metric='train_score', precision=0.1, patience=2)
+        stop.model = model_lower_is_better
+        stop.model.scorer = RegressionMetrics()(metric=stop.model.metric)
+        stop.on_train_begin()                
         logs = [{'train_score': 100}, {'train_score': 99},{'train_score': 80},
                {'train_score': 78},{'train_score': 77}]
         converged = [False, False, False, False, True]
         for i in range(len(logs)):
             stop.on_epoch_end(epoch=i+1, logs=logs[i])
             assert stop.converged == converged[i], "not converging correctly"             
- 
+
     @mark.early_stop
     @mark.early_stop_plateau
     @mark.early_stop_plateau_on_epoch_end
-    def test_early_stop_plateau_on_epoch_end_metric_no_val_greater_is_better(self, 
-                            regression_metric_greater_is_better):
-        stop=EarlyStopPlateau(val_size=0, precision=0.1, patience=2)
-        stop.on_train_begin({'metric': regression_metric_greater_is_better})                
+    def test_early_stop_plateau_on_epoch_end_train_scores_higher_is_better(self, 
+                            model_higher_is_better):
+        stop=EarlyStopPlateau(metric='train_score', precision=0.1, patience=2)
+        stop.model = model_higher_is_better
+        stop.model.scorer = RegressionMetrics()(metric=stop.model.metric)
+        stop.on_train_begin()             
         logs = [{'train_score': 100}, {'train_score': 101},{'train_score': 120},
                {'train_score': 122},{'train_score': 123}]
         converged = [False, False, False, False, True]
         for i in range(len(logs)):
             stop.on_epoch_end(epoch=i+1, logs=logs[i])
-            assert stop.converged == converged[i], "not converging correctly"    
-
+            assert stop.converged == converged[i], "not converging correctly"                                  
+ 
     @mark.early_stop
     @mark.early_stop_plateau
     @mark.early_stop_plateau_on_epoch_end
-    def test_early_stop_plateau_on_epoch_end_metric_w_val_lower_is_better(self, 
-                            regression_metric_lower_is_better):
-        stop=EarlyStopPlateau(precision=0.1, patience=2)
-        stop.on_train_begin({'metric': regression_metric_lower_is_better})                
+    def test_early_stop_plateau_on_epoch_end_val_scores_lower_is_better(self, 
+                            model_lower_is_better):
+        stop=EarlyStopPlateau(metric='val_score', precision=0.1, patience=2)
+        stop.model = model_lower_is_better
+        stop.model.scorer = RegressionMetrics()(metric=stop.model.metric)
+        stop.on_train_begin()                
         logs = [{'val_score': 100}, {'val_score': 99},{'val_score': 80},
                {'val_score': 78},{'val_score': 77}]
         converged = [False, False, False, False, True]
@@ -144,10 +164,12 @@ class EarlyStopPlateauTests:
     @mark.early_stop
     @mark.early_stop_plateau
     @mark.early_stop_plateau_on_epoch_end
-    def test_early_stop_plateau_on_epoch_end_metric_w_val_greater_is_better(self, 
-                            regression_metric_greater_is_better):
+    def test_early_stop_plateau_on_epoch_end_val_scores_higher_is_better(self, 
+                            model_higher_is_better):
         stop=EarlyStopPlateau(precision=0.1, patience=2)
-        stop.on_train_begin({'metric': regression_metric_greater_is_better})                
+        stop.model = model_higher_is_better
+        stop.model.scorer = RegressionMetrics()(metric=stop.model.metric)
+        stop.on_train_begin()             
         logs = [{'val_score': 100}, {'val_score': 101},{'val_score': 120},
                {'val_score': 122},{'val_score': 123}]
         converged = [False, False, False, False, True]
@@ -163,6 +185,7 @@ class EarlyStopGeneralizationLossTests:
 
     @mark.early_stop
     @mark.early_stop_generalization_loss
+    @mark.early_stop_generalization_loss_init
     def test_early_stop_generalization_loss_init(self):    
         stop = EarlyStopGeneralizationLoss()
         assert stop.val_size == 0.2, "val_size not set correctly"
@@ -171,18 +194,21 @@ class EarlyStopGeneralizationLossTests:
 
     @mark.early_stop
     @mark.early_stop_generalization_loss
-    def test_early_stop_generalization_loss_validation(self):    
+    @mark.early_stop_generalization_loss_validation
+    def test_early_stop_generalization_loss_validation(self):
         with pytest.raises(TypeError):
-            stop = EarlyStopGeneralizationLoss(val_size='x')
+            stop = EarlyStopGeneralizationLoss(val_size='x')            
             stop.on_train_begin()
-        with pytest.raises(ValueError):
-            stop = EarlyStopGeneralizationLoss(val_size=0)
-            stop.on_train_begin()
+        with pytest.raises(TypeError):
+            stop = EarlyStopGeneralizationLoss(threshold='x')            
+            stop.on_train_begin()        
 
     @mark.early_stop
     @mark.early_stop_generalization_loss
+    @mark.early_stop_generalization_loss_on_epoch_end
     def test_early_stop_generalization_loss_on_epoch_end(self):
         stop = EarlyStopGeneralizationLoss()
+        stop.model = LinearRegression()
         logs = [{'val_cost': 100,'theta': np.random.rand(4)}, 
                 {'val_cost': 101,'theta': np.random.rand(4)},
                 {'val_cost': 120,'theta': np.random.rand(4)}]
@@ -200,6 +226,7 @@ class EarlyStopProgressTests:
 
     @mark.early_stop
     @mark.early_stop_progress
+    @mark.early_stop_progress_init
     def test_early_stop_progress_init(self):    
         stop = EarlyStopProgress(threshold=0.25)
         assert stop.val_size == 0.2, "val_size not set correctly"
@@ -208,6 +235,7 @@ class EarlyStopProgressTests:
 
     @mark.early_stop
     @mark.early_stop_progress
+    @mark.early_stop_progress_validation
     def test_early_stop_progress_validation(self):    
         with pytest.raises(TypeError):
             stop = EarlyStopProgress(val_size='x')
@@ -233,6 +261,7 @@ class EarlyStopProgressTests:
             logs.append(log)
         # Instantiate and test early stop 
         stop = EarlyStopProgress()
+        stop.model = LinearRegression()
         stop.on_train_begin()
         for i in range(len(train_costs)):
             stop.on_epoch_end(epoch=i+1, logs=logs[i])
@@ -281,6 +310,7 @@ class EarlyStopStripsTests:
             logs.append(log)
         # Instantiate and test early stop 
         stop = EarlyStopStrips(patience=3)
+        stop.model = LinearRegression()
         stop.on_train_begin()
         for i in range(len(val_costs)):
             stop.on_epoch_end(epoch=i+1, logs=logs[i])
