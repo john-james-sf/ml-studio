@@ -60,13 +60,9 @@ class Regression(GradientDescent):
         
     def _predict(self, X):
         """Computes predictions during training with current weights."""
-        
-        n_features = self.theta.shape[0]
-        if X.shape[1] != n_features:
-            raise ValueError("X has %d features per sample; expecting %d"
-                             % (X.shape[1], n_features))
-        y_pred = self._decision(X)
-        return y_pred        
+        self._validate_data(X)
+        y_pred = self._linear_prediction(X)
+        return y_pred.ravel()
 
     def predict(self, X):
         """Predicts output as a linear function of inputs and final parameters.
@@ -84,20 +80,7 @@ class Regression(GradientDescent):
         array, shape(n_samples,)
             Returns the linear regression prediction.        
         """
-        # Raise exception if not fitted yet
-        if self.coef_ is None:
-            raise Exception("This %(name)s instance is not fitted "
-                                 "yet" % {'name': type(self).__name__})
-        else:
-
-            self._validate_data(X)
-            n_features = self.coef_.shape[0]
-            # Raise ValueError if X and n_features shape mismatch
-            if X.shape[1] != n_features:
-                raise ValueError("X has %d features per sample; expecting %d"
-                                % (X.shape[1], n_features))     
-            y_pred = self._decision(X)
-            return y_pred.ravel()
+        return self._predict(X)
 
     def score(self, X, y):
         """Computes a score for the current model, given inputs X and output y.
@@ -118,10 +101,6 @@ class Regression(GradientDescent):
         float
             Returns the score for the designated metric.
         """
-        # Raise exception if model not fit 
-        if not hasattr(self, 'coef_') or self.coef_ is None:
-            raise Exception("This %(name)s instance is not fitted "
-                                "yet" % {'name': type(self).__name__})
         self._validate_data(X, y)
         y_pred = self.predict(X)
         if self.metric:

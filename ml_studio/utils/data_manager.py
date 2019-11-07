@@ -66,7 +66,7 @@ def data_split(X, y, test_size=0.3, shuffle=True, stratify=False, seed=None):
         Bool indicating whether the data should be shuffled prior to split.
 
     stratify : bool, optional (default=False)
-        If True, stratify sampling is performed. 
+        If True, stratified sampling is performed. 
 
     seed : int, optional (default=None)
         Random state variable
