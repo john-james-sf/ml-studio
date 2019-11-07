@@ -110,7 +110,7 @@ class CategoricalCrossEntropy(Cost):
             y = decode(y, axis=1)
         # Prevent division by zero
         y_pred = np.clip(y_pred, 1e-15, 1-1e-15)
-        y_pred[np.arange(n_samples), y] -= 1
+        y_pred[range(n_samples), y] -= 1
         dy_pred = y_pred/n_samples
         dW = X.T.dot(dy_pred)              
         return dW     

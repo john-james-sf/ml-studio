@@ -5,9 +5,10 @@
 """Classes for binary and multi-class classification."""
 import numpy as np
 
-
+from ml_studio.supervised_learning.training.cost import Cost
 from ml_studio.supervised_learning.training.cost import BinaryClassificationCostFunctions
 from ml_studio.supervised_learning.training.cost import MultiClassificationCostFunctions
+from ml_studio.supervised_learning.training.metrics import ClassificationMetric
 from ml_studio.supervised_learning.training.metrics import ClassificationMetrics
 from ml_studio.supervised_learning.training.gradient_descent import GradientDescent
 from ml_studio.utils.data_manager import data_split, one_hot
@@ -39,10 +40,6 @@ class Classification(GradientDescent):
         float
             Returns the score for the designated metric.
         """
-        # Raise exception if model not fit 
-        if not hasattr(self, 'coef_') or self.coef_ is None:
-            raise Exception("This %(name)s instance is not fitted "
-                                "yet" % {'name': type(self).__name__})
         self._validate_data(X, y)
         y_pred = self.predict(X)
         if self.metric:
@@ -50,6 +47,15 @@ class Classification(GradientDescent):
         else:
             score = ClassificationMetrics()(metric=self.DEFAULT_METRIC)(y=y, y_pred=y_pred)        
         return score    
+
+    def _get_scorer(self):
+        """Obtains the scoring function associated with the metric parameter."""
+        scorer = ClassificationMetrics()(metric=self.metric)
+        if not isinstance(scorer, ClassificationMetric):
+            msg = str(self.metric) + ' is not a supported classification metric.'
+            raise ValueError(msg)
+        else:
+            return scorer        
 
 # --------------------------------------------------------------------------- #
 #                          LOGISTIC CLASSIFICATION                            #
@@ -162,31 +168,19 @@ class LogisticRegression(Classification):
         self.task = "Logistic Regression"
         self.name = self.name or self.task + ' with ' + self.algorithm
 
-    def _validate_params(self):
-        """Adds confirmation that metric is a valid regression metric."""
-        super(LogisticRegression,self)._validate_params()
-        if self.metric is not None:
-            if not ClassificationMetrics()(metric=self.metric):            
-                msg = str(self.metric) + ' is not a supported classification metric.'
-                raise ValueError(msg)    
-        if not BinaryClassificationCostFunctions()(cost=self.cost):
-            msg = str(self.cost) + ' is not a supported binary classification cost function.'
-            raise ValueError(msg)   
-
     def _get_cost_function(self):
         """Obtains the cost function associated with the cost parameter."""
         cost_function = BinaryClassificationCostFunctions()(cost=self.cost)
-        return cost_function
-
-    def _get_scorer(self):
-        """Obtains the scoring function associated with the metric parameter."""
-        scorer = ClassificationMetrics()(metric=self.metric)
-        return scorer
+        if not isinstance(cost_function, Cost):
+            msg = str(self.cost) + ' is not a supported binary classification cost function.'
+            raise ValueError(msg)
+        else:
+            return cost_function
 
     def _predict(self, X):
         """Predicts sigmoid probabilities."""        
-        z = self._decision(X) 
-        y_pred = self._sigmoid(z).astype('float64')
+        z = self._linear_prediction(X) 
+        y_pred = self._sigmoid(z).astype('float64').flatten()
         return y_pred
 
     def predict(self, X):
@@ -201,7 +195,7 @@ class LogisticRegression(Classification):
         Vector of class label predictions
         """        
         prob = self._predict(X)      
-        y_pred = np.round(prob).astype(int)
+        y_pred = np.round(prob).astype(int).flatten()
         return y_pred
 
 # --------------------------------------------------------------------------- #
@@ -335,59 +329,31 @@ class MultinomialLogisticRegression(Classification):
             msg = str(self.cost) + ' is not a supported multinomial classification cost function.'
             raise ValueError(msg)   
 
-    def _prepare_output_data(self, y):
-        """Converts y to one-hot-matrix for multi_class problems."""        
-        
-        self.n_features = self.X.shape[1]          
-        # Compute attributes pertaining to the classes
-        if len(y) > 1:
-            self.classes_ = range(y.shape[1])     
-        else:
-            self.classes_ = np.unique(y)        
-        self.n_classes_ = len(self.classes_)
-        # Create one-hot vector
-        y = one_hot(y, n_classes=self.n_classes_)
-        return y
-
     def _prepare_data(self, X, y):
-        """Prepares training (and validation) data."""
-        self.X = self.X_val = self.y = self.y_val = None
-        # Add a column of ones to train the intercept term
-        self.X = np.insert(X, 0, 1, axis=1)  
-        self.y = y        
-        # Set aside val_size training observations for validation set 
-        if self.early_stop:
-            if self.early_stop.val_size:
-                self.X, self.X_val, self.y, self.y_val = \
-                    data_split(self.X, self.y, 
-                        stratify=True,
-                        test_size=self.early_stop.val_size,                         
-                        random_state=self.seed)                    
-            self.y = self._prepare_output_data(self.y)                    
-            self.y_val = self._prepare_output_data(self.y_val)  
-        else:
-            self.y = self._prepare_output_data(self.y)                    
+        """Prepares data and reports classes and n_classes."""
+        super(MultinomialLogisticRegression, self)._prepare_data(X,y)
+        self.classes_ = np.unique(y)
+        self.n_classes_ = len(self.classes_)
     
     def _init_weights(self):
         """Initializes weights according to the shapes of X and y."""
         # Perform random uniform initialization of parameters                              
-        limit = 1 / np.sqrt(self.n_features)
+        limit = 1 / np.sqrt(self.n_features_)
         np.random.seed(self.seed)
-        self.theta = np.random.uniform(-limit, limit, (self.n_features, self.n_classes_))  
+        self.theta = np.random.uniform(-limit, limit, (self.n_features_, self.n_classes_))  
 
     def _get_cost_function(self):
         """Obtains the cost function associated with the cost parameter."""
         cost_function = MultiClassificationCostFunctions()(cost=self.cost)
-        return cost_function
-
-    def _get_scorer(self):
-        """Obtains the scoring function associated with the metric parameter."""
-        scorer = ClassificationMetrics()(metric=self.metric)
-        return scorer            
+        if not isinstance(cost_function, Cost):
+            msg = str(self.cost) + ' is not a supported multi class classification cost function.'
+            raise ValueError(msg)
+        else:
+            return cost_function
 
     def _predict(self, X):
         """Predicts softmax probabilities."""        
-        z = self._decision(X) 
+        z = self._linear_prediction(X) 
         y_pred = self._softmax(z).astype('float64')
         return y_pred
 
@@ -403,7 +369,7 @@ class MultinomialLogisticRegression(Classification):
         Vector of class label predictions
         """        
         prob = self._predict(X)
-        y_pred = np.argmax(prob, axis=1)     
+        y_pred = np.argmax(prob, axis=1).flatten()
         return y_pred
 
 

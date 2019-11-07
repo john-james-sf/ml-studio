@@ -22,106 +22,7 @@ from ml_studio.supervised_learning.training import reports
 # --------------------------------------------------------------------------- #
 
 class GradientDescent(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
-    """Base class gradient descent estimator.
-    
-    Gradient Descent is a first-order iterative optimization algorithm for 
-    finding the minimum of a real-valued, differentiable objective function. 
-    Parameterized by :math:`\\theta \\in \\mathbb{R}^n`, Gradient Descent 
-    iteratively updates the parameters in the direction opposite to the 
-    gradient of the objective function :math:`\\nabla_\\theta J(\\theta)`.
-
-    Parameters
-    ----------
-    learning_rate : float or LearningRateSchedule instance, optional (default=0.01)
-        Learning rate or learning rate schedule.
-
-    batch_size : None or int, optional (default=None)
-        The number of examples to include in a single batch.
-
-    theta_init : None or array_like, optional (default=None)
-        Initial values for the parameters :math:`\\theta`
-
-    epochs : int, optional (default=1000)
-        The number of epochs to execute during training
-
-    cost : str, optional (default='quadratic')
-        The string name for a cost function
-
-    metric : str, optional (default='mean_squared_error')
-        The metric to use when computing the score:
-
-        'r2': 
-            The coefficient of determination.
-        'var_explained': 
-            Proportion of variance explained by model.
-        'mean_absolute_error':
-            Mean absolute error.
-        'mean_squared_error': 
-            Mean squared error.
-        'neg_mean_squared_error':
-            Negative mean squared error.
-        'root_mean_squared_error': 
-            Root mean squared error.
-        'neg_root_mean_squared_error': 
-            Negative root mean squared error.
-        'mean_squared_log_error':
-            Log of mean squared.
-        'root_mean_squared_log_error': 
-            Log of root mean squared error.
-        'median_absolute_error': 
-            Mean absolute error.
-        'accuracy': 
-            Accuracy
-
-    early_stop : None or EarlyStop subclass, optional (default=None)
-        The early stopping algorithm to use during training.
-
-    verbose : bool, optional (default=False)
-        If true, performance during training is summarized to sysout.
-
-    checkpoint : None or int, optional (default=100)
-        If verbose, report performance each 'checkpoint' epochs
-
-    name : None or str, optional (default=None)
-        The name of the model used for plotting
-
-    seed : None or int, optional (default=None)
-        Random state seed        
-
-    Attributes
-    ----------
-    coef_ : array-like shape (n_features,1) or (n_features, n_classes)
-        Coefficient of the features in X. 'coef_' is of shape (n_features,1)
-        for binary problems. For multi-class problems, 'coef_' corresponds
-        to outcome 1 (True) and '-coef_' corresponds to outcome 0 (False).
-
-    intercept_ : array-like, shape(1,) or (n_classes,) 
-        Intercept (a.k.a. bias) added to the decision function. 
-        'intercept_' is of shape (1,) for binary problems. For multi-class
-        problems, `intercept_` corresponds to outcome 1 (True) and 
-        `-intercept_` corresponds to outcome 0 (False).
-
-    epochs_ : int
-        Total number of epochs executed.
-
-    Methods
-    -------
-    fit(X,y) Fits the model to input X and output y
-    predict(X) Renders predictions for input X using learned parameters
-    score(X,y) Computes a score using metric designated in __init__.
-    summary() Prints a summary of the model to sysout.  
-
-    See Also
-    --------
-    regression.LinearRegression : Linear Regression Class
-    regression.LassoRegression : Lasso Regression Class
-    regression.RidgeRegression : Ridge Regression Class
-    regression.ElasticNetRegression : ElasticNet Regression Class
-    classification.Classification : Binary and Multinomial Classification
-    classification.LassoClassification : Lasso Classification Class
-    classification.RidgeClassification : Ridge Classification Class
-    classification.ElasticNetClassification : ElasticNet Classification Class
-    """
+    """Base class gradient descent estimator."""
 
     DEFAULT_METRIC = 'mean_squared_error'
 
@@ -211,7 +112,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
                 raise TypeError("seed must be a positive integer.")
 
     def _validate_data(self, X, y=None):
-        """Confirms data are numpy arrays."""
+        """Validates and reports n_features."""
         if not isinstance(X, (np.ndarray)):
             raise TypeError("X must be of type np.ndarray")
         if y is not None:
@@ -220,7 +121,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
             if len(y.shape) > 1:
                 raise ValueError("y should be of shape (m,) or (m,n_classes), not %s" % str(y.shape))
             if X.shape[0] != y.shape[0]:
-                raise ValueError("X and y have incompatible lengths")
+                raise ValueError("X and y have incompatible lengths")        
 
     def _prepare_data(self, X, y):
         """Prepares training (and validation) data."""
@@ -233,27 +134,33 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
             if self.early_stop.val_size:
                 self.X, self.X_val, self.y, self.y_val = \
                     data_split(self.X, self.y, 
-                    test_size=self.early_stop.val_size, random_state=self.seed)
+                    test_size=self.early_stop.val_size, seed=self.seed)
+        self.n_features_ = self.X.shape[1]
 
     def _evaluate_epoch(self, log=None):
         """Computes training (and validation) costs and scores."""
         log = log or {}
-        y_pred = self._predict(self.X)
-        # Compute epoch training cost
+        # First determine whether validation metrics will be computed
+        val_metrics = False
+        if self.early_stop:
+            if self.early_stop.val_size:
+                val_metrics = True
+        # Update log with current learning rate and parameters theta
         log['epoch'] = self.epoch
         log['learning_rate'] = self.eta
         log['theta'] = self.theta.copy()        
+        # Compute costs 
+        y_pred = self._predict(self.X)
         log['train_cost'] = self.cost_function(y=self.y, y_pred=y_pred)
-        # Compute epoch training score
-        if self.metric is not None:
-            log['train_score'] = self.scorer(y=self.y, y_pred=y_pred)        
-        # Compute epoch validation cost and scores        
-        if self.early_stop:
-            if self.early_stop.val_size:
-                y_pred = self._predict(self.X_val)
-                log['val_cost'] = self.cost_function(y=self.y_val, y_pred=y_pred)
-                if self.metric:
-                    log['val_score'] = self.scorer(y=self.y_val, y_pred=y_pred)
+        if val_metrics:
+            y_pred_val = self._predict(self.X_val)
+            log['val_cost'] = self.cost_function(y=self.y_val, y_pred=y_pred_val)        
+        # Compute scores 
+        if self.metric is not None:            
+            log['train_score'] = self.score(self.X, self.y)
+            if val_metrics:
+                log['val_score'] = self.score(self.X_val, self.y_val)        
+
         return log
 
 
@@ -305,11 +212,10 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
             self.theta = np.random.normal(size=n_features).reshape(-1,1)
 
     def _set_learning_rate(self):
-        """Initializes eta."""
-        if isinstance(self.learning_rate, LearningRateSchedule):
-            self.eta = self.learning_rate.learning_rate
-        else:
+        if isinstance(self.learning_rate,float):
             self.eta = self.learning_rate
+        else:
+            self.eta = self.learning_rate.learning_rate
 
     def _begin_training(self, log=None):
         """Performs initializations required at the beginning of training."""
@@ -401,16 +307,16 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self._end_training()
         return self
     
-    def _decision(self, X):
-        """Computes decision based upon data."""
+    def _linear_prediction(self, X):
+        """Computes prediction as linear combination of inputs and thetas."""
         if X.shape[1] == self.theta.shape[0]:
-            d = X.dot(self.theta)
+            y_pred = X.dot(self.theta)
         else:
             if not hasattr(self, 'coef_') or self.coef_ is None:
                 raise Exception("This %(name)s instance is not fitted "
                                  "yet" % {'name': type(self).__name__})              
-            d = self.intercept_ + X.dot(self.coef_)  
-        return d            
+            y_pred = self.intercept_ + X.dot(self.coef_)  
+        return y_pred            
 
     @abstractmethod
     def _predict(self, X):

@@ -21,10 +21,15 @@ class Metric(ABC):
                                   "Must instantiate the class associated "
                                   "with the required.")
 
+class RegressionMetric(Metric):
+    """Base class for regression metrics."""
+class ClassificationMetric(Metric):
+    """Base class for classification metrics."""
+
 # --------------------------------------------------------------------------- #
 #                           REGRESSION METRICS                                #
 # --------------------------------------------------------------------------- #
-class SSE(Metric):
+class SSE(RegressionMetric):
     """Computes sum squared error given data and parameters"""
 
     def __init__(self):
@@ -42,7 +47,7 @@ class SSE(Metric):
         e = y-y_pred
         return np.sum(e**2)  
 
-class SST(Metric):
+class SST(RegressionMetric):
     """Computes total sum squared error given data and parameters"""
 
     def __init__(self):
@@ -61,7 +66,7 @@ class SST(Metric):
         e = y-y_avg                
         return np.sum(e**2)
 
-class R2(Metric):
+class R2(RegressionMetric):
     """Computes coefficient of determination."""
 
     def __init__(self):
@@ -81,7 +86,7 @@ class R2(Metric):
         r2 = 1 - (self._sse(y, y_pred)/self._sst(y, y_pred))        
         return r2
 
-class VarExplained(Metric):
+class VarExplained(RegressionMetric):
     """Computes proportion of variance explained."""
 
     def __init__(self):
@@ -99,7 +104,7 @@ class VarExplained(Metric):
         var_explained = 1 - (np.var(y-y_pred) / np.var(y))
         return var_explained                   
 
-class MAE(Metric):
+class MAE(RegressionMetric):
     """Computes mean absolute error given data and parameters."""
 
     def __init__(self):
@@ -117,7 +122,7 @@ class MAE(Metric):
         return np.mean(e)
 
 
-class MSE(Metric):
+class MSE(RegressionMetric):
     """Computes mean squared error given data and parameters."""
 
     def __init__(self):
@@ -134,7 +139,7 @@ class MSE(Metric):
         e = y-y_pred
         return np.mean(e**2)
 
-class NMSE(Metric):
+class NMSE(RegressionMetric):
     """Computes negative mean squared error given data and parameters."""
 
     def __init__(self):
@@ -152,7 +157,7 @@ class NMSE(Metric):
         e = y-y_pred
         return -np.mean(e**2)
 
-class RMSE(Metric):
+class RMSE(RegressionMetric):
     """Computes root mean squared error given data and parameters."""
 
     def __init__(self):
@@ -169,7 +174,7 @@ class RMSE(Metric):
         e = y-y_pred
         return np.sqrt(np.mean(e**2)) 
 
-class NRMSE(Metric):
+class NRMSE(RegressionMetric):
     """Computes negative root mean squared error given data and parameters."""
 
     def __init__(self):
@@ -187,7 +192,7 @@ class NRMSE(Metric):
         e = y-y_pred
         return -np.sqrt(np.mean(e**2))
 
-class MSLE(Metric):
+class MSLE(RegressionMetric):
     """Computes mean squared log error given data and parameters."""
 
     def __init__(self):
@@ -204,7 +209,7 @@ class MSLE(Metric):
         e = np.log(y+1)-np.log(y_pred+1)
         return np.mean(e**2)  
 
-class RMSLE(Metric):
+class RMSLE(RegressionMetric):
     """Computes root mean squared log error given data and parameters."""
 
     def __init__(self):
@@ -221,7 +226,7 @@ class RMSLE(Metric):
         e = np.log(y+1)-np.log(y_pred+1)
         return np.sqrt(np.mean(e**2))
 
-class MEDAE(Metric):
+class MEDAE(RegressionMetric):
     """Computes median absolute error given data and parameters."""
 
     def __init__(self):
@@ -258,7 +263,7 @@ class RegressionMetrics:
 # --------------------------------------------------------------------------- #
 #                       CLASSIFICATION METRICS                                #
 # --------------------------------------------------------------------------- #
-class Accuracy(Metric):
+class Accuracy(ClassificationMetric):
     """Computes accuracy."""
 
     def __init__(self):
@@ -272,17 +277,14 @@ class Accuracy(Metric):
         self.precision_factor = 1
     
     def __call__(self, y, y_pred):
-        # If y and y_pred are probability distributions, convert to class prediction
+        """Computes accuracy as correct over total."""
+        # If scoring multinomial logistical regression with one-hot vectors,
+        # convert them back to 1d integers.
         if len(y.shape) > 1:
             y = decode(y)
-        
         if len(y_pred.shape) > 1:
             y_pred = decode(y_pred)
-
-        y = np.atleast_2d(y).reshape(-1,1)
-        y_pred = np.atleast_2d(y_pred).reshape(-1,1)
-
-        return np.mean(np.equal(y[0], y_pred[0]), axis=-1) 
+        return np.sum(np.equal(y,y_pred)) / y.shape[0]
 
 class ClassificationMetrics:
     """Returns the requested score class."""
