@@ -12,7 +12,7 @@ from ml_studio.supervised_learning.training.early_stop import EarlyStopPlateau
 from ml_studio.supervised_learning.training.early_stop import EarlyStopGeneralizationLoss
 from ml_studio.supervised_learning.training.early_stop import EarlyStopProgress
 from ml_studio.supervised_learning.training.early_stop import EarlyStopStrips
-from ml_studio.supervised_learning.training.metrics import RegressionMetrics
+from ml_studio.supervised_learning.training.metrics import RegressionMetricFactory
 from ml_studio.supervised_learning.regression import LinearRegression
 # --------------------------------------------------------------------------- #
 #                        TEST EARLY STOP PLATEAU                              #
@@ -120,7 +120,7 @@ class EarlyStopPlateauTests:
                             model_lower_is_better):
         stop=EarlyStopPlateau(metric='train_score', precision=0.1, patience=2)
         stop.model = model_lower_is_better
-        stop.model.scorer = RegressionMetrics()(metric=stop.model.metric)
+        stop.model.scorer = RegressionMetricFactory()(metric=stop.model.metric)
         stop.on_train_begin()                
         logs = [{'train_score': 100}, {'train_score': 99},{'train_score': 80},
                {'train_score': 78},{'train_score': 77}]
@@ -136,7 +136,7 @@ class EarlyStopPlateauTests:
                             model_higher_is_better):
         stop=EarlyStopPlateau(metric='train_score', precision=0.1, patience=2)
         stop.model = model_higher_is_better
-        stop.model.scorer = RegressionMetrics()(metric=stop.model.metric)
+        stop.model.scorer = RegressionMetricFactory()(metric=stop.model.metric)
         stop.on_train_begin()             
         logs = [{'train_score': 100}, {'train_score': 101},{'train_score': 120},
                {'train_score': 122},{'train_score': 123}]
@@ -152,7 +152,7 @@ class EarlyStopPlateauTests:
                             model_lower_is_better):
         stop=EarlyStopPlateau(metric='val_score', precision=0.1, patience=2)
         stop.model = model_lower_is_better
-        stop.model.scorer = RegressionMetrics()(metric=stop.model.metric)
+        stop.model.scorer = RegressionMetricFactory()(metric=stop.model.metric)
         stop.on_train_begin()                
         logs = [{'val_score': 100}, {'val_score': 99},{'val_score': 80},
                {'val_score': 78},{'val_score': 77}]
@@ -168,7 +168,7 @@ class EarlyStopPlateauTests:
                             model_higher_is_better):
         stop=EarlyStopPlateau(precision=0.1, patience=2)
         stop.model = model_higher_is_better
-        stop.model.scorer = RegressionMetrics()(metric=stop.model.metric)
+        stop.model.scorer = RegressionMetricFactory()(metric=stop.model.metric)
         stop.on_train_begin()             
         logs = [{'val_score': 100}, {'val_score': 101},{'val_score': 120},
                {'val_score': 122},{'val_score': 123}]

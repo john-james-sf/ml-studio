@@ -2,21 +2,23 @@
 #                         CLASSIFICATION MODULE                               #
 # =========================================================================== #
 #%%
-"""Classes for binary and multi-class classification."""
+"""Classes supporting binary and multinomial classification ."""
 import numpy as np
 
 from ml_studio.supervised_learning.training.cost import Cost
-from ml_studio.supervised_learning.training.cost import BinaryClassificationCostFunctions
-from ml_studio.supervised_learning.training.cost import MultiClassificationCostFunctions
+from ml_studio.supervised_learning.training.cost import BinaryClassificationCostFunction
+from ml_studio.supervised_learning.training.cost import BinaryClassificationCostFactory
+from ml_studio.supervised_learning.training.cost import MultinomialClassificationCostFunction
+from ml_studio.supervised_learning.training.cost import MultinomialClassificationCostFactory
 from ml_studio.supervised_learning.training.metrics import ClassificationMetric
-from ml_studio.supervised_learning.training.metrics import ClassificationMetrics
-from ml_studio.supervised_learning.training.gradient_descent import GradientDescent
+from ml_studio.supervised_learning.training.metrics import ClassificationMetricFactory
+from ml_studio.supervised_learning.training.estimator import Estimator
 from ml_studio.utils.data_manager import data_split, one_hot
 
 # --------------------------------------------------------------------------- #
 #                              CLASSIFICATION                                 #
 # --------------------------------------------------------------------------- #                
-class Classification(GradientDescent):
+class Classification(Estimator):
     """Abstract base class for classification classes."""
 
     DEFAULT_METRIC = 'accuracy'
@@ -45,17 +47,18 @@ class Classification(GradientDescent):
         if self.metric:
             score = self.scorer(y=y, y_pred=y_pred)    
         else:
-            score = ClassificationMetrics()(metric=self.DEFAULT_METRIC)(y=y, y_pred=y_pred)        
+            score = ClassificationMetricFactory()(metric=self.DEFAULT_METRIC)(y=y, y_pred=y_pred)        
         return score    
 
     def _get_scorer(self):
         """Obtains the scoring function associated with the metric parameter."""
-        scorer = ClassificationMetrics()(metric=self.metric)
-        if not isinstance(scorer, ClassificationMetric):
-            msg = str(self.metric) + ' is not a supported classification metric.'
-            raise ValueError(msg)
-        else:
-            return scorer        
+        if self.metric is not None:
+            scorer = ClassificationMetricFactory()(metric=self.metric)
+            if not isinstance(scorer, ClassificationMetric):
+                msg = str(self.metric) + ' is not a supported classification metric.'
+                raise ValueError(msg)
+            else:
+                return scorer        
 
 # --------------------------------------------------------------------------- #
 #                          LOGISTIC CLASSIFICATION                            #
@@ -170,8 +173,8 @@ class LogisticRegression(Classification):
 
     def _get_cost_function(self):
         """Obtains the cost function associated with the cost parameter."""
-        cost_function = BinaryClassificationCostFunctions()(cost=self.cost)
-        if not isinstance(cost_function, Cost):
+        cost_function = BinaryClassificationCostFactory()(cost=self.cost)
+        if not isinstance(cost_function, BinaryClassificationCostFunction):
             msg = str(self.cost) + ' is not a supported binary classification cost function.'
             raise ValueError(msg)
         else:
@@ -318,17 +321,6 @@ class MultinomialLogisticRegression(Classification):
         return np.exp(z)/np.sum(np.exp(z), axis=axis)
 
 
-    def _validate_params(self):
-        """Adds confirmation that metric is a valid regression metric."""
-        super(MultinomialLogisticRegression,self)._validate_params()
-        if self.metric is not None:
-            if not ClassificationMetrics()(metric=self.metric):            
-                msg = str(self.metric) + ' is not a supported classification metric.'
-                raise ValueError(msg)    
-        if not MultiClassificationCostFunctions()(cost=self.cost):
-            msg = str(self.cost) + ' is not a supported multinomial classification cost function.'
-            raise ValueError(msg)   
-
     def _prepare_data(self, X, y):
         """Prepares data and reports classes and n_classes."""
         super(MultinomialLogisticRegression, self)._prepare_data(X,y)
@@ -344,8 +336,8 @@ class MultinomialLogisticRegression(Classification):
 
     def _get_cost_function(self):
         """Obtains the cost function associated with the cost parameter."""
-        cost_function = MultiClassificationCostFunctions()(cost=self.cost)
-        if not isinstance(cost_function, Cost):
+        cost_function = MultinomialClassificationCostFactory()(cost=self.cost)
+        if not isinstance(cost_function, MultinomialClassificationCostFunction):
             msg = str(self.cost) + ' is not a supported multi class classification cost function.'
             raise ValueError(msg)
         else:

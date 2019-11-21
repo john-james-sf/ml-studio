@@ -7,6 +7,9 @@ import math
 import numpy as np
 from ml_studio.supervised_learning.training.callbacks import Callback
 
+## TODO: Check out https://www.cs.cmu.edu/~ggordon/10725-F12/slides/05-gd-revisited.pdf
+# Backtracking line search
+
 class LearningRateSchedule(Callback):
     """Abstract base class used to build new learning rate schedules.
 
@@ -17,7 +20,8 @@ class LearningRateSchedule(Callback):
     """
 
     def __init__(self, learning_rate=0.1):
-        self.learning_rate = learning_rate        
+        self.learning_rate = learning_rate
+            
 
 class TimeDecay(LearningRateSchedule):
     """Method for time (epoch) based learning rate schedule."""

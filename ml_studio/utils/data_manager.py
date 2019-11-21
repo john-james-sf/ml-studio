@@ -14,26 +14,89 @@ from sklearn.base import TransformerMixin, BaseEstimator
 #                               TRANSFORMERS                                  #
 # --------------------------------------------------------------------------- #
 class StandardScaler(BaseEstimator, TransformerMixin):
-    def __init__(self, with_mean=True, with_std=True):
-        self.with_mean = with_mean
-        self.with_std = with_std
-        self.mu=0
-        self.s=1
+    """Standardizes data to a zero mean and unit variance.
 
-    def fit(self, X):
-        if self.with_mean:
-            self.mu = np.mean(X,axis=0)
-        if self.with_std:
-            self.s = np.std(X,axis=0)
+    Standardizing a sample 'x' is calculated as:
+
+        z = (x - u) / s
+    where 'u' is either the mean of the training samples 'x', or zero of 
+    'center=False' and 's' is the standard deviation of the training samples
+    or one if 'scale=False'.
+
+    Parameters
+    ----------
+    center : Bool, optional (default=True)
+        If True, center the data by subtracting the means of the variables.
+
+    scale : Bool, optional (default=True)
+        If True, scale the data to a unit variance.
+
+    Attributes
+    ----------
+    mean_ : array-like, shape (n_features)
+        The mean value for each feature in the training set.
+        Equal to zero if 'center=False'.
+
+    std_ : array-like, shape (n_features)
+        The standard deviation for each feature in the training set.
+        Equal to one if 'scale=False'.
+    """        
+
+    def __init__(self, center=True, scale=True):
+        self.center = center
+        self.scale = scale
+        self.mean_=0
+        self.std_=1
+
+    def fit(self, X, y=None):
+        """Computes the mean and std for centering and scaling the data.
+        
+        Parameters
+        ----------
+        X : array-like, shape [n_samples, n_features]
+            The data used to compute the mean and standard deviation
+            used for centering and scaling.
+
+        y : Ignored
+
+        """
+        if self.center:
+            self.mean_ = np.mean(X,axis=0)
+        if self.scale:
+            self.std_ = np.std(X,axis=0)
 
     def transform(self, X):
-        z = (X-self.mu)/self.s
+        """Center and scale the data.
+
+        Parameters
+        ----------
+        X : array-like, shape [n_samples, n_features]
+            The data to center and scale.
+
+        Returns
+        -------
+        array-like of same shape as X, centered and scaled
+        """
+        z = (X-self.mean_)/self.std_
         return z
 
     def inverse_transform(self, X):
-        X = X * self.s
-        X = X + self.mu
+        """Inverses the standardization process.
+
+        Parameters
+        ----------
+        X : array-like, shape [n_samples, n_features]
+            The centered and scaled data.
+
+        Returns
+        -------
+        array-like of same shape as X, with data returned to original
+        un-standardized values.
+        """
+        X = X * self.std_
+        X = X + self.mean_
         return X
+        
 # --------------------------------------------------------------------------- #
 #                               FUNCTIONS                                     #
 # --------------------------------------------------------------------------- #
@@ -85,6 +148,10 @@ def data_split(X, y, test_size=0.3, shuffle=True, stratify=False, seed=None):
     y_test : array_like
         Targets for X_test 
     """
+    if X.shape[0] != y.shape[0]:
+        raise ValueError("X and y have incompatible shapes. Expected "
+                         "X.shape[0]=y.shape[0] however X.shape[0] = %d "
+                         " and y.shape[0] = %d." % (X.shape[0], y.shape[0]))
     if not stratify:
         if shuffle:
             X, y = shuffle_data(X, y, seed)
@@ -96,20 +163,27 @@ def data_split(X, y, test_size=0.3, shuffle=True, stratify=False, seed=None):
         test_idx = []
         classes, group_indices = np.unique(y, return_inverse=True)
         for k in classes:
+            # Obtain the indices and number of samples for class k
             idx_k = np.array(np.where(group_indices == k)).reshape(-1,1)  
             n_samples_k = idx_k.shape[0]
+            # Compute number of training and test samples
             n_train_samples_k = ceil(n_samples_k * (1-test_size))
             n_test_samples_k = n_samples_k - n_train_samples_k
+            # Shuffle the data
             if shuffle:
                 if seed:
                     np.random.seed(seed)
                 np.random.shuffle(idx_k)
+            # Allocate corresponding indices to training and test set indices
             train_idx_k = idx_k[0:n_train_samples_k]
             test_idx_k = idx_k[n_train_samples_k:n_train_samples_k+n_test_samples_k]
+            # Maintain indices in a list
             train_idx.append(train_idx_k)
             test_idx.append(test_idx_k)
+        # Concatenate all indices into a training and test indices
         train_idx = np.concatenate(train_idx).ravel()
         test_idx = np.concatenate(test_idx).ravel()
+        # Slice and dice.
         X_train, X_test = X[train_idx], X[test_idx]
         y_train, y_test = y[train_idx], y[test_idx]
     

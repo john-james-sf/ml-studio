@@ -23,9 +23,6 @@ class Regularizer(ABC):
     def gradient(self, w):
         pass
 
-    @abstractmethod
-    def config(self):
-        pass
 
 class L1(Regularizer):
     """ Regularization for Lasso Regression """
@@ -42,10 +39,6 @@ class L1(Regularizer):
         self._validate_hyperparam(self._alpha)
         return self._alpha * np.sign(w)
 
-    def config(self):
-        c = {'Regularizer': self.name,        
-             'Alpha': self._alpha}
-        return c        
 
 class L2(Regularizer):
     """ Regularization for Ridge Regression """
@@ -62,10 +55,6 @@ class L2(Regularizer):
         self._validate_hyperparam(self._alpha)
         return self._alpha * 2.0 * w
 
-    def config(self):
-        c = {'Regularizer': self.name,        
-             'Alpha': self._alpha}
-        return c
 
 class ElasticNet(Regularizer):
     """ Regularization for Elastic Net Regression """
@@ -89,9 +78,5 @@ class ElasticNet(Regularizer):
         alpha = np.asarray(self._alpha, dtype='float64')
         return np.multiply(alpha, np.add(l1_contr, l2_contr))
 
-    def config(self):
-        c = {'Regularizer': self.name,
-             'Alpha': self._alpha,
-             'L1 Ratio': self._ratio}
-        return c
+
 

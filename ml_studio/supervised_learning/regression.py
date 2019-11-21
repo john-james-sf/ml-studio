@@ -1,14 +1,16 @@
 # =========================================================================== #
 #                          REGRESSION CLASSES                                 #
 # =========================================================================== #
-"""Regression classes."""
+"""Regression, Linear Regression, L1, L2 and ElasticNet Regression classes."""
 from abc import abstractmethod
 import numpy as np
 
 from ml_studio.supervised_learning.training.regularizers import L1, L2, ElasticNet
-from ml_studio.supervised_learning.training.gradient_descent import GradientDescent
-from ml_studio.supervised_learning.training.metrics import RegressionMetrics
-from ml_studio.supervised_learning.training.cost import RegressionCostFunctions
+from ml_studio.supervised_learning.training.estimator import Estimator
+from ml_studio.supervised_learning.training.metrics import RegressionMetric
+from ml_studio.supervised_learning.training.metrics import RegressionMetricFactory
+from ml_studio.supervised_learning.training.cost import RegressionCostFunction
+from ml_studio.supervised_learning.training.cost import RegressionCostFactory
 
 import warnings
 
@@ -16,7 +18,7 @@ import warnings
 #                          REGRESSION CLASS                                   #
 # --------------------------------------------------------------------------- #
 
-class Regression(GradientDescent):
+class Regression(Estimator):
     """Base class for all regression classes."""
 
     DEFAULT_METRIC = 'mean_squared_error'
@@ -37,26 +39,24 @@ class Regression(GradientDescent):
     def _set_name(self):
         pass    
 
-    def _validate_params(self):
-        """Adds confirmation that metric is a valid regression metric."""
-        super(Regression,self)._validate_params()
-        if self.metric is not None:
-            if not RegressionMetrics()(metric=self.metric):            
-                msg = str(self.metric) + ' is not a supported regression metric.'
-                raise ValueError(msg)    
-        if not RegressionCostFunctions()(cost=self.cost):
-            msg = str(self.cost) + ' is not a supported regression cost function.'
-            raise ValueError(msg)    
-
     def _get_cost_function(self):
         """Obtains the cost function associated with the cost parameter."""
-        cost_function = RegressionCostFunctions()(cost=self.cost)
-        return cost_function
+        cost_function = RegressionCostFactory()(cost=self.cost)
+        if not isinstance(cost_function, RegressionCostFunction):
+            msg = str(self.cost) + ' is not a supported regression cost function.'
+            raise ValueError(msg)
+        else:
+            return cost_function
 
     def _get_scorer(self):
         """Obtains the scoring function associated with the metric parameter."""
-        scorer = RegressionMetrics()(metric=self.metric)
-        return scorer        
+        if self.metric is not None:
+            scorer = RegressionMetricFactory()(metric=self.metric)
+            if not isinstance(scorer, RegressionMetric):
+                msg = str(self.metric) + ' is not a supported regression metric.'
+                raise ValueError(msg)
+            else:
+                return scorer            
         
     def _predict(self, X):
         """Computes predictions during training with current weights."""
@@ -106,7 +106,7 @@ class Regression(GradientDescent):
         if self.metric:
             score = self.scorer(y=y, y_pred=y_pred)    
         else:
-            score = RegressionMetrics()(metric=self.DEFAULT_METRIC)(y=y, y_pred=y_pred)        
+            score = RegressionMetricFactory()(metric=self.DEFAULT_METRIC)(y=y, y_pred=y_pred)        
         return score
 
 # --------------------------------------------------------------------------- #

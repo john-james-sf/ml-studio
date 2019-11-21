@@ -56,7 +56,7 @@ class CallbackList(object):
         
         Parameters
         ----------
-        model : GradientDescent or subclass instance 
+        model : Estimator or subclass instance 
         
         """
         self.model = model
@@ -167,7 +167,7 @@ class Callback(object):
     params: dict
         Training parameters (eg. batch size, number of epochs...)
         
-    model: instance of `GradientDescent` or subclass.
+    model: instance of `Estimator` or subclass.
         Reference of the model being trained.
     """
     def __init__(self):

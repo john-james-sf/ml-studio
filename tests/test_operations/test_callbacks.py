@@ -9,7 +9,7 @@ import pytest
 from pytest import mark
 
 from ml_studio.supervised_learning.training.monitor import History
-from ml_studio.supervised_learning.training.metrics import RegressionMetrics
+from ml_studio.supervised_learning.training.metrics import RegressionMetricFactory
 
 
 class HistoryTests:

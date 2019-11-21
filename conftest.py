@@ -9,14 +9,14 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 
 from ml_studio.supervised_learning.training.monitor import History
-from ml_studio.supervised_learning.training.gradient_descent import GradientDescent
+from ml_studio.supervised_learning.training.estimator import Estimator
 from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.supervised_learning.regression import LassoRegression
 from ml_studio.supervised_learning.regression import RidgeRegression
 from ml_studio.supervised_learning.regression import ElasticNetRegression
 
-from ml_studio.supervised_learning.training.cost import RegressionCostFunctions
-from ml_studio.supervised_learning.training.metrics import RegressionMetrics
+from ml_studio.supervised_learning.training.cost import RegressionCostFactory
+from ml_studio.supervised_learning.training.metrics import RegressionMetricFactory
 
 from ml_studio.supervised_learning.training.learning_rate_schedules import TimeDecay
 from ml_studio.supervised_learning.training.learning_rate_schedules import StepDecay
@@ -94,8 +94,8 @@ def fit_multiple_models(get_regression_data):
                                   'neg_root_mean_squared_error'])                                  
 def models_by_metric(request):
     model = LinearRegression(metric=request.param)
-    model.cost_function = RegressionCostFunctions()(cost='quadratic')
-    model.scorer = RegressionMetrics()(metric=request.param)
+    model.cost_function = RegressionCostFactory()(cost='quadratic')
+    model.scorer = RegressionMetricFactory()(metric=request.param)
     return model        
 
 @fixture(scope='session', params=['mean_absolute_error',
@@ -104,8 +104,8 @@ def models_by_metric(request):
                                   'median_absolute_error'])                                  
 def model_lower_is_better(request):
     model = LinearRegression(metric=request.param)
-    model.cost_function = RegressionCostFunctions()(cost='quadratic')
-    model.scorer = RegressionMetrics()(metric=request.param)
+    model.cost_function = RegressionCostFactory()(cost='quadratic')
+    model.scorer = RegressionMetricFactory()(metric=request.param)
     return model
 
 @fixture(scope='session', params=['r2',
@@ -114,8 +114,8 @@ def model_lower_is_better(request):
                                   'neg_root_mean_squared_error'])                                  
 def model_higher_is_better(request):
     model = LinearRegression(metric=request.param)
-    model.cost_function = RegressionCostFunctions()(cost='quadratic')
-    model.scorer = RegressionMetrics()(metric=request.param)
+    model.cost_function = RegressionCostFactory()(cost='quadratic')
+    model.scorer = RegressionMetricFactory()(metric=request.param)
     return model
 
 @fixture(scope='session', params=[TimeDecay(),

@@ -1,6 +1,7 @@
 # =========================================================================== #
 #                                  METRICS MODULE                             #
 # =========================================================================== #
+"""Classification and regression metrics classes."""
 from abc import ABC
 import math
 import numpy as np
@@ -243,7 +244,7 @@ class MEDAE(RegressionMetric):
         return np.median(np.abs(y_pred-y))
 
 
-class RegressionMetrics:
+class RegressionMetricFactory:
     """Returns the requested score class."""
 
     def __call__(self, metric='neg_mean_squared_error'):
@@ -286,7 +287,7 @@ class Accuracy(ClassificationMetric):
             y_pred = decode(y_pred)
         return np.sum(np.equal(y,y_pred)) / y.shape[0]
 
-class ClassificationMetrics:
+class ClassificationMetricFactory:
     """Returns the requested score class."""
 
     def __call__(self, metric='accuracy'):
