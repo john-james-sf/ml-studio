@@ -10,17 +10,23 @@ from ml_studio.utils.data_manager import decode
 class Cost(ABC):
 
     @abstractmethod
-    def __call__(self):
+    def __call__(self, y, y_pred):
         pass
 
     @abstractmethod
-    def gradient(self):
+    def gradient(self, X, y, y_pred):
         pass
 
+class RegressionCostFunction(Cost):
+    """Base class for regression cost functions."""
+class BinaryClassificationCostFunction(Cost):
+    """Base class for binary classification cost functions."""
+class MultinomialClassificationCostFunction(Cost):
+    """Base class for multinomial classification cost functions."""
 # --------------------------------------------------------------------------- #
 #                      REGRESSION COST FUNCTIONS                              #
 # --------------------------------------------------------------------------- #
-class Quadratic(Cost):
+class Quadratic(RegressionCostFunction):
     """Computes cost."""
 
     def __init__(self):        
@@ -40,7 +46,7 @@ class Quadratic(Cost):
         dW = 1/n_samples * X.T.dot(y_pred-y)
         return(dW)   
 
-class RegressionCostFunctions():
+class RegressionCostFactory():
     """Returns the requested cost class."""
 
     def __call__(self,cost='quadratic'):
@@ -51,7 +57,7 @@ class RegressionCostFunctions():
 # --------------------------------------------------------------------------- #
 #               BINARY CLASSIFICATION COST FUNCTIONS                          #
 # --------------------------------------------------------------------------- #
-class BinaryCrossEntropy(Cost):
+class BinaryCrossEntropy(BinaryClassificationCostFunction):
     """Computes cost and gradient w.r.t. weights and bias."""
     
     def __init__(self):        
@@ -73,7 +79,7 @@ class BinaryCrossEntropy(Cost):
         dW = 1/n_samples * X.T.dot(y_pred-y)
         return(dW)
 
-class BinaryClassificationCostFunctions():
+class BinaryClassificationCostFactory():
     """Returns the requested cost class."""
 
     def __call__(self,cost='binary_cross_entropy'):
@@ -84,7 +90,7 @@ class BinaryClassificationCostFunctions():
 # --------------------------------------------------------------------------- #
 #                MULTI CLASSIFICATION COST FUNCTIONS                          #
 # --------------------------------------------------------------------------- #
-class CategoricalCrossEntropy(Cost):
+class CategoricalCrossEntropy(MultinomialClassificationCostFunction):
     """Computes softmax cross entropy (w/softmax) cost and gradient w.r.t. parameters."""
     
     def __init__(self):        
@@ -115,7 +121,7 @@ class CategoricalCrossEntropy(Cost):
         dW = X.T.dot(dy_pred)              
         return dW     
         
-class MultiClassificationCostFunctions():
+class MultinomialClassificationCostFactory():
     """Returns the requested cost class."""
 
     def __call__(self,cost='categorical_cross_entropy'):

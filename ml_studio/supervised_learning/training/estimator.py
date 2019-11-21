@@ -1,7 +1,7 @@
 # =========================================================================== #
 #                          GRADIENT DESCENT CLASS                             #
 # =========================================================================== #
-"""Regression classes."""
+"""Gradient Descent base class, from which regression and classification inherit."""
 from abc import ABC, abstractmethod, ABCMeta
 import datetime
 import numpy as np
@@ -21,7 +21,7 @@ from ml_studio.supervised_learning.training import reports
 
 # --------------------------------------------------------------------------- #
 
-class GradientDescent(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
+class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     """Base class gradient descent estimator."""
 
     DEFAULT_METRIC = 'mean_squared_error'
@@ -119,7 +119,7 @@ class GradientDescent(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
             if not isinstance(y, (np.ndarray)):
                 raise TypeError("y must be of type np.ndarray")            
             if len(y.shape) > 1:
-                raise ValueError("y should be of shape (m,) or (m,n_classes), not %s" % str(y.shape))
+                raise ValueError("y should be of shape (m,), not %s" % str(y.shape))
             if X.shape[0] != y.shape[0]:
                 raise ValueError("X and y have incompatible lengths")        
 

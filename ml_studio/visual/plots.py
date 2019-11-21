@@ -9,8 +9,8 @@ import pandas as pd
 import seaborn as sns
 import warnings
 
-from ml_studio.supervised_learning.training.gradient_descent import GradientDescent
-from ml_studio.supervised_learning.training.metrics import RegressionMetrics
+from ml_studio.supervised_learning.training.estimator import Estimator
+from ml_studio.supervised_learning.training.metrics import RegressionMetricFactory
 from ml_studio.utils.misc import proper
 from ml_studio.utils.file_manager import save_fig
 
@@ -78,8 +78,8 @@ def _plot_train_val_loss(model, title=None, figsize=(12,4)):
 def plot_loss(model, title=None, figsize=(12,4), directory=None, filename=None):
     """Plots training loss (and optionally validation loss) by epoch."""
     # Validate request
-    if not isinstance(model, GradientDescent):
-        raise ValueError("Model is not a valid GradientDescent or subclass object.")
+    if not isinstance(model, Estimator):
+        raise ValueError("Model is not a valid Estimator or subclass object.")
     if not isinstance(figsize, tuple):
         raise TypeError("figsize is not a valid tuple.")    
 
@@ -119,7 +119,7 @@ def _plot_train_score(model, title=None, figsize=(12,4)):
             'Score': model.history.epoch_log['train_score']}
     df = pd.DataFrame(data=d)
     # Extract row with best score for scatterplot    
-    if RegressionMetrics()(model.metric).mode == 'max': 
+    if RegressionMetricFactory()(model.metric).mode == 'max': 
         best_score = df.loc[df.Score.idxmax()]
     else:
         best_score = df.loc[df.Score.idxmin()]    
@@ -153,7 +153,7 @@ def _plot_train_val_score(model, title=None, figsize=(12,4)):
                                                 'Validation'],
                 var_name=['Dataset'], value_name='Score')  
     # Extract row with best score by dataset for scatterplot
-    if RegressionMetrics()(model.metric).mode == 'max': 
+    if RegressionMetricFactory()(model.metric).mode == 'max': 
         best_score = df.loc[df.groupby('Dataset').Score.idxmax()]
     else:
         best_score = df.loc[df.groupby('Dataset').Score.idxmin()]    
@@ -184,8 +184,8 @@ def plot_score(model, title=None, figsize=(12,4), directory=None, filename=None)
         raise Exception("No early stop callback designated, so no score available.")
     elif not model.history.early_stop.metric:
         raise Exception("No metric designated for score.")
-    if not isinstance(model, GradientDescent):
-        raise ValueError("Model is not a valid GradientDescent or subclass object.")
+    if not isinstance(model, Estimator):
+        raise ValueError("Model is not a valid Estimator or subclass object.")
     if not isinstance(figsize, tuple):
         raise TypeError("figsize is not a valid tuple.")
     

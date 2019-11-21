@@ -7,7 +7,7 @@ from collections import deque
 import numpy as np
 
 from ml_studio.supervised_learning.training.callbacks import Callback
-from ml_studio.supervised_learning.training.metrics import RegressionMetrics
+from ml_studio.supervised_learning.training.metrics import RegressionMetricFactory
 
 # --------------------------------------------------------------------------- #
 #                          EARLY STOP PERFORMANCE                             #
