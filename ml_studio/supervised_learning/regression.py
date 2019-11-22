@@ -56,7 +56,7 @@ class Regression(Estimator):
                 msg = str(self.metric) + ' is not a supported regression metric.'
                 raise ValueError(msg)
             else:
-                return scorer            
+                return scorer
         
     def _predict(self, X):
         """Computes predictions during training with current weights."""

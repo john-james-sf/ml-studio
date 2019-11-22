@@ -9,6 +9,13 @@ import types
 center = 25
 
 def summary(history):
+    """Summarizes statistics for model.
+
+    Parameters
+    ----------
+    history : history object
+        history object containing data and statistics from training.
+    """
     monitor = history.params.get('monitor')
     metric = history.params.get('metric', "")
 

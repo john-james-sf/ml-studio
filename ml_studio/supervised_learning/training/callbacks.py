@@ -16,15 +16,16 @@ import types
 #                             CALLBACK LIST                                   #
 # --------------------------------------------------------------------------- #
 class CallbackList(object):
-    """Container of callbacks.
-
-    Parameters
-    ----------
-    callbacks : list
-        List of 'Callback' instances.        
-    """
+    """Container of callbacks."""
 
     def __init__(self, callbacks=None):
+        """CallbackList constructor
+        
+        Parameters
+        ----------
+        callbacks : list
+            List of 'Callback' instances.        
+        """
         callbacks = callbacks or []
         self.callbacks = [c for c in callbacks]        
         self.params = {}
@@ -158,42 +159,100 @@ class CallbackList(object):
 #                             CALLBACK CLASS                                  #
 # --------------------------------------------------------------------------- #
 class Callback(object):
-    """Abstract base class used to build new callbacks.
-
-    The methods beginning with 'on_' should be overridden by subclasses.
-
-    Attributes
-    ----------
-    params: dict
-        Training parameters (eg. batch size, number of epochs...)
-        
-    model: instance of `Estimator` or subclass.
-        Reference of the model being trained.
-    """
+    """Abstract base class used to build new callbacks."""
     def __init__(self):
+        """Callback class constructor."""
         self.params = None
         self.model = None
 
     def set_params(self, params):
+        """Sets parameters from estimator.
+
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing estimator parameters
+        """ 
         self.params = params
 
     def set_model(self, model):
+        """Stores model in Callback object.
+
+        Parameters
+        ----------
+        model : Estimator
+            Estimator object
+        """
         self.model = model
 
     def on_batch_begin(self, batch, logs=None):
+        """Logic executed at the beginning of each batch.
+
+        Parameters
+        ----------
+        batch : int
+            Current training batch
+        
+        logs: dict
+            Dictionary containing the data, cost, batch size and current weights
+        """        
         pass
 
     def on_batch_end(self, batch, logs=None):   
+        """Logic executed at the end of each batch.
+        
+        Parameters
+        ----------
+        batch : int
+            Current training batch
+        
+        logs: dict
+            Dictionary containing the data, cost, batch size and current weights
+        """                
         pass
 
     def on_epoch_begin(self, epoch, logs=None):
+        """Logic executed at the beginning of each epoch.
+        
+        Parameters
+        ----------
+        epoch : int
+            Current epoch
+        
+        logs: dict
+            Dictionary containing the data, cost, batch size and current weights
+        """                
         pass
 
     def on_epoch_end(self, epoch, logs=None):
+        """Logic executed at the end of each epoch.
+        
+        Parameters
+        ----------
+        epoch : int
+            Current epoch
+        
+        logs: dict
+            Dictionary containing the data, cost, batch size and current weights
+        """                      
         pass
 
     def on_train_begin(self, logs=None):
+        """Logic executed at the beginning of training.
+        
+        Parameters
+        ----------        
+        logs: dict
+            Dictionary containing the data, cost, batch size and current weights
+        """                      
         pass
 
     def on_train_end(self, logs=None):
+        """Logic executed at the end of training.
+        
+        Parameters
+        ----------        
+        logs: dict
+            Dictionary containing the data, cost, batch size and current weights
+        """               
         pass

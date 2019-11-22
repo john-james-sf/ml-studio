@@ -1,5 +1,5 @@
 # =========================================================================== #
-#                          GRADIENT DESCENT CLASS                             #
+#                             ESTIMATOR CLASS                                 #
 # =========================================================================== #
 """Gradient Descent base class, from which regression and classification inherit."""
 from abc import ABC, abstractmethod, ABCMeta
@@ -8,10 +8,9 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
-from sklearn.utils import shuffle
 import warnings
 
-from ml_studio.utils.data_manager import batch_iterator, data_split
+from ml_studio.utils.data_manager import batch_iterator, data_split, shuffle_data
 from ml_studio.supervised_learning.training.callbacks import CallbackList, Callback
 from ml_studio.supervised_learning.training.monitor import History, Progress
 from ml_studio.supervised_learning.training.learning_rate_schedules import LearningRateSchedule
@@ -124,7 +123,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
                 raise ValueError("X and y have incompatible lengths")        
 
     def _prepare_data(self, X, y):
-        """Prepares training (and validation) data."""
+        """Creates the X design matrix and saves data as attributes."""
         self.X = self.X_val = self.y = self.y_val = None
         # Add a column of ones to train the intercept term
         self.X = np.insert(X, 0, 1, axis=1)  
@@ -241,7 +240,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     def _begin_epoch(self):
         """Increment the epoch count and shuffle the data."""
         self.epoch += 1
-        self.X, self.y = shuffle(self.X, self.y, random_state=self.seed)
+        self.X, self.y = shuffle_data(self.X, self.y, seed=self.seed)
         if self.seed:
             self.seed += 1
         self.cbks.on_epoch_begin(self.epoch)

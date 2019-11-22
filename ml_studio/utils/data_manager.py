@@ -1,5 +1,5 @@
 # =========================================================================== #
-#                                 DATA                                        #
+#                            DATA MANAGER                                     #
 # =========================================================================== #
 #%%
 """Data manipulation functions."""
@@ -101,7 +101,26 @@ class StandardScaler(BaseEstimator, TransformerMixin):
 #                               FUNCTIONS                                     #
 # --------------------------------------------------------------------------- #
 def shuffle_data(X, y=None, seed=None):
-    """ Random shuffle of the samples in X and y """
+    """ Random shuffle of the samples in X and y.
+    
+    Shuffles data
+
+    Parameters
+    ----------
+    X : array_like of shape (m, n_features)
+        Input data
+
+    y : array_like of shape (m,)
+        Target data    
+
+    seed : int
+        Seed for reproducibility
+
+    Returns
+    -------
+    Shuffled X, and y
+    
+    """    
     if seed:
         np.random.seed(seed)
     idx = np.arange(X.shape[0])

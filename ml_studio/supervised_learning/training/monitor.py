@@ -12,15 +12,27 @@ from ml_studio.supervised_learning.training.callbacks import Callback
 class History(Callback):
     """Records history and metrics for training by epoch."""
     def on_train_begin(self, logs=None):
-        """Sets instance variables at the beginning of training.""" 
+        """Sets instance variables at the beginning of training.
+        
+        Parameters
+        ----------
+        logs : Dict
+            Dictionary containing the X and y data
+        """ 
         self.total_epochs = 0
         self.total_batches = 0
         self.start = datetime.datetime.now() 
         self.epoch_log = {}
-        self.batch_log = {}
+        self.batch_log = {}        
 
     def on_train_end(self, logs=None):        
-        """Sets instance variables at end of training."""
+        """Sets instance variables at end of training.
+        
+        Parameters
+        ----------
+        logs : Dict
+            Not used 
+        """
         self.end = datetime.datetime.now()
         self.duration = (self.end-self.start).total_seconds() 
 
@@ -65,6 +77,16 @@ class Progress(Callback):
     """Class that reports progress at designated points during training."""
     
     def on_epoch_end(self, epoch, logs=None):
+        """Reports progress at the end of each epoch.
+
+        Parameters
+        ----------
+        epoch : int
+            The current training epoch
+
+        logs : Dict
+            Statistics obtained at end of epoch
+        """
         if epoch % self.model.checkpoint == 0:
             items_to_report = ('epoch', 'train', 'val')
             logs = {k:v for k,v in logs.items() if k.startswith(items_to_report)}

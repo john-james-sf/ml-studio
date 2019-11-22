@@ -2,30 +2,50 @@
 #                                  METRICS MODULE                             #
 # =========================================================================== #
 """Classification and regression metrics classes."""
-from abc import ABC
+from abc import ABC, abstractmethod
 import math
 import numpy as np
-import sklearn.metrics
 
 from ml_studio.utils.data_manager import decode
 
 class Metric(ABC):
     """Abstract base class for all metrics."""
 
+    @abstractmethod
     def __init__(self):
-        raise NotImplementedError("Metric is an abstract base class."
-                                  "Must instantiate the class associated "
-                                  "with the required.")
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
 
+    @abstractmethod
     def __call__(self, y, y_pred):
-        raise NotImplementedError("Metric is an abstract base class."
-                                  "Must instantiate the class associated "
-                                  "with the required.")
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
 
 class RegressionMetric(Metric):
     """Base class for regression metrics."""
+
+    @abstractmethod
+    def __init__(self):
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
+
+    @abstractmethod
+    def __call__(self, y, y_pred):
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
+
 class ClassificationMetric(Metric):
     """Base class for classification metrics."""
+
+    @abstractmethod
+    def __init__(self):
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
+
+    @abstractmethod
+    def __call__(self, y, y_pred):
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
 
 # --------------------------------------------------------------------------- #
 #                           REGRESSION METRICS                                #

@@ -11,18 +11,50 @@ class Cost(ABC):
 
     @abstractmethod
     def __call__(self, y, y_pred):
-        pass
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
 
     @abstractmethod
     def gradient(self, X, y, y_pred):
-        pass
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
 
 class RegressionCostFunction(Cost):
     """Base class for regression cost functions."""
+    @abstractmethod
+    def __call__(self, y, y_pred):
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
+
+    @abstractmethod
+    def gradient(self, X, y, y_pred):
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
+
 class BinaryClassificationCostFunction(Cost):
     """Base class for binary classification cost functions."""
+    @abstractmethod
+    def __call__(self, y, y_pred):
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
+
+    @abstractmethod
+    def gradient(self, X, y, y_pred):
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
+
 class MultinomialClassificationCostFunction(Cost):
     """Base class for multinomial classification cost functions."""
+    @abstractmethod
+    def __call__(self, y, y_pred):
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
+
+    @abstractmethod
+    def gradient(self, X, y, y_pred):
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
+
 # --------------------------------------------------------------------------- #
 #                      REGRESSION COST FUNCTIONS                              #
 # --------------------------------------------------------------------------- #
