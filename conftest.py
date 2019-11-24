@@ -139,7 +139,7 @@ def learning_rate_schedules(request):
                                   'train_score',
                                   'val_cost',
                                   'val_score'])
-def early_stop_metric(request):
+def early_stop_monitor(request):
     return request.param
 
 @fixture(scope='session', params=['r2',

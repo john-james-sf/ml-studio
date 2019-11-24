@@ -227,7 +227,7 @@ class RegressionTests:
         est.fit(X,y)
         assert est.history.total_epochs < 5000, "didn't stop early"
         assert len(est.history.epoch_log['learning_rate']) < 5000, "epoch log too long for early stop"        
-        assert est.convergence_monitor.metric == 'val_score', "Estimator sending wrong metric to early stop"
+        assert est.convergence_monitor.monitor == 'val_score', "Estimator sending wrong metric to early stop"
 
     @mark.regression
     @mark.regression_early_stop
@@ -238,7 +238,7 @@ class RegressionTests:
         est.fit(X,y)
         assert est.history.total_epochs < 5000, "didn't stop early"
         assert len(est.history.epoch_log['learning_rate']) < 5000, "epoch log too long for early stop"        
-        assert est.convergence_monitor.metric == 'val_cost', "Estimator sending wrong metric to early stop"
+        assert est.convergence_monitor.monitor == 'val_cost', "Estimator sending wrong metric to early stop"
 
     @mark.regression
     @mark.regression_early_stop
@@ -249,7 +249,7 @@ class RegressionTests:
         est.fit(X,y)
         assert est.history.total_epochs < 5000, "didn't stop early"
         assert len(est.history.epoch_log['learning_rate']) < 5000, "epoch log too long for early stop"        
-        assert est.convergence_monitor.metric == 'train_cost', "Estimator sending wrong metric to early stop"
+        assert est.convergence_monitor.monitor == 'train_cost', "Estimator sending wrong metric to early stop"
 
     @mark.regression
     @mark.regression_early_stop
@@ -261,7 +261,7 @@ class RegressionTests:
         est.fit(X,y)
         assert est.history.total_epochs < 5000, "didn't stop early"
         assert len(est.history.epoch_log['learning_rate']) < 5000, "epoch log too long for early stop"        
-        assert est.convergence_monitor.metric == 'train_score', "Estimator sending wrong metric to early stop"
+        assert est.convergence_monitor.monitor == 'train_score', "Estimator sending wrong metric to early stop"
     @mark.regression
     @mark.regression_early_stop
     @mark.regression_early_stop_generalization

@@ -102,28 +102,28 @@ class LogisticRegressionTests:
         X, y = get_binary_classification_data        
         clf = LogisticRegression(epochs=5000, early_stop=False, val_size=0.3, metric=None)
         clf.fit(X, y)
-        assert clf.convergence_monitor.metric == 'train_cost', "Estimator is not sending correct metric"
+        assert clf.convergence_monitor.monitor == 'train_cost', "Estimator is not sending correct metric"
 
     @mark.logistic_regression
     def test_logistic_regression_early_stop_from_estimator_train_score(self, get_binary_classification_data): 
         X, y = get_binary_classification_data        
         clf = LogisticRegression(epochs=5000, early_stop=False, val_size=0.3, metric='accuracy')
         clf.fit(X, y)
-        assert clf.convergence_monitor.metric == 'train_score', "Estimator is not sending correct metric"
+        assert clf.convergence_monitor.monitor == 'train_score', "Estimator is not sending correct metric"
 
     @mark.logistic_regression
     def test_logistic_regression_early_stop_from_estimator_val_cost(self, get_binary_classification_data): 
         X, y = get_binary_classification_data        
         clf = LogisticRegression(epochs=5000, early_stop=True, val_size=0.3, metric=None)
         clf.fit(X, y)
-        assert clf.convergence_monitor.metric == 'val_cost', "Estimator is not sending correct metric"        
+        assert clf.convergence_monitor.monitor == 'val_cost', "Estimator is not sending correct metric"        
 
     @mark.logistic_regression    
     def test_logistic_regression_early_stop_from_estimator_val_score(self, get_binary_classification_data): 
         X, y = get_binary_classification_data        
         clf = LogisticRegression(epochs=5000, early_stop=True, val_size=0.3, metric='accuracy')
         clf.fit(X, y)
-        assert clf.convergence_monitor.metric == 'val_score', "Estimator is not sending correct metric"                     
+        assert clf.convergence_monitor.monitor == 'val_score', "Estimator is not sending correct metric"                     
 
 # --------------------------------------------------------------------------- #
 #                    MULTINOMIAL LOGISTIC REGRESSION                          #
@@ -243,7 +243,7 @@ class MultinomialLogisticRegressionTests:
         X, y = get_multinomial_classification_data        
         clf = MultinomialLogisticRegression(epochs=5000, early_stop=False, val_size=0.3, metric=None)
         clf.fit(X, y)
-        assert clf.convergence_monitor.metric == 'train_cost', "Estimator is not sending correct metric"
+        assert clf.convergence_monitor.monitor == 'train_cost', "Estimator is not sending correct metric"
 
     @mark.logistic_regression
     @mark.multinomial_logistic_regression
@@ -251,7 +251,7 @@ class MultinomialLogisticRegressionTests:
         X, y = get_multinomial_classification_data        
         clf = MultinomialLogisticRegression(epochs=5000, early_stop=False, val_size=0.3, metric='accuracy')
         clf.fit(X, y)
-        assert clf.convergence_monitor.metric == 'train_score', "Estimator is not sending correct metric"
+        assert clf.convergence_monitor.monitor == 'train_score', "Estimator is not sending correct metric"
 
     @mark.logistic_regression
     @mark.multinomial_logistic_regression
@@ -259,7 +259,7 @@ class MultinomialLogisticRegressionTests:
         X, y = get_multinomial_classification_data        
         clf = MultinomialLogisticRegression(epochs=5000, early_stop=True, val_size=0.3, metric=None)
         clf.fit(X, y)
-        assert clf.convergence_monitor.metric == 'val_cost', "Estimator is not sending correct metric"        
+        assert clf.convergence_monitor.monitor == 'val_cost', "Estimator is not sending correct metric"        
 
     @mark.logistic_regression
     @mark.multinomial_logistic_regression
@@ -267,4 +267,4 @@ class MultinomialLogisticRegressionTests:
         X, y = get_multinomial_classification_data        
         clf = MultinomialLogisticRegression(epochs=5000, early_stop=True, val_size=0.3, metric='accuracy')
         clf.fit(X, y)
-        assert clf.convergence_monitor.metric == 'val_score', "Estimator is not sending correct metric"                
+        assert clf.convergence_monitor.monitor == 'val_score', "Estimator is not sending correct metric"                
