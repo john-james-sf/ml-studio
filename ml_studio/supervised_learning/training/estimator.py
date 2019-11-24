@@ -181,20 +181,20 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         else:
             if self.early_stop:
                 if self.metric:
-                    convergence_monitor = EarlyStopImprovement(metric='val_score',
+                    convergence_monitor = EarlyStopImprovement(monitor='val_score',
                                                               precision=self.precision,
                                                               patience=self.patience)
                 else:
-                    convergence_monitor = EarlyStopImprovement(metric='val_cost',
+                    convergence_monitor = EarlyStopImprovement(monitor='val_cost',
                                                               precision=self.precision,
                                                               patience=self.patience)
             else:
                 if self.metric:
-                    convergence_monitor = EarlyStopImprovement(metric='train_score',
+                    convergence_monitor = EarlyStopImprovement(monitor='train_score',
                                                               precision=self.precision,
                                                               patience=self.patience)
                 else:
-                    convergence_monitor = EarlyStopImprovement(metric='train_cost',
+                    convergence_monitor = EarlyStopImprovement(monitor='train_cost',
                                                               precision=self.precision,
                                                               patience=self.patience)            
         return convergence_monitor

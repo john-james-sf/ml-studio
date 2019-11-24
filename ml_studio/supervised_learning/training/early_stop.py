@@ -40,12 +40,13 @@ class EarlyStopImprovement(EarlyStop):
 
     Parameters
     ----------
-    metric : str, optional (default='val_score')
-        Specifies which metric to use when evaluating performance
+    monitor : str, optional (default='val_score')
+        Specifies which statistic to monitor for evaluation purposes.
 
         'train_cost': Training set costs
+        'train_score': Training set scores based upon the model's metric parameter
         'val_cost': Validation set costs
-        'val_score': Validation set scores
+        'val_score': Validation set scores based upon the model's metric parameter
 
     precision : float, optional (default=0.01)
         The factor by which performance is considered to have improved. For 
@@ -57,9 +58,9 @@ class EarlyStopImprovement(EarlyStop):
         stop training.    
     """
 
-    def __init__(self, metric='val_score', precision=0.01, patience=5):
+    def __init__(self, monitor='val_score', precision=0.01, patience=5):
         super(EarlyStopImprovement, self).__init__()
-        self.metric = metric
+        self.monitor = monitor
         self.precision = precision
         self.patience = patience
         # Instance variables
@@ -70,19 +71,19 @@ class EarlyStopImprovement(EarlyStop):
         
 
     def _validate(self):
-        if self.metric not in ['train_cost', 'train_score', 'val_cost', 'val_score']:
-            raise ValueError("metric must be in ['train_cost', 'train_score', 'val_cost', 'val_score']")
+        if self.monitor not in ['train_cost', 'train_score', 'val_cost', 'val_score']:
+            raise ValueError("monitor must be in ['train_cost', 'train_score', 'val_cost', 'val_score']")
         elif not isinstance(self.precision, float):
             raise TypeError("precision must be a float.")
         elif self.precision < 0 or self.precision > 1:
             raise ValueError("precision must be between 0 and 1. A good default is 0.01 or 1%.")
         elif not isinstance(self.patience, (int)):
             raise TypeError("patience must be an integer.")
-        elif 'score' in self.metric and self.model.metric is None:
+        elif 'score' in self.monitor and self.model.metric is None:
             raise ValueError("'score' has been selected for evaluation; however"
                              " no scoring metric has been provided for the model. "
                              "Either change the metric in the EarlyStop class to "
-                             "'cost', or add a metric to the model.")
+                             "'train_cost' or 'val_cost', or add a metric to the model.")
 
 
     def on_train_begin(self, logs=None):        
@@ -104,7 +105,7 @@ class EarlyStopImprovement(EarlyStop):
         # margin and 1 if we add it. The following logic extracts the precision
         # factor for the metric and multiplies it by the precision for the 
         # improvement calculation.
-        if 'score' in self.metric:
+        if 'score' in self.monitor:
             scorer = self.model.scorer
             self._better = scorer.better
             self.best_performance_ = scorer.worst
@@ -133,7 +134,7 @@ class EarlyStopImprovement(EarlyStop):
         """
         logs = logs or {}
         # Obtain current cost or score
-        current = logs.get(self.metric)
+        current = logs.get(self.monitor)
 
         # Handle the first iteration
         if self.best_performance_ in [np.Inf,-np.Inf]:

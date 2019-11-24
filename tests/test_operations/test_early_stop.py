@@ -25,7 +25,7 @@ class EarlyStopImprovementTests:
     def test_early_stop_improvement_init(self):
         stop = EarlyStopImprovement()
         assert stop.precision == 0.01, "precision not correct"
-        assert stop.metric == 'val_score', "metric is initiated correctly"
+        assert stop.monitor == 'val_score', "metric is initiated correctly"
         assert stop.converged is False, "converged is not False on instantiation"
         assert stop.best_weights_ is None, "best weights is not None on instantiation"
 
@@ -34,11 +34,11 @@ class EarlyStopImprovementTests:
     @mark.early_stop_improvement_validation
     def test_early_stop_improvement_validation(self):
         with pytest.raises(ValueError):
-            stop = EarlyStopImprovement(metric=9)
+            stop = EarlyStopImprovement(monitor=9)
             stop.model = LinearRegression(metric=None)
             stop.on_train_begin()
         with pytest.raises(ValueError):
-            stop = EarlyStopImprovement(metric='x')
+            stop = EarlyStopImprovement(monitor='x')
             stop.model = LinearRegression(metric=None)
             stop.on_train_begin()
         with pytest.raises(TypeError):
@@ -54,7 +54,7 @@ class EarlyStopImprovementTests:
             stop.model = LinearRegression(metric=None)
             stop.on_train_begin()            
         with pytest.raises(ValueError):
-            stop = EarlyStopImprovement(metric='val_score')
+            stop = EarlyStopImprovement(monitor='val_score')
             stop.model = LinearRegression(metric=None)
             stop.on_train_begin()                        
 
@@ -62,13 +62,13 @@ class EarlyStopImprovementTests:
     @mark.early_stop_improvement    
     @mark.early_stop_improvement_on_train_begin
     def test_early_stop_improvement_on_train_begin(self, models_by_metric,
-                                               early_stop_metric):        
+                                               early_stop_monitor):        
         # Test with score        
-        stop=EarlyStopImprovement(metric=early_stop_metric)
+        stop=EarlyStopImprovement(monitor=early_stop_monitor)
         stop.model = models_by_metric
         stop.on_train_begin()
-        assert stop.metric == early_stop_metric, "metric not set correctly" 
-        if 'score' in early_stop_metric:
+        assert stop.monitor == early_stop_monitor, "metric not set correctly" 
+        if 'score' in early_stop_monitor:
             assert stop.best_performance_ == models_by_metric.scorer.worst, "metric best_performance not set correctly"
             assert stop.precision == abs(stop.precision) * models_by_metric.scorer.precision_factor, "precision not set correctly"
         else:
@@ -79,7 +79,7 @@ class EarlyStopImprovementTests:
     @mark.early_stop_improvement
     @mark.early_stop_improvement_on_epoch_end
     def test_early_stop_improvement_on_epoch_end_train_cost(self):        
-        stop=EarlyStopImprovement(metric='train_cost', precision=0.1, patience=2)
+        stop=EarlyStopImprovement(monitor='train_cost', precision=0.1, patience=2)
         stop.model = LinearRegression(metric=None)
         stop.on_train_begin()                
         logs = [{'train_cost': 100}, {'train_cost': 99},{'train_cost': 80},
@@ -93,7 +93,7 @@ class EarlyStopImprovementTests:
     @mark.early_stop_improvement
     @mark.early_stop_improvement_on_epoch_end
     def test_early_stop_improvement_on_epoch_end_val_cost(self):
-        stop=EarlyStopImprovement(metric='val_cost', precision=0.1, patience=2)
+        stop=EarlyStopImprovement(monitor='val_cost', precision=0.1, patience=2)
         stop.model = LinearRegression(metric=None)
         stop.on_train_begin()                
         logs = [{'val_cost': 100}, {'val_cost': 99},{'val_cost': 80},
@@ -108,7 +108,7 @@ class EarlyStopImprovementTests:
     @mark.early_stop_improvement_on_epoch_end
     def test_early_stop_improvement_on_epoch_end_train_scores_lower_is_better(self, 
                             model_lower_is_better):
-        stop=EarlyStopImprovement(metric='train_score', precision=0.1, patience=2)
+        stop=EarlyStopImprovement(monitor='train_score', precision=0.1, patience=2)
         stop.model = model_lower_is_better
         stop.on_train_begin()                
         logs = [{'train_score': 100}, {'train_score': 99},{'train_score': 80},
@@ -123,7 +123,7 @@ class EarlyStopImprovementTests:
     @mark.early_stop_improvement_on_epoch_end
     def test_early_stop_improvement_on_epoch_end_train_scores_higher_is_better(self, 
                             model_higher_is_better):
-        stop=EarlyStopImprovement(metric='train_score', precision=0.1, patience=2)
+        stop=EarlyStopImprovement(monitor='train_score', precision=0.1, patience=2)
         stop.model = model_higher_is_better
         stop.on_train_begin()             
         logs = [{'train_score': 100}, {'train_score': 101},{'train_score': 120},
@@ -138,7 +138,7 @@ class EarlyStopImprovementTests:
     @mark.early_stop_improvement_on_epoch_end
     def test_early_stop_improvement_on_epoch_end_val_scores_lower_is_better(self, 
                             model_lower_is_better):
-        stop=EarlyStopImprovement(metric='val_score', precision=0.1, patience=2)
+        stop=EarlyStopImprovement(monitor='val_score', precision=0.1, patience=2)
         stop.model = model_lower_is_better
         stop.on_train_begin()                
         logs = [{'val_score': 100}, {'val_score': 99},{'val_score': 80},
