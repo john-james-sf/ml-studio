@@ -12,12 +12,10 @@ import warnings
 
 from ml_studio.utils.data_manager import batch_iterator, data_split, shuffle_data
 from ml_studio.supervised_learning.training.callbacks import CallbackList, Callback
-from ml_studio.supervised_learning.training.monitor import History, Progress
+from ml_studio.supervised_learning.training.monitor import History, Progress, summary
 from ml_studio.supervised_learning.training.learning_rate_schedules import LearningRateSchedule
 from ml_studio.supervised_learning.training.early_stop import EarlyStop
-
-from ml_studio.supervised_learning.training import reports
-
+from ml_studio.supervised_learning.training.early_stop import EarlyStopImprovement
 # --------------------------------------------------------------------------- #
 
 class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
@@ -27,8 +25,8 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
                  epochs=1000, cost='quadratic', metric='mean_squared_error', 
-                 early_stop=None, verbose=False, 
-                 checkpoint=100, name=None, seed=None):
+                 early_stop=False, val_size=0.3, patience=5, precision=0.001,
+                 verbose=False, checkpoint=100, name=None, seed=None):
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.theta_init = theta_init
@@ -36,6 +34,9 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self.cost = cost
         self.metric = metric
         self.early_stop = early_stop
+        self.val_size = val_size
+        self.patience = patience
+        self.precision = precision
         self.verbose = verbose
         self.checkpoint = checkpoint
         self.name = name
@@ -45,13 +46,16 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self.batch = 0
         self.converged = False
         self.theta = None
-        self.eta = None        
-        self.cost_function = None
+        self.eta = None                
         self.cbks = None
         self.X = self.y = self.X_val = self.y_val = None
         self.regularizer = lambda x: 0
         self.regularizer.gradient = lambda x: 0
         self.algorithm = None
+        # Functions
+        self.scorer = None
+        self.cost_function = None
+        self.convergence_monitor = None
         # Attributes
         self.coef_ = None
         self.intercept_ = None
@@ -89,8 +93,15 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         if not isinstance(self.epochs, int):
             raise TypeError("epochs must be an integer.")        
         if self.early_stop:
-            if not isinstance(self.early_stop, EarlyStop):
+            if not isinstance(self.early_stop, (bool,EarlyStop)):
                 raise TypeError("early stop is not a valid EarlyStop callable.")
+        if self.early_stop:
+            if not isinstance(self.val_size, float) or self.val_size < 0 or self.val_size >= 1:
+                raise ValueError("val_size must be a float between 0 and 1.")
+        if not isinstance(self.patience, int):
+            raise ValueError("patience must be an integer")
+        if not isinstance(self.precision, float) or self.precision < 0 or self.precision >= 1:
+            raise ValueError("precision must be a float between 0 and 1.")            
         if self.metric is not None:
             if not isinstance(self.metric, str):
                 raise TypeError("metric must be string containing name of metric for scoring")                
@@ -129,35 +140,24 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self.X = np.insert(X, 0, 1, axis=1)  
         self.y = y
         # Set aside val_size training observations for validation set 
-        if self.early_stop:
-            if self.early_stop.val_size:
-                self.X, self.X_val, self.y, self.y_val = \
-                    data_split(self.X, self.y, 
-                    test_size=self.early_stop.val_size, seed=self.seed)
-        self.n_features_ = self.X.shape[1]
+        if self.val_size:
+            self.X, self.X_val, self.y, self.y_val = \
+                data_split(self.X, self.y, 
+                test_size=self.val_size, seed=self.seed)
 
     def _evaluate_epoch(self, log=None):
         """Computes training (and validation) costs and scores."""
         log = log or {}
-        # First determine whether validation metrics will be computed
-        val_metrics = False
-        if self.early_stop:
-            if self.early_stop.val_size:
-                val_metrics = True
-        # Update log with current learning rate and parameters theta
-        log['epoch'] = self.epoch
-        log['learning_rate'] = self.eta
-        log['theta'] = self.theta.copy()        
         # Compute costs 
         y_pred = self._predict(self.X)
         log['train_cost'] = self.cost_function(y=self.y, y_pred=y_pred)
-        if val_metrics:
+        if self.val_size > 0:
             y_pred_val = self._predict(self.X_val)
             log['val_cost'] = self.cost_function(y=self.y_val, y_pred=y_pred_val)        
         # Compute scores 
         if self.metric is not None:            
             log['train_score'] = self.score(self.X, self.y)
-            if val_metrics:
+            if self.val_size > 0:
                 log['val_score'] = self.score(self.X_val, self.y_val)        
 
         return log
@@ -166,17 +166,39 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     @abstractmethod
     def _get_cost_function(self):
         """Obtains the cost function for the cost parameter."""
-        pass
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
 
     @abstractmethod        
     def _get_scorer(self):
         """Obtains the scoring function for the metric parameter."""
-        pass
+        raise NotImplementedError("This method is not implemented for "
+                                  "this Abstract Base Class.")
+
+    def _get_convergence_monitor(self):
+        if isinstance(self.early_stop, EarlyStop):
+            self.convergence_monitor = self.early_stop
+        else:
+            if self.early_stop:
+                if self.metric:
+                    self.early_stop = EarlyStopImprovement(metric='val_score',
+                                                              precision=self.precision,
+                                                              patience=self.patience)
+                else:
+                    self.early_stop = EarlyStopImprovement(metric='val_cost',
+                                                              precision=self.precision,
+                                                              patience=self.patience)
+            else:
+                self.early_stop = EarlyStopImprovement(metric='train_cost',
+                                                          precision=self.precision,
+                                                          patience=self.patience)                
+
 
     def _compile(self):
         """Obtains external objects and add key functions to the log."""
         self.cost_function = self._get_cost_function()
         self.scorer = self._get_scorer()        
+        self._get_convergence_monitor()
 
     def _init_callbacks(self):
         # Initialize callback list
@@ -189,8 +211,8 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         # Add additional callbacks if available
         if isinstance(self.learning_rate, Callback):
             self.cbks.append(self.learning_rate)
-        if isinstance(self.early_stop, Callback):
-            self.cbks.append(self.early_stop)
+        if isinstance(self.convergence_monitor, Callback):
+            self.cbks.append(self.convergence_monitor)
         # Initialize all callbacks.
         self.cbks.set_params(self.get_params())
         self.cbks.set_model(self)
@@ -222,13 +244,13 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self._validate_params()
         self._validate_data(log.get('X'), log.get('y'))        
         self._prepare_data(log.get('X'), log.get('y'))
+        self._set_name()
         self._init_weights()   
         self._compile()
         self._init_callbacks()
         self.cbks.on_train_begin(log)
         self._set_learning_rate()
-        self._set_algorithm_name()
-        self._set_name()
+        
 
     def _end_training(self, log=None):
         """Closes history callout and assign final and best weights."""
@@ -247,8 +269,13 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
     def _end_epoch(self, log=None):        
         """Performs end-of-epoch evaluation and scoring."""
+        log = log or {}
+        # Update log with current learning rate and parameters theta
+        log['epoch'] = self.epoch
+        log['learning_rate'] = self.eta
+        log['theta'] = self.theta.copy()     
         # Compute performance statistics for epoch and post to history
-        log = self._evaluate_epoch()
+        log = self._evaluate_epoch(log)
         # Call 'on_epoch_end' methods on callbacks.
         self.cbks.on_epoch_end(self.epoch, log)
 
@@ -292,7 +319,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
                 # Update batch log with weights and cost
                 batch_log = {'batch': self.batch, 'batch_size': X_batch.shape[0],
                              'theta': self.theta.copy(), 'train_cost': J}
-                # Compute gradient and update weights
+                # Compute gradient 
                 gradient = self.cost_function.gradient(
                     X_batch, y_batch, y_pred) - self.regularizer.gradient(self.theta)
                 # Update parameters              
@@ -330,4 +357,4 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         pass
 
     def summary(self):
-        reports.summary(self.history)
+        summary(self.history)

@@ -2,12 +2,11 @@
 # =========================================================================== #
 #                             EARLY STOP CLASSES                              #
 # =========================================================================== #
-
+from abc import ABC, abstractmethod, ABCMeta
 from collections import deque
 import numpy as np
 
 from ml_studio.supervised_learning.training.callbacks import Callback
-from ml_studio.supervised_learning.training.metrics import RegressionMetricFactory
 
 # --------------------------------------------------------------------------- #
 #                          EARLY STOP PERFORMANCE                             #
@@ -21,8 +20,16 @@ class EarlyStop(Callback):
         self.epochs_ = 0
         self.converged = False
         self.best_weights_ = None
+    
+    @abstractmethod
+    def on_train_begin(self, logs=None):        
+        pass
 
-class EarlyStopPlateau(EarlyStop):
+    @abstractmethod
+    def on_epoch_end(self, logs=None):        
+        pass
+
+class EarlyStopImprovement(EarlyStop):
     """Stops training if performance hasn't improved.
     
     Stops training if performance hasn't improved. Improvement is measured 
@@ -33,17 +40,12 @@ class EarlyStopPlateau(EarlyStop):
 
     Parameters
     ----------
-    metric : str, optional (default='score')
+    metric : str, optional (default='val_score')
         Specifies which metric to use when evaluating performance
 
         'train_cost': Training set costs
-        'train_score': Training set scores
         'val_cost': Validation set costs
         'val_score': Validation set scores
-
-    val_size : None, float, optional (default=0.2)
-        The proportion of the data to allocate to a validation set. If
-        metric is 'score', val_size must be in range (0,1)
 
     precision : float, optional (default=0.01)
         The factor by which performance is considered to have improved. For 
@@ -55,10 +57,9 @@ class EarlyStopPlateau(EarlyStop):
         stop training.    
     """
 
-    def __init__(self, metric='val_score', val_size=0.2, precision=0.01, patience=5):
-        super(EarlyStopPlateau, self).__init__()
+    def __init__(self, metric='val_score', precision=0.01, patience=5):
+        super(EarlyStopImprovement, self).__init__()
         self.metric = metric
-        self.val_size = val_size        
         self.precision = precision
         self.patience = patience
         # Instance variables
@@ -69,12 +70,8 @@ class EarlyStopPlateau(EarlyStop):
         
 
     def _validate(self):
-        if not isinstance(self.val_size, (int,float)):
-            raise TypeError("val_size must be an int=0, or a float.")         
-        elif self.metric not in ['train_cost', 'train_score', 'val_cost', 'val_score']:
+        if self.metric not in ['train_cost', 'train_score', 'val_cost', 'val_score']:
             raise ValueError("metric must in ['train_cost', 'train_score', 'val_cost', 'val_score']")
-        elif 'val' in self.metric and (self.val_size == 0 or self.val_size is None):
-            raise ValueError("val_size must be in range (0,0.5] if metric is 'score'.")
         elif not isinstance(self.precision, float):
             raise TypeError("precision must be a float.")
         elif self.precision < 0 or self.precision > 1:
@@ -96,7 +93,7 @@ class EarlyStopPlateau(EarlyStop):
         log : dict
             Contains no information
         """
-        super(EarlyStopPlateau, self).on_train_begin()
+        super(EarlyStopImprovement, self).on_train_begin()
         logs = logs or {}
         self._validate()
         # We evaluate improvement against the prior metric plus or minus a
@@ -170,24 +167,17 @@ class EarlyStopGeneralizationLoss(EarlyStop):
 
     Parameters
     ----------
-    val_size : float, optional (default=0.2)
-        The proportion of the data to allocate to a validation set. Must
-        be in range (0,1)
-
     threshold : int, optional (default=2)
         The threshold of generalization loss, above which training stops.
     
     """
 
-    def __init__(self, val_size=0.2, threshold=2):
-        super(EarlyStopGeneralizationLoss,self).__init__()        
-        self.val_size = val_size
+    def __init__(self, threshold=2):
+        super(EarlyStopGeneralizationLoss,self).__init__()                
         self.threshold=threshold
         self.best_val_cost = np.Inf    
 
     def _validate(self):
-        if not isinstance(self.val_size, float):
-            raise TypeError("val_size must be a float.")
         if not isinstance(self.threshold,(int, float)):
             raise TypeError("threshold must be an integer or float.")
 
@@ -212,9 +202,8 @@ class EarlyStopGeneralizationLoss(EarlyStop):
 class EarlyStopProgress(EarlyStop):
     """Early stopping criteria based upon progress of training."""
 
-    def __init__(self, val_size=0.2, threshold=0.25, strip_size=5):
-        super(EarlyStopProgress,self).__init__()        
-        self.val_size = val_size
+    def __init__(self, threshold=0.25, strip_size=5):
+        super(EarlyStopProgress,self).__init__()                
         self.threshold = threshold
         self.strip_size = strip_size
         self.best_val_cost = np.Inf
@@ -223,8 +212,6 @@ class EarlyStopProgress(EarlyStop):
 
     def _validate(self):
 
-        if not isinstance(self.val_size, (int,float)):
-            raise TypeError("val_size must be an int or a float.")
         if not isinstance(self.threshold, (int, float)):
             raise TypeError("threshold must be an integer or float.")                    
         if not isinstance(self.strip_size, int):
@@ -270,9 +257,8 @@ class EarlyStopProgress(EarlyStop):
 class EarlyStopStrips(EarlyStop):
     """Stop when validation error has not improved over 'patience' successive strips."""
 
-    def __init__(self, val_size=0.2, strip_size=5, patience=5):
-        super(EarlyStopStrips,self).__init__()        
-        self.val_size = val_size
+    def __init__(self, strip_size=5, patience=5):
+        super(EarlyStopStrips,self).__init__()
         self.strip_size = strip_size
         self.strip = deque([], strip_size)
         self.patience = patience
@@ -280,8 +266,6 @@ class EarlyStopStrips(EarlyStop):
 
     def _validate(self):
 
-        if not isinstance(self.val_size, (int,float)):
-            raise TypeError("val_size must be an int or a float.")                   
         if not isinstance(self.strip_size, int):
             raise TypeError("strip_size must be an integer.")      
         if not isinstance(self.patience, int):

@@ -26,7 +26,7 @@ from ml_studio.supervised_learning.training.learning_rate_schedules import Polyn
 from ml_studio.supervised_learning.training.learning_rate_schedules import InverseScaling
 from ml_studio.supervised_learning.training.learning_rate_schedules import Adaptive
 
-from ml_studio.supervised_learning.training.early_stop import EarlyStopPlateau
+from ml_studio.supervised_learning.training.early_stop import EarlyStopImprovement
 from ml_studio.supervised_learning.training.early_stop import EarlyStopGeneralizationLoss
 from ml_studio.supervised_learning.training.early_stop import EarlyStopProgress
 
@@ -63,10 +63,10 @@ def get_regression_data_w_validation(get_regression_data):
         X, y, test_size=0.33, random_state=50)
     return X_train, X_test, y_train, y_test
 
-@fixture(scope='session', params=[LinearRegression,
-                                  LassoRegression,
-                                  RidgeRegression,
-                                  ElasticNetRegression])
+@fixture(scope='function', params=[LinearRegression,
+                                   LassoRegression,
+                                   RidgeRegression,
+                                   ElasticNetRegression])
 def regression(request):
     return request.param
     
@@ -95,7 +95,7 @@ def fit_multiple_models(get_regression_data):
 def models_by_metric(request):
     model = LinearRegression(metric=request.param)
     model.cost_function = RegressionCostFactory()(cost='quadratic')
-    model.scorer = RegressionMetricFactory()(metric=request.param)
+    model.scorer = RegressionMetricFactory()(metric=request.param)    
     return model        
 
 @fixture(scope='session', params=['mean_absolute_error',
@@ -103,9 +103,11 @@ def models_by_metric(request):
                                   'root_mean_squared_error',
                                   'median_absolute_error'])                                  
 def model_lower_is_better(request):
-    model = LinearRegression(metric=request.param)
+    model = LinearRegression(metric=request.param, early_stop=True,
+                            val_size=0.3, precision=0.1,
+                            patience=2)
     model.cost_function = RegressionCostFactory()(cost='quadratic')
-    model.scorer = RegressionMetricFactory()(metric=request.param)
+    model.scorer = RegressionMetricFactory()(metric=request.param)                            
     return model
 
 @fixture(scope='session', params=['r2',
@@ -113,9 +115,11 @@ def model_lower_is_better(request):
                                   'neg_mean_squared_error',
                                   'neg_root_mean_squared_error'])                                  
 def model_higher_is_better(request):
-    model = LinearRegression(metric=request.param)
+    model = LinearRegression(metric=request.param, early_stop=True,
+                            val_size=0.3, precision=0.1,
+                            patience=2)
     model.cost_function = RegressionCostFactory()(cost='quadratic')
-    model.scorer = RegressionMetricFactory()(metric=request.param)
+    model.scorer = RegressionMetricFactory()(metric=request.param)                            
     return model
 
 @fixture(scope='session', params=[TimeDecay(),

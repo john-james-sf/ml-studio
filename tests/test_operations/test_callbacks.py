@@ -119,7 +119,6 @@ class HistoryTests:
         assert history.epoch_log['val_cost'][0] == val_cost, "val_cost 1st iteration not correct"
         assert history.epoch_log['val_score'][0] == val_score, "val_score 1st iteration not correct"
         assert (history.epoch_log['theta'][0]==theta).all(), "theta 1st iteration not correct"
-        print(history)
         assert isinstance(
             history.epoch_log['epoch'], list), "epochs is not a list"
         assert isinstance(

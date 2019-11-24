@@ -111,6 +111,19 @@ class LogisticRegression(Classification):
     early_stop : None or EarlyStop subclass, optional (default=None)
         The early stopping algorithm to use during training.
 
+    val_size : Float, default=0.3
+        The proportion of the training set to allocate to the validation set.
+        Must be between 0 and 1. Only used when early_stop is not False.
+
+    patience : int, default=5
+        The number of consecutive iterations with no improvement to wait before
+        early stopping.
+
+    precision : float, default=0.01
+        The stopping criteria. The precision with which improvement in training
+        cost or validation score is measured e.g. training cost at time k+1
+        has improved if it has dropped training cost (k) * precision.
+
     verbose : bool, optional (default=False)
         If true, performance during training is summarized to sysout.
 
@@ -152,14 +165,16 @@ class LogisticRegression(Classification):
     """    
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None,
-                 epochs=1000, cost='binary_cross_entropy',
-                 metric='accuracy',  early_stop=None, verbose=False, 
-                 checkpoint=100, name=None, seed=None):
+                 epochs=1000, cost='binary_cross_entropy',                 
+                 metric='accuracy',  early_stop=False, 
+                 val_size=0.3, patience=5, precision=0.001,
+                 verbose=False, checkpoint=100, name=None, seed=None):
         super(LogisticRegression,self).__init__(learning_rate=learning_rate, 
                  batch_size=batch_size, theta_init=theta_init, 
                  epochs=epochs, cost=cost, metric=metric,  
-                 early_stop=early_stop, verbose=verbose, 
-                 checkpoint=checkpoint, name=name, seed=seed)                 
+                 early_stop=early_stop, val_size=val_size, patience=patience, 
+                 precision=precision, verbose=verbose, checkpoint=checkpoint, 
+                 name=name, seed=seed)                 
 
     def _sigmoid(self, z):
         """Computes the sigmoid for a scalar or vector z."""
@@ -168,6 +183,7 @@ class LogisticRegression(Classification):
 
     def _set_name(self):
         """Set name of model for plotting purposes."""
+        self._set_algorithm_name()
         self.task = "Logistic Regression"
         self.name = self.name or self.task + ' with ' + self.algorithm
 
@@ -219,7 +235,7 @@ class MultinomialLogisticRegression(Classification):
         Initial values for the parameters :math:`\\theta`
 
     epochs : int, optional (default=1000)
-        The number of epochs to execute during training
+        The maximum number of epochs to execute during training
 
     cost : str, optional (default='binary_cross_entropy')
         The string name for the cost function
@@ -249,8 +265,21 @@ class MultinomialLogisticRegression(Classification):
         'roc':
             Compute Reciever Operating Characteristics (ROC)
 
-    early_stop : None or EarlyStop subclass, optional (default=None)
+    early_stop : Bool or EarlyStop subclass, optional (default=True)
         The early stopping algorithm to use during training.
+
+    val_size : Float, default=0.3
+        The proportion of the training set to allocate to the validation set.
+        Must be between 0 and 1. Only used when early_stop is not False.
+
+    patience : int, default=5
+        The number of consecutive iterations with no improvement to wait before
+        early stopping.
+
+    precision : float, default=0.01
+        The stopping criteria. The precision with which improvement in training
+        cost or validation score is measured e.g. training cost at time k+1
+        has improved if it has dropped training cost (k) * precision. 
 
     verbose : bool, optional (default=False)
         If true, performance during training is summarized to sysout.
@@ -277,12 +306,6 @@ class MultinomialLogisticRegression(Classification):
         problems, `intercept_` corresponds to outcome 1 (True) and 
         `-intercept_` corresponds to outcome 0 (False).
 
-    classes_ : array-like, shape (n_classes_,)
-        Array containing all class labels
-
-    n_classes_ : int
-        The number of classes 
-
     epochs_ : int
         Total number of epochs executed.
 
@@ -298,21 +321,21 @@ class MultinomialLogisticRegression(Classification):
     classification.LogisticRegression : Binary Classification
     """    
 
-    def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
-                 epochs=1000, cost='categorical_cross_entropy',
-                 metric='accuracy',  early_stop=None, verbose=False, 
-                 checkpoint=100, name=None, seed=None):
+    def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None,
+                 epochs=1000, cost='categorical_cross_entropy',                 
+                 metric='accuracy',  early_stop=False, 
+                 val_size=0.3, patience=5, precision=0.001,
+                 verbose=False, checkpoint=100, name=None, seed=None):
         super(MultinomialLogisticRegression,self).__init__(learning_rate=learning_rate, 
                  batch_size=batch_size, theta_init=theta_init, 
                  epochs=epochs, cost=cost, metric=metric,  
-                 early_stop=early_stop, verbose=verbose, 
-                 checkpoint=checkpoint, name=name, seed=seed)
-
-        self.n_classes_ = 0
-        self.classes_ = None
+                 early_stop=early_stop, val_size=val_size, patience=patience, 
+                 precision=precision, verbose=verbose, checkpoint=checkpoint, 
+                 name=name, seed=seed)   
 
     def _set_name(self):
         """Set name of model for plotting purposes."""
+        self._set_algorithm_name()
         self.task = "Multinomial Logistic Regression"
         self.name = self.name or self.task + ' with ' + self.algorithm
 
@@ -320,19 +343,15 @@ class MultinomialLogisticRegression(Classification):
         """Computes softmax probabilities."""
         return np.exp(z)/np.sum(np.exp(z), axis=axis)
 
-
-    def _prepare_data(self, X, y):
-        """Prepares data and reports classes and n_classes."""
-        super(MultinomialLogisticRegression, self)._prepare_data(X,y)
-        self.classes_ = np.unique(y)
-        self.n_classes_ = len(self.classes_)
     
     def _init_weights(self):
         """Initializes weights according to the shapes of X and y."""
-        # Perform random uniform initialization of parameters                              
-        limit = 1 / np.sqrt(self.n_features_)
+        # Perform random uniform initialization of parameters        
+        n_features = self.X.shape[1]
+        n_classes = len(np.unique(self.y))
+        limit = 1 / np.sqrt(n_features)
         np.random.seed(self.seed)
-        self.theta = np.random.uniform(-limit, limit, (self.n_features_, self.n_classes_))  
+        self.theta = np.random.uniform(-limit, limit, (n_features, n_classes))  
 
     def _get_cost_function(self):
         """Obtains the cost function associated with the cost parameter."""

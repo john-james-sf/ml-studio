@@ -11,7 +11,7 @@ from pytest import mark
 
 from ml_studio.supervised_learning.classification import LogisticRegression
 from ml_studio.supervised_learning.classification import MultinomialLogisticRegression
-from ml_studio.supervised_learning.training.early_stop import EarlyStopPlateau
+from ml_studio.supervised_learning.training.early_stop import EarlyStopImprovement
 from ml_studio.supervised_learning.training.early_stop import EarlyStopStrips
 from ml_studio.supervised_learning.training.metrics import Metric
 # --------------------------------------------------------------------------- #
@@ -64,7 +64,7 @@ class LogisticRegressionTests:
     @mark.logistic_regression_history
     def test_logistic_regression_history_w_early_stop(self, get_binary_classification_data):        
         X, y = get_binary_classification_data
-        es = EarlyStopPlateau()
+        es = EarlyStopImprovement()
         clf = LogisticRegression(epochs=10, early_stop=es)
         clf.fit(X, y)        
         # Test epoch history
@@ -90,7 +90,7 @@ class LogisticRegressionTests:
     @mark.logistic_regression_learning_rate_schedules
     def test_logistic_regression_learning_rate_schedules(self, learning_rate_schedules, get_binary_classification_data):        
         X, y = get_binary_classification_data        
-        clf = LogisticRegression(epochs=50, checkpoint=10, learning_rate=learning_rate_schedules)
+        clf = LogisticRegression(epochs=100, checkpoint=10, learning_rate=learning_rate_schedules)
         clf.fit(X, y)       
         # Confirm learning rates decreased
         assert clf.history.epoch_log.get('learning_rate')[0] > clf.history.epoch_log.get('learning_rate')[-1], "Learning rate didn't decrease"
@@ -133,7 +133,8 @@ class MultinomialLogisticRegressionTests:
     @mark.multinomial_logistic_regression_prep_data
     def test_multinomial_logistic_regression_prep_data(self, get_multinomial_classification_data):
         X, y = get_multinomial_classification_data
-        clf = MultinomialLogisticRegression(epochs=50, cost='categorical_cross_entropy')                
+        clf = MultinomialLogisticRegression(epochs=50, cost='categorical_cross_entropy',
+                                            val_size=0, early_stop=False)                
         clf.fit(X,y)
         assert X.shape[0] == clf.X.shape[0], "X.shape[0] incorrect in prep data"
         assert X.shape[1]+1 == clf.X.shape[1], "X.shape[1] incorrect in prep data"
@@ -143,13 +144,12 @@ class MultinomialLogisticRegressionTests:
     @mark.multinomial_logistic_regression_init_weights
     def test_multinomial_logistic_regression_init_weights(self, get_multinomial_classification_data):
         X, y = get_multinomial_classification_data        
+        n_features = X.shape[1]+1
+        n_classes = len(np.unique(y))
         clf = MultinomialLogisticRegression(epochs=50)                
         clf.fit(X,y)
-        assert clf.theta.shape == (X.shape[1]+1,3), "theta shape incorrect for multi classification"
-        assert clf.n_classes_ == 3, "n_classes doesn't equal len(np.unique(y))"        
-
-
-
+        assert clf.theta.shape == (n_features,n_classes), "theta shape incorrect for multi classification"
+        
     @mark.logistic_regression
     @mark.multinomial_logistic_regression
     @mark.multinomial_logistic_regression_predict
@@ -172,7 +172,7 @@ class MultinomialLogisticRegressionTests:
     @mark.multinomial_logistic_regression_early_stop
     def test_multinomial_logistic_regression_early_stop(self, get_multinomial_classification_data):        
         X, y = get_multinomial_classification_data
-        es = EarlyStopPlateau(precision=0.001, patience=5)
+        es = EarlyStopImprovement(precision=0.001, patience=5)
         clf = MultinomialLogisticRegression(epochs=100, early_stop=es, checkpoint=10)
         clf.fit(X, y)       
         # Confirm early stop happened

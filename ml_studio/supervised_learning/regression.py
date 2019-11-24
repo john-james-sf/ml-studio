@@ -24,16 +24,19 @@ class Regression(Estimator):
     DEFAULT_METRIC = 'mean_squared_error'
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
                  epochs=1000, cost='quadratic', metric='mean_squared_error', 
-                 early_stop=None, verbose=False, checkpoint=100, 
-                 name=None, seed=None):
-        super(Regression, self).__init__(learning_rate=learning_rate,
-                                              batch_size=batch_size,
-                                              theta_init=theta_init, epochs=epochs,
-                                              cost=cost, metric=metric, 
-                                              early_stop=early_stop,
-                                              verbose=verbose,
-                                              checkpoint=checkpoint, 
-                                              name=name, seed=seed)    
+                 early_stop=False, val_size=0.3, patience=5, precision=0.001,
+                 verbose=False, checkpoint=100, name=None, seed=None):
+        super(Regression, self).__init__(learning_rate=learning_rate, 
+                                         batch_size=batch_size, 
+                                         theta_init=theta_init, 
+                                         epochs=epochs, cost=cost, 
+                                         metric=metric, 
+                                         early_stop=early_stop, 
+                                         val_size=val_size, 
+                                         patience=patience, 
+                                         precision=precision,
+                                         verbose=verbose, checkpoint=checkpoint, 
+                                         name=name, seed=seed)     
  
     @abstractmethod
     def _set_name(self):
@@ -115,22 +118,127 @@ class Regression(Estimator):
 
 
 class LinearRegression(Regression):
-    """Performs linear regression with gradient descent."""
+    """Trains linear regression models using Gradient Descent.
+    
+    Parameters
+    ----------
+    learning_rate : float or LearningRateSchedule instance, optional (default=0.01)
+        Learning rate or learning rate schedule.
+
+    batch_size : None or int, optional (default=None)
+        The number of examples to include in a single batch.
+
+    theta_init : None or array_like, optional (default=None)
+        Initial values for the parameters :math:`\\theta`
+
+    epochs : int, optional (default=1000)
+        The number of epochs to execute during training
+
+    cost : str, (default='quadratic')
+        The string name for the cost function
+
+        'quadratic':
+            Quadratic or Mean Squared Error (MSE) cost 
+        'mae':
+            Mean Absolute Error (MAE)
+        'huber':
+            Computes Huber cost
+
+    metric : str, optional (default='mean_squared_error')
+        Metrics used to evaluate classification scores:
+
+        'r2': 
+            R2 - The coefficient of determination
+        'var_explained': 
+            Percentage of variance explained
+        'mean_absolute_error':
+            Mean absolute error
+        'mean_squared_error':
+            Mean squared error
+        'neg_mean_squared_error':
+            Negative mean squared error
+        'root_mean_squared_error':
+            Root mean squared error
+        'neg_root_mean_squared_error':
+            Negative root mean squared error
+        'mean_squared_log_error':
+            Mean squared log error
+        'root_mean_squared_log_error':
+            Root mean squared log error
+        'median_absolute_error':
+            Median absolute error
+
+    early_stop : Bool or EarlyStop subclass, optional (default=True)
+        The early stopping algorithm to use during training.
+
+    val_size : Float, default=0.3
+        The proportion of the training set to allocate to the validation set.
+        Must be between 0 and 1. Only used when early_stop is not False.
+
+    patience : int, default=5
+        The number of consecutive iterations with no improvement to wait before
+        early stopping.
+
+    precision : float, default=0.01
+        The stopping criteria. The precision with which improvement in training
+        cost or validation score is measured e.g. training cost at time k+1
+        has improved if it has dropped training cost (k) * precision.
+
+    verbose : bool, optional (default=False)
+        If true, performance during training is summarized to sysout.
+
+    checkpoint : None or int, optional (default=100)
+        If verbose, report performance each 'checkpoint' epochs
+
+    name : None or str, optional (default=None)
+        The name of the model used for plotting
+
+    seed : None or int, optional (default=None)
+        Random state seed        
+
+    Attributes
+    ----------
+    coef_ : array-like shape (n_features,1) or (n_features, n_classes)
+        Coefficient of the features in X. 
+
+    intercept_ : array-like, shape(1,) or (n_classes,) 
+        Intercept (a.k.a. bias) added to the decision function. 
+
+    epochs_ : int
+        Total number of epochs executed.
+
+    Methods
+    -------
+    fit(X,y) Fits the model to input X and output y
+    predict(X) Renders predictions for input X using learned parameters
+    score(X,y) Computes a score using metric designated in __init__.
+    summary() Prints a summary of the model to sysout.  
+
+    See Also
+    --------
+    regression.LassoRegression : Lasso Regression
+    regression.RidgeRegression : Ridge Regression
+    regression.ElasticNetRegression : ElasticNet Regression
+    """    
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
-                 epochs=1000, cost='quadratic', 
-                 metric='mean_squared_error', early_stop=None, 
-                 verbose=False, checkpoint=100, name=None, 
-                 seed=None):
-        super(LinearRegression, self).__init__(learning_rate=learning_rate,
-                                              batch_size=batch_size,
-                                              theta_init=theta_init, epochs=epochs,
-                                              cost=cost,
-                                              metric=metric, early_stop=early_stop,
-                                              verbose=verbose,
-                                              checkpoint=checkpoint, name=name, seed=seed)
+                 epochs=1000, cost='quadratic', metric='mean_squared_error', 
+                 early_stop=False, val_size=0.3, patience=5, precision=0.001,
+                 verbose=False, checkpoint=100, name=None, seed=None):
+        super(LinearRegression, self).__init__(learning_rate=learning_rate, 
+                                         batch_size=batch_size, 
+                                         theta_init=theta_init, 
+                                         epochs=epochs, cost=cost, 
+                                         metric=metric, 
+                                         early_stop=early_stop, 
+                                         val_size=val_size, 
+                                         patience=patience, 
+                                         precision=precision,
+                                         verbose=verbose, checkpoint=checkpoint, 
+                                         name=name, seed=seed)   
 
     def _set_name(self):
+        self._set_algorithm_name()
         self.task = "Linear Regression"
         self.name = self.name or self.task + ' with ' + self.algorithm
 
@@ -141,24 +249,133 @@ class LinearRegression(Regression):
 
 
 class LassoRegression(Regression):
-    """Performs lasso regression with gradient descent."""
+    """Trains lasso regression models using Gradient Descent.
+    
+    Parameters
+    ----------
+    learning_rate : float or LearningRateSchedule instance, optional (default=0.01)
+        Learning rate or learning rate schedule.
+
+    batch_size : None or int, optional (default=None)
+        The number of examples to include in a single batch.
+
+    theta_init : None or array_like, optional (default=None)
+        Initial values for the parameters :math:`\\theta`
+
+    alpha : Float, default=0.001
+        Constant that multiplies the regularization term.
+
+    epochs : int, optional (default=1000)
+        The number of epochs to execute during training
+
+    cost : str, (default='quadratic')
+        The string name for the cost function
+
+        'quadratic':
+            Quadratic or Mean Squared Error (MSE) cost 
+        'mae':
+            Mean Absolute Error (MAE)
+        'huber':
+            Computes Huber cost
+
+    metric : str, optional (default='mean_squared_error')
+        Metrics used to evaluate classification scores:
+
+        'r2': 
+            R2 - The coefficient of determination
+        'var_explained': 
+            Percentage of variance explained
+        'mean_absolute_error':
+            Mean absolute error
+        'mean_squared_error':
+            Mean squared error
+        'neg_mean_squared_error':
+            Negative mean squared error
+        'root_mean_squared_error':
+            Root mean squared error
+        'neg_root_mean_squared_error':
+            Negative root mean squared error
+        'mean_squared_log_error':
+            Mean squared log error
+        'root_mean_squared_log_error':
+            Root mean squared log error
+        'median_absolute_error':
+            Median absolute error
+
+    early_stop : Bool or EarlyStop subclass, optional (default=True)
+        The early stopping algorithm to use during training.
+
+    val_size : Float, default=0.3
+        The proportion of the training set to allocate to the validation set.
+        Must be between 0 and 1. Only used when early_stop is not False.
+
+    patience : int, default=5
+        The number of consecutive iterations with no improvement to wait before
+        early stopping.
+
+    precision : float, default=0.01
+        The stopping criteria. The precision with which improvement in training
+        cost or validation score is measured e.g. training cost at time k+1
+        has improved if it has dropped training cost (k) * precision.
+
+    verbose : bool, optional (default=False)
+        If true, performance during training is summarized to sysout.
+
+    checkpoint : None or int, optional (default=100)
+        If verbose, report performance each 'checkpoint' epochs
+
+    name : None or str, optional (default=None)
+        The name of the model used for plotting
+
+    seed : None or int, optional (default=None)
+        Random state seed        
+
+    Attributes
+    ----------
+    coef_ : array-like shape (n_features,1) or (n_features, n_classes)
+        Coefficient of the features in X. 
+
+    intercept_ : array-like, shape(1,) or (n_classes,) 
+        Intercept (a.k.a. bias) added to the decision function. 
+
+    epochs_ : int
+        Total number of epochs executed.
+
+    Methods
+    -------
+    fit(X,y) Fits the model to input X and output y
+    predict(X) Renders predictions for input X using learned parameters
+    score(X,y) Computes a score using metric designated in __init__.
+    summary() Prints a summary of the model to sysout.  
+
+    See Also
+    --------
+    regression.LinearRegression : Lasso Regression
+    regression.RidgeRegression : Ridge Regression
+    regression.ElasticNetRegression : ElasticNet Regression
+    """    
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
-                 alpha=1.0, epochs=1000, cost='quadratic', 
-                 metric='mean_squared_error', early_stop=None, 
-                 verbose=False, checkpoint=100, name=None, 
-                 seed=None):
-        super(LassoRegression, self).__init__(learning_rate=learning_rate,
-                                              batch_size=batch_size,
-                                              theta_init=theta_init, epochs=epochs,
-                                              cost=cost,
-                                              metric=metric, early_stop=early_stop,
-                                              verbose=verbose,
-                                              checkpoint=checkpoint, name=name, seed=seed)
+                 alpha=0.0001, epochs=1000, cost='quadratic', 
+                 metric='mean_squared_error',  early_stop=False, 
+                 val_size=0.3, patience=5, precision=0.001,
+                 verbose=False, checkpoint=100, name=None, seed=None):
+        super(LassoRegression, self).__init__(learning_rate=learning_rate, 
+                                         batch_size=batch_size, 
+                                         theta_init=theta_init, 
+                                         epochs=epochs, cost=cost, 
+                                         metric=metric, 
+                                         early_stop=early_stop, 
+                                         val_size=val_size, 
+                                         patience=patience, 
+                                         precision=precision,
+                                         verbose=verbose, checkpoint=checkpoint, 
+                                         name=name, seed=seed)    
         self.alpha = alpha
         self.regularizer = L1(alpha=alpha)
 
     def _set_name(self):
+        self._set_algorithm_name()
         self.task = "Lasso Regression"
         self.name = self.name or self.task + ' with ' + self.algorithm
 
@@ -166,25 +383,134 @@ class LassoRegression(Regression):
 #                         RIDGE REGRESSION CLASS                              #
 # --------------------------------------------------------------------------- #
 class RidgeRegression(Regression):
-    """Performs ridge regression with gradient descent."""
+    """Trains ridge regression models using Gradient Descent.
+    
+    Parameters
+    ----------
+    learning_rate : float or LearningRateSchedule instance, optional (default=0.01)
+        Learning rate or learning rate schedule.
+
+    batch_size : None or int, optional (default=None)
+        The number of examples to include in a single batch.
+
+    theta_init : None or array_like, optional (default=None)
+        Initial values for the parameters :math:`\\theta`
+
+    alpha : Float, default=0.0001
+        Constant that multiplies the regularization term.
+
+    epochs : int, optional (default=1000)
+        The number of epochs to execute during training
+
+    cost : str, (default='quadratic')
+        The string name for the cost function
+
+        'quadratic':
+            Quadratic or Mean Squared Error (MSE) cost 
+        'mae':
+            Mean Absolute Error (MAE)
+        'huber':
+            Computes Huber cost
+
+    metric : str, optional (default='mean_squared_error')
+        Metrics used to evaluate classification scores:
+
+        'r2': 
+            R2 - The coefficient of determination
+        'var_explained': 
+            Percentage of variance explained
+        'mean_absolute_error':
+            Mean absolute error
+        'mean_squared_error':
+            Mean squared error
+        'neg_mean_squared_error':
+            Negative mean squared error
+        'root_mean_squared_error':
+            Root mean squared error
+        'neg_root_mean_squared_error':
+            Negative root mean squared error
+        'mean_squared_log_error':
+            Mean squared log error
+        'root_mean_squared_log_error':
+            Root mean squared log error
+        'median_absolute_error':
+            Median absolute error
+
+    early_stop : Bool or EarlyStop subclass, optional (default=True)
+        The early stopping algorithm to use during training.
+
+    val_size : Float, default=0.3
+        The proportion of the training set to allocate to the validation set.
+        Must be between 0 and 1. Only used when early_stop is not False.
+
+    patience : int, default=5
+        The number of consecutive iterations with no improvement to wait before
+        early stopping.
+
+    precision : float, default=0.01
+        The stopping criteria. The precision with which improvement in training
+        cost or validation score is measured e.g. training cost at time k+1
+        has improved if it has dropped training cost (k) * precision.
+
+    verbose : bool, optional (default=False)
+        If true, performance during training is summarized to sysout.
+
+    checkpoint : None or int, optional (default=100)
+        If verbose, report performance each 'checkpoint' epochs
+
+    name : None or str, optional (default=None)
+        The name of the model used for plotting
+
+    seed : None or int, optional (default=None)
+        Random state seed        
+
+    Attributes
+    ----------
+    coef_ : array-like shape (n_features,1) or (n_features, n_classes)
+        Coefficient of the features in X. 
+
+    intercept_ : array-like, shape(1,) or (n_classes,) 
+        Intercept (a.k.a. bias) added to the decision function. 
+
+    epochs_ : int
+        Total number of epochs executed.
+
+    Methods
+    -------
+    fit(X,y) Fits the model to input X and output y
+    predict(X) Renders predictions for input X using learned parameters
+    score(X,y) Computes a score using metric designated in __init__.
+    summary() Prints a summary of the model to sysout.  
+
+    See Also
+    --------
+    regression.LinearRegression : Linear Regression
+    regression.LassoRegression : Lasso Regression
+    regression.ElasticNetRegression : ElasticNet Regression
+    """    
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
-                 alpha=1.0, epochs=1000, cost='quadratic', 
-                 metric='mean_squared_error',  
-                 early_stop=None, verbose=False, checkpoint=100, 
-                 name=None, seed=None):
-        super(RidgeRegression, self).__init__(learning_rate=learning_rate,
-                                              batch_size=batch_size,
-                                              theta_init=theta_init, epochs=epochs,
-                                              cost=cost,
-                                              metric=metric, early_stop=early_stop,
-                                              verbose=verbose,
-                                              checkpoint=checkpoint, name=name, seed=seed)
+                 alpha=0.0001, epochs=1000, cost='quadratic', 
+                 metric='mean_squared_error',  early_stop=False, 
+                 val_size=0.3, patience=5, precision=0.001,
+                 verbose=False, checkpoint=100, name=None, seed=None):
+        super(RidgeRegression, self).__init__(learning_rate=learning_rate, 
+                                         batch_size=batch_size, 
+                                         theta_init=theta_init, 
+                                         epochs=epochs, cost=cost, 
+                                         metric=metric, 
+                                         early_stop=early_stop, 
+                                         val_size=val_size, 
+                                         patience=patience, 
+                                         precision=precision,
+                                         verbose=verbose, checkpoint=checkpoint, 
+                                         name=name, seed=seed)     
         self.alpha = alpha
         self.regularizer = L2(alpha=alpha)
 
     def _set_name(self):
         """Sets name of model for plotting purposes."""
+        self._set_algorithm_name()
         self.task = "Ridge Regression"
         self.name = self.name or self.task + ' with ' + self.algorithm
 
@@ -194,27 +520,139 @@ class RidgeRegression(Regression):
 
 
 class ElasticNetRegression(Regression):
-    """Performs elastic net regression with gradient descent."""
+    """Trains lasso regression models using Gradient Descent.
+    
+    Parameters
+    ----------
+    learning_rate : float or LearningRateSchedule instance, optional (default=0.01)
+        Learning rate or learning rate schedule.
+
+    batch_size : None or int, optional (default=None)
+        The number of examples to include in a single batch.
+
+    theta_init : None or array_like, optional (default=None)
+        Initial values for the parameters :math:`\\theta`
+
+    alpha : Float, default=0.0001
+        Constant that multiplies the regularization term.
+
+    ratio : Float, default=0.5
+        The L1 ratio with 0 <= ratio <= 1. For ratio = 0 the penalty is an L2 
+        penalty. For ratio = 1 it is an L1 penalty. For 0 < ratio < 1, the 
+        penalty is a combination of L1 and L2. 
+
+    epochs : int, optional (default=1000)
+        The number of epochs to execute during training
+
+    cost : str, (default='quadratic')
+        The string name for the cost function
+
+        'quadratic':
+            Quadratic or Mean Squared Error (MSE) cost 
+        'mae':
+            Mean Absolute Error (MAE)
+        'huber':
+            Computes Huber cost
+
+    metric : str, optional (default='mean_squared_error')
+        Metrics used to evaluate classification scores:
+
+        'r2': 
+            R2 - The coefficient of determination
+        'var_explained': 
+            Percentage of variance explained
+        'mean_absolute_error':
+            Mean absolute error
+        'mean_squared_error':
+            Mean squared error
+        'neg_mean_squared_error':
+            Negative mean squared error
+        'root_mean_squared_error':
+            Root mean squared error
+        'neg_root_mean_squared_error':
+            Negative root mean squared error
+        'mean_squared_log_error':
+            Mean squared log error
+        'root_mean_squared_log_error':
+            Root mean squared log error
+        'median_absolute_error':
+            Median absolute error
+
+    early_stop : Bool or EarlyStop subclass, optional (default=True)
+        The early stopping algorithm to use during training.
+
+    val_size : Float, default=0.3
+        The proportion of the training set to allocate to the validation set.
+        Must be between 0 and 1. Only used when early_stop is not False.
+
+    patience : int, default=5
+        The number of consecutive iterations with no improvement to wait before
+        early stopping.
+
+    precision : float, default=0.01
+        The stopping criteria. The precision with which improvement in training
+        cost or validation score is measured e.g. training cost at time k+1
+        has improved if it has dropped training cost (k) * precision.
+
+    verbose : bool, optional (default=False)
+        If true, performance during training is summarized to sysout.
+
+    checkpoint : None or int, optional (default=100)
+        If verbose, report performance each 'checkpoint' epochs
+
+    name : None or str, optional (default=None)
+        The name of the model used for plotting
+
+    seed : None or int, optional (default=None)
+        Random state seed        
+
+    Attributes
+    ----------
+    coef_ : array-like shape (n_features,1) or (n_features, n_classes)
+        Coefficient of the features in X. 
+
+    intercept_ : array-like, shape(1,) or (n_classes,) 
+        Intercept (a.k.a. bias) added to the decision function. 
+
+    epochs_ : int
+        Total number of epochs executed.
+
+    Methods
+    -------
+    fit(X,y) Fits the model to input X and output y
+    predict(X) Renders predictions for input X using learned parameters
+    score(X,y) Computes a score using metric designated in __init__.
+    summary() Prints a summary of the model to sysout.  
+
+    See Also
+    --------
+    regression.LinearRegression : Linear Regression
+    regression.RidgeRegression : Ridge Regression
+    regression.LassoRegression : Lasso Regression
+    """    
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
-                 alpha=1.0, ratio=0.5, epochs=1000, cost='quadratic', 
-                 metric='mean_squared_error', early_stop=None, verbose=False, 
-                 checkpoint=100, name=None, seed=None):
-        super(ElasticNetRegression, self).__init__(learning_rate=learning_rate,
-                                                   batch_size=batch_size,
-                                                   theta_init=theta_init, 
-                                                   epochs=epochs,
-                                                   cost=cost, 
-                                                   metric=metric, 
-                                                   early_stop=early_stop,
-                                                   verbose=verbose,
-                                                   checkpoint=checkpoint, 
-                                                   name=name, seed=seed)
+                 alpha=0.0001, ratio=0.15, epochs=1000, cost='quadratic', 
+                 metric='mean_squared_error',  early_stop=False, 
+                 val_size=0.3, patience=5, precision=0.001,
+                 verbose=False, checkpoint=100, name=None, seed=None):
+        super(ElasticNetRegression, self).__init__(learning_rate=learning_rate, 
+                                         batch_size=batch_size, 
+                                         theta_init=theta_init, 
+                                         epochs=epochs, cost=cost, 
+                                         metric=metric, 
+                                         early_stop=early_stop, 
+                                         val_size=val_size, 
+                                         patience=patience, 
+                                         precision=precision,
+                                         verbose=verbose, checkpoint=checkpoint, 
+                                         name=name, seed=seed)    
         self.alpha = alpha
         self.ratio = ratio
         self.regularizer = ElasticNet(alpha=alpha, ratio=ratio)    
         
     def _set_name(self):
         """Sets name of model for plotting purposes."""
+        self._set_algorithm_name()
         self.task = "ElasticNet Regression"
         self.name = self.name or self.task + ' with ' + self.algorithm
