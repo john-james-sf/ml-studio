@@ -206,8 +206,8 @@ class RegressionTests:
 
     @mark.regression
     @mark.regression_early_stop
-    @mark.regression_early_stop_plateau
-    def test_regression_fit_early_stop_plateau(self, regression, get_regression_data):
+    @mark.regression_early_stop_improvement
+    def test_regression_fit_early_stop_improvement(self, regression, get_regression_data):
         stop = EarlyStopImprovement(precision=0.1, patience=2)
         X, y = get_regression_data                
         est = regression(learning_rate=0.5, epochs=5000, early_stop=stop)
@@ -218,6 +218,50 @@ class RegressionTests:
             est = regression(learning_rate=0.5, epochs=5000, early_stop=stop, metric=None)
             est.fit(X,y)
     
+    @mark.regression
+    @mark.regression_early_stop
+    @mark.regression_early_stop_improvement_from_estimator
+    def test_regression_fit_early_stop_improvement_from_estimator_val_score(self, regression, get_regression_data):        
+        X, y = get_regression_data                
+        est = regression(learning_rate=0.5, epochs=5000, early_stop=True, val_size=0.3)
+        est.fit(X,y)
+        assert est.history.total_epochs < 5000, "didn't stop early"
+        assert len(est.history.epoch_log['learning_rate']) < 5000, "epoch log too long for early stop"        
+        assert est.convergence_monitor.metric == 'val_score', "Estimator sending wrong metric to early stop"
+
+    @mark.regression
+    @mark.regression_early_stop
+    @mark.regression_early_stop_improvement_from_estimator
+    def test_regression_fit_early_stop_improvement_from_estimator_val_cost(self, regression, get_regression_data):        
+        X, y = get_regression_data                
+        est = regression(learning_rate=0.5, epochs=5000, early_stop=True, val_size=0.3, metric=None)
+        est.fit(X,y)
+        assert est.history.total_epochs < 5000, "didn't stop early"
+        assert len(est.history.epoch_log['learning_rate']) < 5000, "epoch log too long for early stop"        
+        assert est.convergence_monitor.metric == 'val_cost', "Estimator sending wrong metric to early stop"
+
+    @mark.regression
+    @mark.regression_early_stop
+    @mark.regression_early_stop_improvement_from_estimator
+    def test_regression_fit_early_stop_improvement_from_estimator_train_cost(self, regression, get_regression_data):        
+        X, y = get_regression_data                
+        est = regression(learning_rate=0.5, epochs=5000, early_stop=False, val_size=0.3, metric=None)
+        est.fit(X,y)
+        assert est.history.total_epochs < 5000, "didn't stop early"
+        assert len(est.history.epoch_log['learning_rate']) < 5000, "epoch log too long for early stop"        
+        assert est.convergence_monitor.metric == 'train_cost', "Estimator sending wrong metric to early stop"
+
+    @mark.regression
+    @mark.regression_early_stop
+    @mark.regression_early_stop_improvement_from_estimator
+    def test_regression_fit_early_stop_improvement_from_estimator_train_score(self, regression, get_regression_data):        
+        X, y = get_regression_data                
+        est = regression(learning_rate=0.5, epochs=5000, early_stop=False, 
+                         val_size=0.3, metric='mean_squared_error')
+        est.fit(X,y)
+        assert est.history.total_epochs < 5000, "didn't stop early"
+        assert len(est.history.epoch_log['learning_rate']) < 5000, "epoch log too long for early stop"        
+        assert est.convergence_monitor.metric == 'train_score', "Estimator sending wrong metric to early stop"
     @mark.regression
     @mark.regression_early_stop
     @mark.regression_early_stop_generalization
