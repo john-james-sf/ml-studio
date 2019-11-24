@@ -18,7 +18,7 @@ from ml_studio.supervised_learning.training.callbacks import Callback
 from ml_studio.supervised_learning.training.cost import Cost, Quadratic, BinaryCrossEntropy
 from ml_studio.supervised_learning.training.cost import CategoricalCrossEntropy
 from ml_studio.supervised_learning.training.metrics import Metric
-from ml_studio.supervised_learning.training.early_stop import EarlyStopPlateau
+from ml_studio.supervised_learning.training.early_stop import EarlyStopImprovement
 from ml_studio.supervised_learning.training.early_stop import EarlyStopGeneralizationLoss
 from ml_studio.supervised_learning.training.early_stop import EarlyStopProgress
 from ml_studio.supervised_learning.training.early_stop import EarlyStopStrips
@@ -105,7 +105,7 @@ class RegressionTests:
     @mark.regression
     @mark.regression_prepare_data
     def test_regression_prepare_data_no_val_set(self, regression, get_regression_data):
-        est = regression(epochs=10)
+        est = regression(epochs=10, val_size=0)
         X, y = get_regression_data                
         est.fit(X,y)
         assert X.shape[1] == est.X.shape[1] - 1, "intercept column not added to X in prepare data"
@@ -115,8 +115,8 @@ class RegressionTests:
     @mark.regression
     @mark.regression_prepare_data
     def test_regression_prepare_data_w_val_set(self, regression, get_regression_data):                
-        stop = EarlyStopPlateau(val_size=0.2)
-        est = regression(epochs=10, early_stop=stop)
+        stop = EarlyStopImprovement()
+        est = regression(epochs=10, val_size=0.3, early_stop=stop)
         X, y = get_regression_data                
         est.fit(X,y)
         assert X.shape[1] == est.X.shape[1] - 1, "intercept column not added to X in prepare data"
@@ -183,7 +183,7 @@ class RegressionTests:
         X, y = get_regression_data         
         X = X[0:33]
         y = y[0:33]       
-        est = regression(batch_size=32, epochs=10)
+        est = regression(batch_size=32, epochs=10, val_size=0)
         est.fit(X,y)                
         assert est.history.total_epochs == 10, "total epochs in history not correct"
         assert est.history.total_batches == 20, "total batches in history not correct"
@@ -208,7 +208,7 @@ class RegressionTests:
     @mark.regression_early_stop
     @mark.regression_early_stop_plateau
     def test_regression_fit_early_stop_plateau(self, regression, get_regression_data):
-        stop = EarlyStopPlateau(precision=0.1, patience=2)
+        stop = EarlyStopImprovement(precision=0.1, patience=2)
         X, y = get_regression_data                
         est = regression(learning_rate=0.5, epochs=5000, early_stop=stop)
         est.fit(X,y)
@@ -255,7 +255,7 @@ class RegressionTests:
     @mark.regression_history
     def test_regression_history_no_val_data_no_metric(self, regression, get_regression_data):        
         X, y = get_regression_data        
-        est = regression(epochs=10, metric=None)
+        est = regression(epochs=10, metric=None, val_size=0)
         est.fit(X, y)        
         # Test epoch history
         assert est.history.total_epochs == len(est.history.epoch_log.get('epoch')), "number of epochs in log doesn't match epochs"        
@@ -278,7 +278,8 @@ class RegressionTests:
     def test_regression_history_w_val_data_and_metric(self, regression, get_regression_data):        
         X, y = get_regression_data  
         stop = EarlyStopStrips()
-        est = regression(epochs=10, learning_rate=0.001, early_stop=stop, metric='neg_root_mean_squared_error')
+        est = regression(epochs=10, learning_rate=0.001, val_size=0.3, 
+                         early_stop=stop, metric='neg_root_mean_squared_error')
         est.fit(X, y)        
         # Test epoch history
         assert est.history.total_epochs == len(est.history.epoch_log.get('epoch')), "number of epochs in log doesn't match epochs"        
@@ -300,7 +301,7 @@ class RegressionTests:
     @mark.regression_history
     def test_regression_history_no_val_data_w_metric(self, regression, get_regression_data):        
         X, y = get_regression_data        
-        est = regression(epochs=10, metric='mean_squared_error')
+        est = regression(epochs=10, metric='mean_squared_error', val_size=0)
         est.fit(X, y)        
         # Test epoch history
         assert est.history.total_epochs == len(est.history.epoch_log.get('epoch')), "number of epochs in log doesn't match epochs"        
@@ -323,7 +324,7 @@ class RegressionTests:
     @mark.regression_history
     def test_regression_history_w_val_data_w_metric(self, regression, get_regression_data):        
         X, y = get_regression_data     
-        stop = EarlyStopPlateau()   
+        stop = EarlyStopImprovement()   
         est = regression(epochs=10, learning_rate=0.001, metric='mean_squared_error', early_stop=stop)
         est.fit(X, y)        
         # Test epoch history
