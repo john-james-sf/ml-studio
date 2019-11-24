@@ -91,7 +91,7 @@ class LogisticRegressionTests:
     @mark.logistic_regression_learning_rate_schedules
     def test_logistic_regression_learning_rate_schedules(self, learning_rate_schedules, get_binary_classification_data):        
         X, y = get_binary_classification_data        
-        clf = LogisticRegression(epochs=100, checkpoint=10, learning_rate=learning_rate_schedules, patience=20)
+        clf = LogisticRegression(epochs=200, checkpoint=10, learning_rate=learning_rate_schedules, patience=40)
         clf.fit(X, y)       
         # Confirm learning rates decreased
         assert clf.history.epoch_log.get('learning_rate')[0] > clf.history.epoch_log.get('learning_rate')[-1], "Learning rate didn't decrease"

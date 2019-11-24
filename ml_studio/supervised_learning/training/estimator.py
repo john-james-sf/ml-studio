@@ -151,13 +151,13 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         # Compute costs 
         y_pred = self._predict(self.X)
         log['train_cost'] = self.cost_function(y=self.y, y_pred=y_pred)
-        if self.val_size > 0:
+        if self.val_size > 0 and self.early_stop:
             y_pred_val = self._predict(self.X_val)
             log['val_cost'] = self.cost_function(y=self.y_val, y_pred=y_pred_val)        
         # Compute scores 
         if self.metric is not None:            
             log['train_score'] = self.score(self.X, self.y)
-            if self.val_size > 0:
+            if self.val_size > 0 and self.early_stop:
                 log['val_score'] = self.score(self.X_val, self.y_val)        
 
         return log
@@ -177,33 +177,33 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
     def _get_convergence_monitor(self):
         if isinstance(self.early_stop, EarlyStop):
-            self.convergence_monitor = self.early_stop
+            convergence_monitor = self.early_stop
         else:
             if self.early_stop:
                 if self.metric:
-                    self.convergence_monitor = EarlyStopImprovement(metric='val_score',
+                    convergence_monitor = EarlyStopImprovement(metric='val_score',
                                                               precision=self.precision,
                                                               patience=self.patience)
                 else:
-                    self.convergence_monitor = EarlyStopImprovement(metric='val_cost',
+                    convergence_monitor = EarlyStopImprovement(metric='val_cost',
                                                               precision=self.precision,
                                                               patience=self.patience)
             else:
                 if self.metric:
-                    self.convergence_monitor = EarlyStopImprovement(metric='train_score',
+                    convergence_monitor = EarlyStopImprovement(metric='train_score',
                                                               precision=self.precision,
                                                               patience=self.patience)
                 else:
-                    self.convergence_monitor = EarlyStopImprovement(metric='train_cost',
+                    convergence_monitor = EarlyStopImprovement(metric='train_cost',
                                                               precision=self.precision,
                                                               patience=self.patience)            
-
+        return convergence_monitor
 
     def _compile(self):
         """Obtains external objects and add key functions to the log."""
         self.cost_function = self._get_cost_function()
         self.scorer = self._get_scorer()        
-        self._get_convergence_monitor()
+        self.convergence_monitor = self._get_convergence_monitor()
 
     def _init_callbacks(self):
         # Initialize callback list
