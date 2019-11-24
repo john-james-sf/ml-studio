@@ -71,7 +71,7 @@ class EarlyStopImprovement(EarlyStop):
 
     def _validate(self):
         if self.metric not in ['train_cost', 'train_score', 'val_cost', 'val_score']:
-            raise ValueError("metric must in ['train_cost', 'train_score', 'val_cost', 'val_score']")
+            raise ValueError("metric must be in ['train_cost', 'train_score', 'val_cost', 'val_score']")
         elif not isinstance(self.precision, float):
             raise TypeError("precision must be a float.")
         elif self.precision < 0 or self.precision > 1:

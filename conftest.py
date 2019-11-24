@@ -14,6 +14,8 @@ from ml_studio.supervised_learning.regression import LinearRegression
 from ml_studio.supervised_learning.regression import LassoRegression
 from ml_studio.supervised_learning.regression import RidgeRegression
 from ml_studio.supervised_learning.regression import ElasticNetRegression
+from ml_studio.supervised_learning.classification import LogisticRegression
+from ml_studio.supervised_learning.classification import MultinomialLogisticRegression
 
 from ml_studio.supervised_learning.training.cost import RegressionCostFactory
 from ml_studio.supervised_learning.training.metrics import RegressionMetricFactory
@@ -63,12 +65,13 @@ def get_regression_data_w_validation(get_regression_data):
         X, y, test_size=0.33, random_state=50)
     return X_train, X_test, y_train, y_test
 
-@fixture(scope='function', params=[LinearRegression,
+@fixture(scope='session', params=[LinearRegression,
                                    LassoRegression,
                                    RidgeRegression,
                                    ElasticNetRegression])
 def regression(request):
     return request.param
+
     
 @fixture(scope='session')
 def fit_multiple_models(get_regression_data):

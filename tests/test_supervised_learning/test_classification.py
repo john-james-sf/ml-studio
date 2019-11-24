@@ -86,15 +86,44 @@ class LogisticRegressionTests:
         assert clf.history.total_batches == len(clf.history.batch_log.get('theta')), "number of thetas in log doesn't match total batches"        
         assert clf.history.total_batches == len(clf.history.batch_log.get('train_cost')), "number of train_costs in log doesn't match total batches"                
 
+
     @mark.logistic_regression
     @mark.logistic_regression_learning_rate_schedules
     def test_logistic_regression_learning_rate_schedules(self, learning_rate_schedules, get_binary_classification_data):        
         X, y = get_binary_classification_data        
-        clf = LogisticRegression(epochs=100, checkpoint=10, learning_rate=learning_rate_schedules)
+        clf = LogisticRegression(epochs=100, checkpoint=10, learning_rate=learning_rate_schedules, patience=20)
         clf.fit(X, y)       
         # Confirm learning rates decreased
         assert clf.history.epoch_log.get('learning_rate')[0] > clf.history.epoch_log.get('learning_rate')[-1], "Learning rate didn't decrease"
         assert clf.history.epoch_log.get('learning_rate')[0] != clf.eta, "Learning rate didn't change"        
+
+    @mark.logistic_regression
+    def test_logistic_regression_early_stop_from_estimator_train_cost(self, get_binary_classification_data): 
+        X, y = get_binary_classification_data        
+        clf = LogisticRegression(epochs=5000, early_stop=False, val_size=0.3, metric=None)
+        clf.fit(X, y)
+        assert clf.convergence_monitor.metric == 'train_cost', "Estimator is not sending correct metric"
+
+    @mark.logistic_regression
+    def test_logistic_regression_early_stop_from_estimator_train_score(self, get_binary_classification_data): 
+        X, y = get_binary_classification_data        
+        clf = LogisticRegression(epochs=5000, early_stop=False, val_size=0.3, metric='accuracy')
+        clf.fit(X, y)
+        assert clf.convergence_monitor.metric == 'train_score', "Estimator is not sending correct metric"
+
+    @mark.logistic_regression
+    def test_logistic_regression_early_stop_from_estimator_val_cost(self, get_binary_classification_data): 
+        X, y = get_binary_classification_data        
+        clf = LogisticRegression(epochs=5000, early_stop=True, val_size=0.3, metric=None)
+        clf.fit(X, y)
+        assert clf.convergence_monitor.metric == 'val_cost', "Estimator is not sending correct metric"        
+
+    @mark.logistic_regression    
+    def test_logistic_regression_early_stop_from_estimator_val_score(self, get_binary_classification_data): 
+        X, y = get_binary_classification_data        
+        clf = LogisticRegression(epochs=5000, early_stop=True, val_size=0.3, metric='accuracy')
+        clf.fit(X, y)
+        assert clf.convergence_monitor.metric == 'val_score', "Estimator is not sending correct metric"                     
 
 # --------------------------------------------------------------------------- #
 #                    MULTINOMIAL LOGISTIC REGRESSION                          #
@@ -208,4 +237,34 @@ class MultinomialLogisticRegressionTests:
         assert clf.history.epoch_log.get('learning_rate')[0] > clf.history.epoch_log.get('learning_rate')[-1], "Learning rate didn't decrease"
         assert clf.history.epoch_log.get('learning_rate')[0] != clf.eta, "Learning rate didn't change"
 
+    @mark.logistic_regression
+    @mark.multinomial_logistic_regression
+    def test_multinomial_logistic_regression_early_stop_from_estimator_train_cost(self, get_multinomial_classification_data): 
+        X, y = get_multinomial_classification_data        
+        clf = MultinomialLogisticRegression(epochs=5000, early_stop=False, val_size=0.3, metric=None)
+        clf.fit(X, y)
+        assert clf.convergence_monitor.metric == 'train_cost', "Estimator is not sending correct metric"
 
+    @mark.logistic_regression
+    @mark.multinomial_logistic_regression
+    def test_multinomial_logistic_regression_early_stop_from_estimator_train_score(self, get_multinomial_classification_data): 
+        X, y = get_multinomial_classification_data        
+        clf = MultinomialLogisticRegression(epochs=5000, early_stop=False, val_size=0.3, metric='accuracy')
+        clf.fit(X, y)
+        assert clf.convergence_monitor.metric == 'train_score', "Estimator is not sending correct metric"
+
+    @mark.logistic_regression
+    @mark.multinomial_logistic_regression
+    def test_multinomial_logistic_regression_early_stop_from_estimator_val_cost(self, get_multinomial_classification_data): 
+        X, y = get_multinomial_classification_data        
+        clf = MultinomialLogisticRegression(epochs=5000, early_stop=True, val_size=0.3, metric=None)
+        clf.fit(X, y)
+        assert clf.convergence_monitor.metric == 'val_cost', "Estimator is not sending correct metric"        
+
+    @mark.logistic_regression
+    @mark.multinomial_logistic_regression
+    def test_multinomial_logistic_regression_early_stop_from_estimator_val_score(self, get_multinomial_classification_data): 
+        X, y = get_multinomial_classification_data        
+        clf = MultinomialLogisticRegression(epochs=5000, early_stop=True, val_size=0.3, metric='accuracy')
+        clf.fit(X, y)
+        assert clf.convergence_monitor.metric == 'val_score', "Estimator is not sending correct metric"                

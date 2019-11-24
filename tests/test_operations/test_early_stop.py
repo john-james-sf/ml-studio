@@ -59,8 +59,7 @@ class EarlyStopImprovementTests:
             stop.on_train_begin()                        
 
     @mark.early_stop
-    @mark.early_stop_improvement
-    @mark.early_stop_improvement_from_estimator
+    @mark.early_stop_improvement    
     @mark.early_stop_improvement_on_train_begin
     def test_early_stop_improvement_on_train_begin(self, models_by_metric,
                                                early_stop_metric):        
@@ -75,7 +74,6 @@ class EarlyStopImprovementTests:
         else:
             assert stop.best_performance_ == np.Inf, "cost best_performance not set correctly"
             assert stop.precision < 0, "precision not set correctly"
-
 
     @mark.early_stop
     @mark.early_stop_improvement
@@ -164,6 +162,7 @@ class EarlyStopImprovementTests:
         for i in range(len(logs)):
             stop.on_epoch_end(epoch=i+1, logs=logs[i])            
             assert stop.converged == converged[i], "not converging correctly"                      
+         
 
 # --------------------------------------------------------------------------- #
 #                  TEST EARLY STOP GENERALIZATION LOSS                        #
