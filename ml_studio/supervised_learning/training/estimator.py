@@ -114,9 +114,6 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
             elif self.checkpoint < 0:
                 raise ValueError(
                     "checkpoint must be a positive integer or None.")
-            elif self.checkpoint > self.epochs:
-                warnings.warn(UserWarning(
-                    "checkpoint must not be greater than the number of epochs."))
         if self.seed is not None:
             if not isinstance(self.seed, int):
                 raise TypeError("seed must be a positive integer.")
