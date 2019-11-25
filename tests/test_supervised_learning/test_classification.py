@@ -184,7 +184,7 @@ class MultinomialLogisticRegressionTests:
     @mark.multinomial_logistic_regression_predict
     def test_multinomial_logistic_regression_predict(self, get_multinomial_classification_data):
         X, y = get_multinomial_classification_data
-        clf = MultinomialLogisticRegression(epochs=100, cost='categorical_cross_entropy')
+        clf = MultinomialLogisticRegression(epochs=1000, cost='categorical_cross_entropy', patience=40)
         clf.fit(X,y)
         y_pred = clf._predict(X)
         assert y_pred.shape == (y.shape[0],3), "Shape of prediction is not correct."

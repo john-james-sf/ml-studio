@@ -261,7 +261,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         """Closes history callout and assign final and best weights."""
         self.cbks.on_train_end()
         self.intercept_ = self.theta[0]
-        self.coef_ = self.theta[1:]        
+        self.coef_ = self.theta[1:]
         self.epochs_ = self.epoch
 
     def _begin_epoch(self):
@@ -346,7 +346,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
             if not hasattr(self, 'coef_') or self.coef_ is None:
                 raise Exception("This %(name)s instance is not fitted "
                                  "yet" % {'name': type(self).__name__})              
-            y_pred = self.intercept_ + X.dot(self.coef_)  
+            y_pred = self.intercept_ + X.dot(self.coef_)
         return y_pred            
 
     @abstractmethod
