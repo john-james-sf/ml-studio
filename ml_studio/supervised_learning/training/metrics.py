@@ -50,13 +50,13 @@ class ClassificationMetric(Metric):
 # --------------------------------------------------------------------------- #
 #                           REGRESSION METRICS                                #
 # --------------------------------------------------------------------------- #
-class SSE(RegressionMetric):
-    """Computes sum squared error given data and parameters"""
+class SSR(RegressionMetric):
+    """Computes sum squared residuals given"""
 
     def __init__(self):
         self.mode = 'min'
-        self.name = 'sum_squared_error'
-        self.label = "Sum Squared Error"
+        self.name = 'residual_sum_squared_error'
+        self.label = "Residual Sum Squared Error"
         self.stateful = False
         self.best = np.min
         self.better = np.less
@@ -65,11 +65,11 @@ class SSE(RegressionMetric):
 
     
     def __call__(self, y, y_pred):
-        e = y-y_pred
+        e = y - y_pred
         return np.sum(e**2)  
 
 class SST(RegressionMetric):
-    """Computes total sum squared error given data and parameters"""
+    """Computes total sum of squares"""
 
     def __init__(self):
         self.mode = 'min'
@@ -102,9 +102,9 @@ class R2(RegressionMetric):
 
     
     def __call__(self, y, y_pred):
-        self._sse = SSE()
+        self._ssr = SSR()
         self._sst = SST()
-        r2 = 1 - (self._sse(y, y_pred)/self._sst(y, y_pred))        
+        r2 = 1 - (self._ssr(y, y_pred)/self._sst(y, y_pred))        
         return r2
 
 class VarExplained(RegressionMetric):

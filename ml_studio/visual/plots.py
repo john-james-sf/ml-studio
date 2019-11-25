@@ -85,9 +85,9 @@ def plot_loss(model, title=None, figsize=(12,4), directory=None, filename=None):
 
     # Format plot title
     if title is None:
-        title = model.history.params.get('name') + "\n" + \
+        title = model.name + "\n" + \
             "Training Plot with Learning Rate" +\
-            '\n' + proper(model.history.params.get('cost')) + " Cost"
+            '\n' + proper(model.cost) + " Cost"
         
     # If val loss is on the log, plot both training and validation loss
     if 'val_cost' in model.history.epoch_log:
@@ -99,7 +99,7 @@ def plot_loss(model, title=None, figsize=(12,4), directory=None, filename=None):
 
     # Save figure if directory is not None
     if directory is not None:
-        title = title.replace('\n') + '.png'
+        title = title.replace('\n', ' ') + '.png'
         save_plot(fig, directory, filename, title)
 
     # Show plot
@@ -180,9 +180,9 @@ def plot_score(model, title=None, figsize=(12,4), directory=None, filename=None)
     """Plots training score (and optionally validation score) by epoch."""
 
     # Validate request
-    if not model.history.early_stop:
+    if not model.early_stop:
         raise Exception("No early stop callback designated, so no score available.")
-    elif not model.history.early_stop.metric:
+    elif not model.metric:
         raise Exception("No metric designated for score.")
     if not isinstance(model, Estimator):
         raise ValueError("Model is not a valid Estimator or subclass object.")
