@@ -110,29 +110,34 @@ def summary(history):
     history : history object
         history object containing data and statistics from training.
     """
-    monitor = history.params.get('monitor')
     metric = history.params.get('metric', "")
 
     print("\nOptimization Summary")
-    print("                  Name: " + history.params.get('name'))
-    print("                 Start: " + str(history.start))
-    print("                   End: " + str(history.end))
-    print("              Duration: " + str(history.duration) + " seconds.")
-    print("                Epochs: " + str(history.total_epochs))
-    print("               Batches: " + str(history.total_batches))
+    print("                     Name: " + history.params.get('name'))
+    print("                    Start: " + str(history.start))
+    print("                      End: " + str(history.end))
+    print("                 Duration: " + str(history.duration) + " seconds.")
+    print("                   Epochs: " + str(history.total_epochs))
+    print("                  Batches: " + str(history.total_batches))
     print("\n")
-    print("   Final Training Loss: " +
-          str(history.epoch_log.get('train_cost')[-1]))
-    if 'score' in monitor:
-        print("  Final Training Score: " + str(history.epoch_log.get('train_score')[-1])
+    print("Performance Summary")
+    print("      Final Training Loss: " +
+          str(round(history.epoch_log.get('train_cost')[-1],4)))
+    if history.epoch_log.get('train_score',None):
+        print("     Final Training Score: " +\
+             str(round(history.epoch_log.get('train_score')[-1],4))
               + " " + history.params.get('metric'))
-    if history.early_stop:
-        print(" Final Validation Loss: " +
-              str(history.epoch_log.get('val_cost')[-1]))
-        if history.metric:
-            print("Final Validation Score: " + str(history.epoch_log.get('val_score')[-1])
-                  + " " + metric)
-    print("         Final Weights: " + str(history.epoch_log.get('theta')[-1]))
+    if history.epoch_log.get('val_cost',None):
+        print("    Final Validation Loss: " +
+              str(round(history.epoch_log.get('val_cost')[-1],4)))
+    if history.epoch_log.get('val_score',None):
+        print("   Final Validation Score: " + \
+            str(round(history.epoch_log.get('val_score')[-1],4))
+                + " " + metric)
+    if history.epoch_log.get('theta')[-1].shape[0] < 10:
+        print("          Final Intercept: " + str(history.epoch_log.get('theta')[-1][0]))
+        print("       Final Coefficients:\t " +\
+            str(history.epoch_log.get('theta')[-1][1:]).replace('\n','\n\t\t\t'))
     print("\nModel Parameters")
 
     for p, v in history.params.items():
@@ -146,10 +151,16 @@ def summary(history):
             # is None. If this is the case, we'll print "None" for
             # this parameter.
             if isinstance(v, types.FunctionType):
-                v = None
+                v = ""
             print(p + str(v))
         else:
             _recur(p, v)
+
+    print("\nData")
+    print("        Num. Observations: " +\
+             str(history.model.X.shape[0]))
+    print("            Num. Features: " +\
+             str(history.model.X.shape[1]-1))
 
 
 def _recur(callable_type, callable_object):
