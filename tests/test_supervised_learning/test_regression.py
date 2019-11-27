@@ -66,9 +66,6 @@ class RegressionTests:
         with pytest.raises(TypeError):
             est = regression(epochs=10,checkpoint='x')
             est.fit(X, y)  
-        with pytest.warns(UserWarning):
-            est = regression(epochs=10,checkpoint=100)
-            est.fit(X, y)                        
         with pytest.raises(TypeError):
             est = regression(epochs=10,seed='k')                                
             est.fit(X, y)
@@ -108,7 +105,7 @@ class RegressionTests:
         est = regression(epochs=10, val_size=0)
         X, y = get_regression_data                
         est.fit(X,y)
-        assert X.shape[1] == est.X.shape[1] - 1, "intercept column not added to X in prepare data"
+        assert X.shape[1] == est._X_design.shape[1] - 1, "intercept column not added to X in prepare data"
         assert X.shape[0] == est.X.shape[0], "X.shape[0] changed in prepare data"
         assert y.shape == est.y.shape, "y shape changed in prepare data" 
 
@@ -119,12 +116,12 @@ class RegressionTests:
         est = regression(epochs=10, val_size=0.3, early_stop=stop)
         X, y = get_regression_data                
         est.fit(X,y)
-        assert X.shape[1] == est.X.shape[1] - 1, "intercept column not added to X in prepare data"
-        assert X.shape[0] != est.X.shape[0], "X.shape[0] not changed in prepare data validation split"
+        assert X.shape[1] == est._X_design.shape[1] - 1, "intercept column not added to X in prepare data"
+        assert X.shape[0] != est._X_design.shape[0], "X.shape[0] not changed in prepare data validation split"
         assert y.shape != est.y.shape, "y shape not changed in prepare data validation split" 
         assert est.X_val is not None, "X_val is None, not created in prepare data."
         assert est.y_val is not None, "y_val is None, not created in prepare data."
-        assert est.X.shape[0] + est.X_val.shape[0] == X.shape[0], "X.shape[0] plus X_val.shape[0] doesn't match input shape"
+        assert est._X_design.shape[0] + est.X_val.shape[0] == X.shape[0], "X.shape[0] plus X_val.shape[0] doesn't match input shape"
         assert est.y.shape[0] + est.y_val.shape[0] == y.shape[0], "y.shape[0] plus y_val.shape[0] doesn't match output shape"
 
     @mark.regression

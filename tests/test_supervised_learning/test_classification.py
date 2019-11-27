@@ -166,7 +166,7 @@ class MultinomialLogisticRegressionTests:
                                             val_size=0, early_stop=False)                
         clf.fit(X,y)
         assert X.shape[0] == clf.X.shape[0], "X.shape[0] incorrect in prep data"
-        assert X.shape[1]+1 == clf.X.shape[1], "X.shape[1] incorrect in prep data"
+        assert X.shape[1]+1 == clf._X_design.shape[1], "X.shape[1] incorrect in prep data"
 
     @mark.logistic_regression
     @mark.multinomial_logistic_regression
