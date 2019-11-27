@@ -347,7 +347,7 @@ class MultinomialLogisticRegression(Classification):
     def _init_weights(self):
         """Initializes weights according to the shapes of X and y."""
         # Perform random uniform initialization of parameters        
-        n_features = self.X.shape[1]
+        n_features = self._X_design.shape[1]
         n_classes = len(np.unique(self.y))
         limit = 1 / np.sqrt(n_features)
         np.random.seed(self.seed)

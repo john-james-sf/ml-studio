@@ -123,14 +123,14 @@ def summary(history):
     print("Performance Summary")
     print("      Final Training Loss: " +
           str(round(history.epoch_log.get('train_cost')[-1],4)))
-    if history.epoch_log.get('train_score',None):
+    if history.epoch_log.get('train_score'):
         print("     Final Training Score: " +\
              str(round(history.epoch_log.get('train_score')[-1],4))
               + " " + history.params.get('metric'))
-    if history.epoch_log.get('val_cost',None):
+    if history.epoch_log.get('val_cost'):
         print("    Final Validation Loss: " +
               str(round(history.epoch_log.get('val_cost')[-1],4)))
-    if history.epoch_log.get('val_score',None):
+    if history.epoch_log.get('val_score'):
         print("   Final Validation Score: " + \
             str(round(history.epoch_log.get('val_score')[-1],4))
                 + " " + metric)

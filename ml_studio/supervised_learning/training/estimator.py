@@ -57,6 +57,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self.cost_function = None
         self.convergence_monitor = None
         # Attributes
+        self.fitted = False
         self.coef_ = None
         self.intercept_ = None
         self.epochs_ = 0
@@ -134,26 +135,27 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         """Creates the X design matrix and saves data as attributes."""
         self.X = self.X_val = self.y = self.y_val = None
         # Add a column of ones to train the intercept term
-        self.X = np.insert(X, 0, 1, axis=1)  
+        self.X = X
+        self._X_design = np.insert(X, 0, 1, axis=1)  
         self.y = y
         # Set aside val_size training observations for validation set 
         if self.val_size:
-            self.X, self.X_val, self.y, self.y_val = \
-                data_split(self.X, self.y, 
+            self._X_design, self.X_val, self.y, self.y_val = \
+                data_split(self._X_design, self.y, 
                 test_size=self.val_size, seed=self.seed)
 
     def _evaluate_epoch(self, log=None):
         """Computes training (and validation) costs and scores."""
         log = log or {}
         # Compute costs 
-        y_pred = self._predict(self.X)
+        y_pred = self._predict(self._X_design)
         log['train_cost'] = self.cost_function(y=self.y, y_pred=y_pred)
         if self.val_size > 0 and self.early_stop:
             y_pred_val = self._predict(self.X_val)
             log['val_cost'] = self.cost_function(y=self.y_val, y_pred=y_pred_val)        
         # Compute scores 
         if self.metric is not None:            
-            log['train_score'] = self.score(self.X, self.y)
+            log['train_score'] = self.score(self._X_design, self.y)
             if self.val_size > 0 and self.early_stop:
                 log['val_score'] = self.score(self.X_val, self.y_val)        
 
@@ -223,14 +225,14 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     def _init_weights(self):
         """Initializes weights"""        
         if self.theta_init is not None:
-            if self.theta_init.shape[0] != self.X.shape[1]:
+            if self.theta_init.shape[0] != self._X_design.shape[1]:
                 raise ValueError("theta_init shape mispatch. Expected shape %s,"
-                                 " but theta_init.shape = %s." % ((self.X.shape[1],1),
+                                 " but theta_init.shape = %s." % ((self._X_design.shape[1],1),
                                  self.theta_init.shape))
             else:
                 self.theta = np.atleast_2d(self.theta_init).reshape(-1,1)
         else:
-            n_features = self.X.shape[1]
+            n_features = self._X_design.shape[1]
             np.random.seed(seed=self.seed)
             self.theta = np.random.normal(size=n_features).reshape(-1,1)
 
@@ -243,6 +245,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     def _begin_training(self, log=None):
         """Performs initializations required at the beginning of training."""
         self.converged = False
+        self.fitted = False
         self._validate_params()
         self._validate_data(log.get('X'), log.get('y'))        
         self._prepare_data(log.get('X'), log.get('y'))
@@ -260,11 +263,12 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self.intercept_ = self.theta[0]
         self.coef_ = self.theta[1:]
         self.epochs_ = self.epoch
+        self.fitted = True
 
     def _begin_epoch(self):
         """Increment the epoch count and shuffle the data."""
         self.epoch += 1
-        self.X, self.y = shuffle_data(self.X, self.y, seed=self.seed)
+        self._X_design, self.y = shuffle_data(self._X_design, self.y, seed=self.seed)
         if self.seed:
             self.seed += 1
         self.cbks.on_epoch_begin(self.epoch)
@@ -310,7 +314,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
             self._begin_epoch()
 
-            for X_batch, y_batch in batch_iterator(self.X, self.y, batch_size=self.batch_size):
+            for X_batch, y_batch in batch_iterator(self._X_design, self.y, batch_size=self.batch_size):
 
                 self._begin_batch()
                 # Compute prediction
