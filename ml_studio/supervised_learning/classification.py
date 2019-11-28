@@ -58,6 +58,7 @@ class Classification(Estimator):
                 msg = str(self.metric) + ' is not a supported classification metric.'
                 raise ValueError(msg)
             else:
+                self.metric_name = scorer.label
                 return scorer
 
 # --------------------------------------------------------------------------- #

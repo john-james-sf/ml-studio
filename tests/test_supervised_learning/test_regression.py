@@ -85,7 +85,7 @@ class RegressionTests:
         assert params['cost'] == 'quadratic', "cost is invalid"
         assert params['verbose'] == False, "verbose is invalid"
         assert params['checkpoint'] == 100, "checkpoint is invalid"
-        assert params['seed'] == 50, "seed is invalid"
+        assert params['seed'] == 50, "seed is invalid"        
 
     @mark.regression
     @mark.regression_validate_data
@@ -134,6 +134,7 @@ class RegressionTests:
         assert isinstance(est.scorer, Metric), "scorer function is not an instance of a valid Metric subclass."
         assert isinstance(est.history, Callback), "history function is not an instance of a valid Callback subclass."
         assert isinstance(est.progress, Callback), "progress function is not an instance of a valid Callback subclass."
+        assert est.metric_name == 'Mean Squared Error', "Metric name is not correct"
 
     @mark.regression
     @mark.regression_init_weights
