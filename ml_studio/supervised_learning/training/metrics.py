@@ -93,7 +93,7 @@ class R2(RegressionMetric):
     def __init__(self):
         self.mode = 'max'        
         self.name = 'R2'
-        self.label = r"Coefficient of Determination ($R^2$)"
+        self.label = r"$R^2$"
         self.stateful = False
         self.best = np.max
         self.better = np.greater
