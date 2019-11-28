@@ -93,7 +93,7 @@ class R2(RegressionMetric):
     def __init__(self):
         self.mode = 'max'        
         self.name = 'R2'
-        self.label = "Coefficient of Determination (R2)"
+        self.label = r"Coefficient of Determination ($R^2$)"
         self.stateful = False
         self.best = np.max
         self.better = np.greater
@@ -263,22 +263,38 @@ class MEDAE(RegressionMetric):
     def __call__(self, y, y_pred):        
         return np.median(np.abs(y_pred-y))
 
+class MAPE(RegressionMetric):
+    """Computes mean absolute percentage given data and parameters."""
+
+    def __init__(self):
+        self.mode = 'min'
+        self.name = 'mean_absolute_percentage_error'
+        self.label = "Mean Absolute Percentage Error"
+        self.stateful = False
+        self.best = np.min
+        self.better = np.less
+        self.worst = np.Inf
+        self.precision_factor = -1
+    
+    def __call__(self, y, y_pred):        
+        return 100*np.mean(np.abs((y-y_pred)/y))
 
 class RegressionMetricFactory:
     """Returns the requested score class."""
 
-    def __call__(self, metric='neg_mean_squared_error'):
+    def __call__(self, metric='mse'):
 
         dispatcher = {'r2': R2(),
                       'var_explained': VarExplained(),
-                      'mean_absolute_error': MAE(),
-                      'mean_squared_error': MSE(),                      
-                      'neg_mean_squared_error': NMSE(),
-                      'root_mean_squared_error': RMSE(),
-                      'neg_root_mean_squared_error': NRMSE(),
-                      'mean_squared_log_error': MSLE(),
-                      'root_mean_squared_log_error': RMSLE(),
-                      'median_absolute_error': MEDAE()}
+                      'mae': MAE(),
+                      'mse': MSE(),                      
+                      'nmse': NMSE(),
+                      'rmse': RMSE(),
+                      'nrmse': NRMSE(),
+                      'msle': MSLE(),
+                      'rmsle': RMSLE(),
+                      'medae': MEDAE(),
+                      'mape': MAPE()}
         return(dispatcher.get(metric,False))
 
 # --------------------------------------------------------------------------- #

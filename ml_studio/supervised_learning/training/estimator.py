@@ -21,10 +21,10 @@ from ml_studio.supervised_learning.training.early_stop import EarlyStopImproveme
 class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     """Base class gradient descent estimator."""
 
-    DEFAULT_METRIC = 'mean_squared_error'
+    DEFAULT_METRIC = 'mse'
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
-                 epochs=1000, cost='quadratic', metric='mean_squared_error', 
+                 epochs=1000, cost='quadratic', metric='mse', 
                  early_stop=False, val_size=0.3, patience=5, precision=0.001,
                  verbose=False, checkpoint=100, name=None, seed=None):
         self.learning_rate = learning_rate
@@ -52,6 +52,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self.regularizer = lambda x: 0
         self.regularizer.gradient = lambda x: 0
         self.algorithm = None
+        self.metric_name = None
         # Functions
         self.scorer = None
         self.cost_function = None
@@ -344,7 +345,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         if X.shape[1] == self.theta.shape[0]:
             y_pred = X.dot(self.theta)
         else:
-            if not hasattr(self, 'coef_') or self.coef_ is None:
+            if not self.fitted:
                 raise Exception("This %(name)s instance is not fitted "
                                  "yet" % {'name': type(self).__name__})              
             y_pred = self.intercept_ + X.dot(self.coef_)

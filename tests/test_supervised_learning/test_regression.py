@@ -254,7 +254,7 @@ class RegressionTests:
     def test_regression_fit_early_stop_improvement_from_estimator_train_score(self, regression, get_regression_data):        
         X, y = get_regression_data                
         est = regression(learning_rate=0.5, epochs=5000, early_stop=False, 
-                         val_size=0.3, metric='mean_squared_error')
+                         val_size=0.3, metric='mse')
         est.fit(X,y)
         assert est.history.total_epochs < 5000, "didn't stop early"
         assert len(est.history.epoch_log['learning_rate']) < 5000, "epoch log too long for early stop"        
@@ -320,7 +320,7 @@ class RegressionTests:
         X, y = get_regression_data  
         stop = EarlyStopStrips()
         est = regression(epochs=10, learning_rate=0.001, val_size=0.3, 
-                         early_stop=stop, metric='neg_root_mean_squared_error')
+                         early_stop=stop, metric='nrmse')
         est.fit(X, y)        
         # Test epoch history
         assert est.history.total_epochs == len(est.history.epoch_log.get('epoch')), "number of epochs in log doesn't match epochs"        
@@ -342,7 +342,7 @@ class RegressionTests:
     @mark.regression_history
     def test_regression_history_no_val_data_w_metric(self, regression, get_regression_data):        
         X, y = get_regression_data        
-        est = regression(epochs=10, metric='mean_squared_error', val_size=0)
+        est = regression(epochs=10, metric='mse', val_size=0)
         est.fit(X, y)        
         # Test epoch history
         assert est.history.total_epochs == len(est.history.epoch_log.get('epoch')), "number of epochs in log doesn't match epochs"        
@@ -366,7 +366,7 @@ class RegressionTests:
     def test_regression_history_w_val_data_w_metric(self, regression, get_regression_data):        
         X, y = get_regression_data     
         stop = EarlyStopImprovement()   
-        est = regression(epochs=10, learning_rate=0.001, metric='mean_squared_error', early_stop=stop)
+        est = regression(epochs=10, learning_rate=0.001, metric='mse', early_stop=stop)
         est.fit(X, y)        
         # Test epoch history
         assert est.history.total_epochs == len(est.history.epoch_log.get('epoch')), "number of epochs in log doesn't match epochs"        

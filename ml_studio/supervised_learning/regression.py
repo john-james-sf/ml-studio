@@ -21,9 +21,9 @@ import warnings
 class Regression(Estimator):
     """Base class for all regression classes."""
 
-    DEFAULT_METRIC = 'mean_squared_error'
+    DEFAULT_METRIC = 'mse'
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
-                 epochs=1000, cost='quadratic', metric='mean_squared_error', 
+                 epochs=1000, cost='quadratic', metric='mse', 
                  early_stop=False, val_size=0.3, patience=5, precision=0.001,
                  verbose=False, checkpoint=100, name=None, seed=None):
         super(Regression, self).__init__(learning_rate=learning_rate, 
@@ -59,6 +59,7 @@ class Regression(Estimator):
                 msg = str(self.metric) + ' is not a supported regression metric.'
                 raise ValueError(msg)
             else:
+                self.metric_name = scorer.label
                 return scorer
         
     def _predict(self, X):
@@ -144,28 +145,30 @@ class LinearRegression(Regression):
         'huber':
             Computes Huber cost
 
-    metric : str, optional (default='mean_squared_error')
-        Metrics used to evaluate classification scores:
+    metric : str, optional (default='mse')
+        Metrics used to evaluate regression scores:
 
         'r2': 
             R2 - The coefficient of determination
         'var_explained': 
             Percentage of variance explained
-        'mean_absolute_error':
+        'mae':
             Mean absolute error
-        'mean_squared_error':
+        'mape':
+            Mean absolute percentage error
+        'mse':
             Mean squared error
-        'neg_mean_squared_error':
+        'nmse':
             Negative mean squared error
-        'root_mean_squared_error':
+        'rmse':
             Root mean squared error
-        'neg_root_mean_squared_error':
+        'nrmse':
             Negative root mean squared error
-        'mean_squared_log_error':
+        'msle':
             Mean squared log error
-        'root_mean_squared_log_error':
+        'rmsle':
             Root mean squared log error
-        'median_absolute_error':
+        'medae':
             Median absolute error
 
     early_stop : Bool or EarlyStop subclass, optional (default=True)
@@ -222,7 +225,7 @@ class LinearRegression(Regression):
     """    
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
-                 epochs=1000, cost='quadratic', metric='mean_squared_error', 
+                 epochs=1000, cost='quadratic', metric='mse', 
                  early_stop=False, val_size=0.3, patience=5, precision=0.001,
                  verbose=False, checkpoint=100, name=None, seed=None):
         super(LinearRegression, self).__init__(learning_rate=learning_rate, 
@@ -278,28 +281,30 @@ class LassoRegression(Regression):
         'huber':
             Computes Huber cost
 
-    metric : str, optional (default='mean_squared_error')
-        Metrics used to evaluate classification scores:
+    metric : str, optional (default='mse')
+        Metrics used to evaluate regression scores:
 
         'r2': 
             R2 - The coefficient of determination
         'var_explained': 
             Percentage of variance explained
-        'mean_absolute_error':
+        'mae':
             Mean absolute error
-        'mean_squared_error':
+        'mape':
+            Mean absolute percentage error
+        'mse':
             Mean squared error
-        'neg_mean_squared_error':
+        'nmse':
             Negative mean squared error
-        'root_mean_squared_error':
+        'rmse':
             Root mean squared error
-        'neg_root_mean_squared_error':
+        'nrmse':
             Negative root mean squared error
-        'mean_squared_log_error':
+        'msle':
             Mean squared log error
-        'root_mean_squared_log_error':
+        'rmsle':
             Root mean squared log error
-        'median_absolute_error':
+        'medae':
             Median absolute error
 
     early_stop : Bool or EarlyStop subclass, optional (default=True)
@@ -357,7 +362,7 @@ class LassoRegression(Regression):
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
                  alpha=0.0001, epochs=1000, cost='quadratic', 
-                 metric='mean_squared_error',  early_stop=False, 
+                 metric='mse',  early_stop=False, 
                  val_size=0.3, patience=5, precision=0.001,
                  verbose=False, checkpoint=100, name=None, seed=None):
         super(LassoRegression, self).__init__(learning_rate=learning_rate, 
@@ -412,28 +417,30 @@ class RidgeRegression(Regression):
         'huber':
             Computes Huber cost
 
-    metric : str, optional (default='mean_squared_error')
-        Metrics used to evaluate classification scores:
+    metric : str, optional (default='mse')
+        Metrics used to evaluate regression scores:
 
         'r2': 
             R2 - The coefficient of determination
         'var_explained': 
             Percentage of variance explained
-        'mean_absolute_error':
+        'mae':
             Mean absolute error
-        'mean_squared_error':
+        'mape':
+            Mean absolute percentage error
+        'mse':
             Mean squared error
-        'neg_mean_squared_error':
+        'nmse':
             Negative mean squared error
-        'root_mean_squared_error':
+        'rmse':
             Root mean squared error
-        'neg_root_mean_squared_error':
+        'nrmse':
             Negative root mean squared error
-        'mean_squared_log_error':
+        'msle':
             Mean squared log error
-        'root_mean_squared_log_error':
+        'rmsle':
             Root mean squared log error
-        'median_absolute_error':
+        'medae':
             Median absolute error
 
     early_stop : Bool or EarlyStop subclass, optional (default=True)
@@ -491,7 +498,7 @@ class RidgeRegression(Regression):
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
                  alpha=0.0001, epochs=1000, cost='quadratic', 
-                 metric='mean_squared_error',  early_stop=False, 
+                 metric='mse',  early_stop=False, 
                  val_size=0.3, patience=5, precision=0.001,
                  verbose=False, checkpoint=100, name=None, seed=None):
         super(RidgeRegression, self).__init__(learning_rate=learning_rate, 
@@ -554,28 +561,30 @@ class ElasticNetRegression(Regression):
         'huber':
             Computes Huber cost
 
-    metric : str, optional (default='mean_squared_error')
+    metric : str, optional (default='mse')
         Metrics used to evaluate classification scores:
 
         'r2': 
             R2 - The coefficient of determination
         'var_explained': 
             Percentage of variance explained
-        'mean_absolute_error':
+        'mae':
             Mean absolute error
-        'mean_squared_error':
+        'mape':
+            Mean absolute percentage error
+        'mse':
             Mean squared error
-        'neg_mean_squared_error':
+        'nmse':
             Negative mean squared error
-        'root_mean_squared_error':
+        'rmse':
             Root mean squared error
-        'neg_root_mean_squared_error':
+        'nrmse':
             Negative root mean squared error
-        'mean_squared_log_error':
+        'msle':
             Mean squared log error
-        'root_mean_squared_log_error':
+        'rmsle':
             Root mean squared log error
-        'median_absolute_error':
+        'medae':
             Median absolute error
 
     early_stop : Bool or EarlyStop subclass, optional (default=True)
@@ -633,7 +642,7 @@ class ElasticNetRegression(Regression):
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
                  alpha=0.0001, ratio=0.15, epochs=1000, cost='quadratic', 
-                 metric='mean_squared_error',  early_stop=False, 
+                 metric='mse',  early_stop=False, 
                  val_size=0.3, patience=5, precision=0.001,
                  verbose=False, checkpoint=100, name=None, seed=None):
         super(ElasticNetRegression, self).__init__(learning_rate=learning_rate, 
