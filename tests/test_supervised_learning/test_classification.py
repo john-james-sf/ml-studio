@@ -150,7 +150,7 @@ class MultinomialLogisticRegressionTests:
     @mark.multinomial_logistic_regression_val
     def test_multinomial_logistic_regression_validation(self, get_multinomial_classification_data):
         X, y = get_multinomial_classification_data
-        clf = MultinomialLogisticRegression(epochs=50, metric='mean_squared_error')                
+        clf = MultinomialLogisticRegression(epochs=50, metric='mse')                
         with pytest.raises(ValueError):
             clf.fit(X,y)
         clf = MultinomialLogisticRegression(epochs=50, cost='binary_cross_entropy')                

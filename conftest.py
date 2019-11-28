@@ -87,24 +87,24 @@ def fit_multiple_models(get_regression_data):
                  'Mini-batch Gradient Descent': mgd.fit(X,y)}
         return models
 
-@fixture(scope='session', params=['mean_absolute_error',
-                                  'mean_squared_error',
-                                  'root_mean_squared_error',
-                                  'median_absolute_error',
+@fixture(scope='session', params=['mae',
+                                  'mse',
+                                  'rmse',
+                                  'mae',
                                   'r2',
                                   'var_explained',
-                                  'neg_mean_squared_error',
-                                  'neg_root_mean_squared_error'])                                  
+                                  'nmse',
+                                  'nrmse'])                                  
 def models_by_metric(request):
     model = LinearRegression(metric=request.param)
     model.cost_function = RegressionCostFactory()(cost='quadratic')
     model.scorer = RegressionMetricFactory()(metric=request.param)    
     return model        
 
-@fixture(scope='session', params=['mean_absolute_error',
-                                  'mean_squared_error',
-                                  'root_mean_squared_error',
-                                  'median_absolute_error'])                                  
+@fixture(scope='session', params=['mae',
+                                  'mse',
+                                  'rmse',
+                                  'medae'])                                  
 def model_lower_is_better(request):
     model = LinearRegression(metric=request.param, early_stop=True,
                             val_size=0.3, precision=0.1,
@@ -115,8 +115,8 @@ def model_lower_is_better(request):
 
 @fixture(scope='session', params=['r2',
                                   'var_explained',
-                                  'neg_mean_squared_error',
-                                  'neg_root_mean_squared_error'])                                  
+                                  'nmse',
+                                  'nrmse'])                                  
 def model_higher_is_better(request):
     model = LinearRegression(metric=request.param, early_stop=True,
                             val_size=0.3, precision=0.1,
@@ -144,26 +144,26 @@ def early_stop_monitor(request):
 
 @fixture(scope='session', params=['r2',
                                   'var_explained',
-                                  'mean_absolute_error',
-                                  'mean_squared_error',
-                                  'neg_mean_squared_error',
-                                  'root_mean_squared_error',
-                                  'neg_root_mean_squared_error',
-                                  'median_absolute_error'])
+                                  'mae',
+                                  'mse',
+                                  'nmse',
+                                  'rmse',
+                                  'nrmse',
+                                  'medae'])
 def regression_metric(request):
     return request.param
 
 @fixture(scope='session', params=['r2',
                                   'var_explained',
-                                  'neg_mean_squared_error',
-                                  'neg_root_mean_squared_error'])
+                                  'nmse',
+                                  'nrmse'])
 def regression_metric_greater_is_better(request):
     return request.param
 
-@fixture(scope='session', params=['mean_absolute_error',
-                                  'mean_squared_error',
-                                  'root_mean_squared_error',                                  
-                                  'median_absolute_error'])
+@fixture(scope='session', params=['mae',
+                                  'mse',
+                                  'rmse',                                  
+                                  'medae'])
 def regression_metric_lower_is_better(request):
     return request.param    
 
