@@ -155,7 +155,7 @@ class Residuals(ModelVisualator):
             go.Scattergl(x=self.y_train_pred, y=self.train_residuals,
                         mode='markers',
                         marker=dict(color=self.train_color),
-                        name=train_legend_name,
+                        name="Residual Plot",
                         showlegend=False,
                         opacity=self.train_alpha),
             go.Scattergl(x=z1[:,0], y=z1[:,1],
@@ -331,40 +331,23 @@ class StandardizedResiduals(ModelVisualator):
             Various keyword arguments
 
         """
+        self.path = path
         # Create lowess smoothing line
         z1 = lowess(self.train_residuals, self.y_train_pred, frac=1./3, it=0, is_sorted=False)        
-        
-        self.path = path
-        if self.model.metric == 'r2':
-            train_legend_name = r'$\text{{Train }} R^2 = \text{{{}}}$'.format(str(round(self.train_score,4)))            
-        else:
-            train_legend_name = 'Train %s: %s' % (self.model.metric_name, str(round(self.train_score,4)))            
-        
+                
         # Create scatterplot traces
         data = [
             go.Scattergl(x=self.y_train_pred, y=self.train_residuals,
                         mode='markers',
                         marker=dict(color=self.train_color),
-                        name=train_legend_name,
-                        showlegend=True,
+                        name="Standardized Residuals",
+                        showlegend=False,
                         opacity=self.train_alpha),
-            go.Scattergl(x=self.y_test_pred, y=self.test_residuals,
-                        mode='markers',
-                        marker=dict(color=self.test_color),
-                        name=test_legend_name,
-                        showlegend=True,
-                        opacity=self.test_alpha),
             go.Scattergl(x=z1[:,0], y=z1[:,1],
                         mode='lines',
                         marker=dict(color='red'),
                         name="Training Set Lowess",
                         opacity=self.train_alpha,
-                        showlegend=False),
-            go.Scattergl(x=z2[:,0], y=z2[:,1],
-                        mode='lines',
-                        marker=dict(color='red'),
-                        name="Test Set Lowess",
-                        opacity=self.test_alpha,
                         showlegend=False)                             
         ]
 
@@ -378,7 +361,7 @@ class StandardizedResiduals(ModelVisualator):
                         yaxis=dict(domain=[0,0.85],  zeroline=False),
                         xaxis2=dict(domain=[0.85,1], zeroline=False),
                         yaxis2=dict(domain=[0.85,1], zeroline=False),                        
-                        showlegend=True,
+                        showlegend=False,
                         legend=dict(x=0, bgcolor='white'),
                         template=self.template)
 
@@ -412,14 +395,7 @@ class StandardizedResiduals(ModelVisualator):
                                 opacity=self.train_alpha,
                                 marker_color=self.train_color,
                                 histnorm=self.hist))
-            self.fig.add_trace(go.Histogram(y=self.test_residuals,
-                                name="y density test",
-                                showlegend=False,
-                                xaxis="x2",
-                                orientation="h",
-                                opacity=self.test_alpha,
-                                marker_color=self.test_color,
-                                histnorm=self.hist))
+
         # Render plot and save if path is provided
         if self.path:
             py.plot(self.fig, filename=self.path, auto_open=True, include_mathjax='cdn')
@@ -481,32 +457,6 @@ class StudentizedResiduals(ModelVisualator):
         title        specify the title for the visualization
         ===========  ==========================================================
 
-    Attributes
-    ----------
-    train_score_ : float
-        The score that specifies the goodness of fit of the underlying
-        regression model to the training data. Scores may be
-
-        ===========     ==========================================================
-        Metric          Description
-        -----------     ----------------------------------------------------------
-        R Squared (R2)  Coefficient of Determination 
-        Adjusted R2     Adjusted Coefficient of Determination 
-        MSE             Mean Squared Error 
-        MAE             Mean Absolute Error
-        RMSE            Root Mean Squared Error
-        MSPE            Mean Squared Percentage Error 
-        MAPE            Mean Absolute Percentage Error
-        RMSLE           Root Mean Squared Logarithmic Error
-        AIC             Akaike's Information Criteria
-        BIC             Bayesian Information Criteria
-        Cp              Mallows Cp             
-        ===========     ==========================================================
-
-    test_score_ : float
-        The score that specifies the goodness of fit of the underlying
-        regression model to the test data.
-
     """
 
     def __init__(self, model, hist=True, train_color='#0272a2', 
@@ -548,43 +498,6 @@ class StudentizedResiduals(ModelVisualator):
         self.train_residuals, self.y_train_pred = studentized_residuals(self.model,X,y)        
         return self           
 
-    def score(self, X, y, **kwargs):
-        """Computes a score for a Model.
-
-        The parent class invokes the score method on the estimator to compute
-        both training and test scores. This class extends the parent class
-        and computes the standardized residuals for the test set.
-
-        Parameters
-        ----------
-        X : ndarray or DataFrame of shape n x m
-            A matrix of n instances with m features
-
-        y : ndarray or Series of length n
-            An array or series of target or class values
-
-        kwargs: dict
-            Keyword arguments passed to the scikit-learn API. 
-            See visualizer specific details for how to use
-            the kwargs to modify the visualization or fitting process.    
-
-        Returns
-        -------
-        metric : str
-            String indicating the name of the metric
-
-        train_score : float or array-like
-            Returns the training score of the underlying model, the metric 
-            is specified in the model's hyperparameters.
-
-        test_score : float or array-like
-            Returns the test score of the underlying model, the metric 
-            is specified in the model's hyperparameters.            
-        """ 
-        super(StudentizedResiduals, self).score(X,y, **kwargs)  
-        self.test_residuals, self.y_test_pred = studentized_residuals(self.model,X,y)   
-
-
     def show(self, path=None, **kwargs):
         """Renders the visualization.
 
@@ -606,42 +519,21 @@ class StudentizedResiduals(ModelVisualator):
         self.path = path
 
         # Create lowess smoothing line
-        z1 = lowess(self.train_residuals, self.y_train_pred, frac=1./3, it=0, is_sorted=False)
-        z2 = lowess(self.test_residuals, self.y_test_pred, frac=1./3, it=0, is_sorted=False)        
-        
-        # Format legend metric
-        if self.model.metric == 'r2':
-            train_legend_name = r'$\text{{Train }} R^2 = \text{{{}}}$'.format(str(round(self.train_score,4)))
-            test_legend_name = r'$\text{{Test }} R^2 = \text{{{}}}$'.format(str(round(self.test_score,4)))
-        else:
-            train_legend_name = 'Train %s: %s' % (self.model.metric_name, str(round(self.train_score,4)))
-            test_legend_name = 'Test %s: %s' % (self.model.metric_name, str(round(self.test_score,4)))
-        
+        z1 = lowess(self.train_residuals, self.y_train_pred, frac=1./3, it=0, is_sorted=False)  
+                
         # Create scatterplot traces
         data = [
             go.Scattergl(x=self.y_train_pred, y=self.train_residuals,
                         mode='markers',
                         marker=dict(color=self.train_color),
-                        name=train_legend_name,
-                        showlegend=True,
+                        name="Studentized Residuals",
+                        showlegend=False,
                         opacity=self.train_alpha),
-            go.Scattergl(x=self.y_test_pred, y=self.test_residuals,
-                        mode='markers',
-                        marker=dict(color=self.test_color),
-                        name=test_legend_name,
-                        showlegend=True,
-                        opacity=self.test_alpha),
             go.Scattergl(x=z1[:,0], y=z1[:,1],
                         mode='lines',
                         marker=dict(color='red'),
                         name="Training Set Lowess",
                         opacity=self.train_alpha,
-                        showlegend=False),
-            go.Scattergl(x=z2[:,0], y=z2[:,1],
-                        mode='lines',
-                        marker=dict(color='red'),
-                        name="Test Set Lowess",
-                        opacity=self.test_alpha,
                         showlegend=False)                        
         ]
 
@@ -655,7 +547,7 @@ class StudentizedResiduals(ModelVisualator):
                         yaxis=dict(domain=[0,0.85],  zeroline=False),
                         xaxis2=dict(domain=[0.85,1], zeroline=False),
                         yaxis2=dict(domain=[0.85,1], zeroline=False),                        
-                        showlegend=True,
+                        showlegend=False,
                         legend=dict(x=0, bgcolor='white'),
                         template=self.template)
 
@@ -689,14 +581,7 @@ class StudentizedResiduals(ModelVisualator):
                                 opacity=self.train_alpha,
                                 marker_color=self.train_color,
                                 histnorm=self.hist))
-            self.fig.add_trace(go.Histogram(y=self.test_residuals,
-                                name="y density test",
-                                showlegend=False,
-                                xaxis="x2",
-                                orientation="h",
-                                opacity=self.test_alpha,
-                                marker_color=self.test_color,
-                                histnorm=self.hist))
+
         # Render plot and save if path is provided
         if self.path:
             py.plot(self.fig, filename=self.path, auto_open=True, include_mathjax='cdn')
@@ -758,32 +643,6 @@ class ScaleLocation(ModelVisualator):
         title        specify the title for the visualization
         ===========  ==========================================================
 
-    Attributes
-    ----------
-    train_score_ : float
-        The score that specifies the goodness of fit of the underlying
-        regression model to the training data. Scores may be
-
-        ===========     ==========================================================
-        Metric          Description
-        -----------     ----------------------------------------------------------
-        R Squared (R2)  Coefficient of Determination 
-        Adjusted R2     Adjusted Coefficient of Determination 
-        MSE             Mean Squared Error 
-        MAE             Mean Absolute Error
-        RMSE            Root Mean Squared Error
-        MSPE            Mean Squared Percentage Error 
-        MAPE            Mean Absolute Percentage Error
-        RMSLE           Root Mean Squared Logarithmic Error
-        AIC             Akaike's Information Criteria
-        BIC             Bayesian Information Criteria
-        Cp              Mallows Cp             
-        ===========     ==========================================================
-
-    test_score_ : float
-        The score that specifies the goodness of fit of the underlying
-        regression model to the test data.
-
     """
 
     def __init__(self, model, hist=True, train_color='#0272a2', 
@@ -827,43 +686,6 @@ class ScaleLocation(ModelVisualator):
         
         return self           
 
-    def score(self, X, y, **kwargs):
-        """Computes a score for a Model.
-
-        The parent class invokes the score method on the estimator to compute
-        both training and test scores. This class extends the parent class
-        and computes the standardized residuals for the test set.
-
-        Parameters
-        ----------
-        X : ndarray or DataFrame of shape n x m
-            A matrix of n instances with m features
-
-        y : ndarray or Series of length n
-            An array or series of target or class values
-
-        kwargs: dict
-            Keyword arguments passed to the scikit-learn API. 
-            See visualizer specific details for how to use
-            the kwargs to modify the visualization or fitting process.    
-
-        Returns
-        -------
-        metric : str
-            String indicating the name of the metric
-
-        train_score : float or array-like
-            Returns the training score of the underlying model, the metric 
-            is specified in the model's hyperparameters.
-
-        test_score : float or array-like
-            Returns the test score of the underlying model, the metric 
-            is specified in the model's hyperparameters.            
-        """ 
-        super(ScaleLocation, self).score(X,y, **kwargs)  
-        self.test_residuals, self.y_test_pred = standardized_residuals(self.model, X, y)
-
-
     def show(self, path=None, **kwargs):
         """Renders the visualization.
 
@@ -885,42 +707,21 @@ class ScaleLocation(ModelVisualator):
         self.path = path
         # Create lowess smoothing line
         z1 = lowess(self.train_residuals, self.y_train_pred, frac=1./3, it=0, is_sorted=False)
-        z2 = lowess(self.test_residuals, self.y_test_pred, frac=1./3, it=0, is_sorted=False)
-
-        # Format legend metric        
-        if self.model.metric == 'r2':
-            train_legend_name = r'$\text{{Train }} R^2 = \text{{{}}}$'.format(str(round(self.train_score,4)))
-            test_legend_name = r'$\text{{Test }} R^2 = \text{{{}}}$'.format(str(round(self.test_score,4)))
-        else:
-            train_legend_name = 'Train %s: %s' % (self.model.metric_name, str(round(self.train_score,4)))
-            test_legend_name = 'Test %s: %s' % (self.model.metric_name, str(round(self.test_score,4)))
         
         # Create scatterplot traces
         data = [
             go.Scattergl(x=self.y_train_pred, y=np.sqrt(self.train_residuals),
                         mode='markers',
                         marker=dict(color=self.train_color),
-                        name=train_legend_name,
-                        showlegend=True,
+                        name="Scale Location",
+                        showlegend=False,
                         opacity=self.train_alpha),
-            go.Scattergl(x=self.y_test_pred, y=np.sqrt(self.test_residuals),
-                        mode='markers',
-                        marker=dict(color=self.test_color),
-                        name=test_legend_name,
-                        showlegend=True,
-                        opacity=self.test_alpha),
             go.Scattergl(x=z1[:,0], y=z1[:,1],
                         mode='lines',
                         marker=dict(color='red'),
                         name="Training Set Lowess",
                         opacity=self.train_alpha,
-                        showlegend=False),
-            go.Scattergl(x=z2[:,0], y=z2[:,1],
-                        mode='lines',
-                        marker=dict(color='red'),
-                        name="Test Set Lowess",
-                        opacity=self.test_alpha,
-                        showlegend=False)                           
+                        showlegend=False)                  
         ]
 
         # Designate Layout
@@ -933,7 +734,7 @@ class ScaleLocation(ModelVisualator):
                         yaxis=dict(domain=[0,0.85],  zeroline=False),
                         xaxis2=dict(domain=[0.85,1], zeroline=False),
                         yaxis2=dict(domain=[0.85,1], zeroline=False),                        
-                        showlegend=True,
+                        showlegend=False,
                         legend=dict(x=0, bgcolor='white'),
                         template=self.template)
 
@@ -966,14 +767,6 @@ class ScaleLocation(ModelVisualator):
                                 orientation="h",
                                 opacity=self.train_alpha,
                                 marker_color=self.train_color,
-                                histnorm=self.hist))
-            self.fig.add_trace(go.Histogram(y=self.test_residuals,
-                                name="y density test",
-                                showlegend=False,
-                                xaxis="x2",
-                                orientation="h",
-                                opacity=self.test_alpha,
-                                marker_color=self.test_color,
                                 histnorm=self.hist))
         # Render plot and save if path is provided
         if self.path:

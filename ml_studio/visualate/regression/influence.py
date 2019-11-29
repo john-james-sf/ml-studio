@@ -90,35 +90,9 @@ class ResidualsLeverage(ModelVisualator):
         title        specify the title for the visualization
         ===========  ==========================================================
 
-    Attributes
-    ----------
-    train_score_ : float
-        The score that specifies the goodness of fit of the underlying
-        regression model to the training data. Scores may be
-
-        ===========     ==========================================================
-        Metric          Description
-        -----------     ----------------------------------------------------------
-        R Squared (R2)  Coefficient of Determination 
-        Adjusted R2     Adjusted Coefficient of Determination 
-        MSE             Mean Squared Error 
-        MAE             Mean Absolute Error
-        RMSE            Root Mean Squared Error
-        MSPE            Mean Squared Percentage Error 
-        MAPE            Mean Absolute Percentage Error
-        RMSLE           Root Mean Squared Logarithmic Error
-        AIC             Akaike's Information Criteria
-        BIC             Bayesian Information Criteria
-        Cp              Mallows Cp             
-        ===========     ==========================================================
-
-    test_score_ : float
-        The score that specifies the goodness of fit of the underlying
-        regression model to the test data.
-
     """
 
-    def __init__(self, model, hist=True, train_color='#0272a2', 
+    def __init__(self, model, hist=False, train_color='#0272a2', 
                  test_color='#9fc377', line_color='darkgray', train_alpha=0.75, 
                  test_alpha=0.75, **kwargs):    
         super(ResidualsLeverage, self).__init__(model, **kwargs)                
@@ -127,8 +101,7 @@ class ResidualsLeverage(ModelVisualator):
         self.test_color = test_color
         self.line_color = line_color
         self.train_alpha = train_alpha
-        self.test_alpha = test_alpha      
-    
+        self.test_alpha = test_alpha    
 
     def fit(self, X, y, **kwargs):
         """ Fits the visualator to the data.
@@ -154,13 +127,33 @@ class ResidualsLeverage(ModelVisualator):
         # Format plot title
         if self.title is None:
             self.title = "Residual vs. Leverage Plot : " + self.model.name        
+        
         # Compute predictions and standardized residuals        
         self.train_residuals, self.y_train_pred = standardized_residuals(self.model, X, y)
+        
+        # Compute leverage and cooks distances
         self.leverage = leverage(X)
         self.cooks_d = cooks_distance(self.model, X, y)
+
         return self           
 
-    def show(self, path=None, **kwargs):
+    def _cooks_contour(self, distance=0.5, sign=1):
+        """Computes the leverage v standardized residuals, given Cooks Distance."""        
+        # Compute F-distribution degrees of freedom
+        n = self.X_train.shape[0]
+        p = self.X_train.shape[1]
+        df = (1/p) * (n/(n-p))
+        # Designate the leverage range being plotted
+        min_leverage = np.min(self.leverage)
+        max_leverage = np.max(self.leverage)
+        leverage = np.linspace(start=min_leverage, stop=max_leverage)
+        # Compute standard residuals
+        std_resid_squared = distance/df * ((1-leverage)/leverage)
+        std_resid = sign * np.sqrt(std_resid_squared)
+        return (leverage, std_resid)
+        
+
+    def show(self, path=None, **kwargs):        
         """Renders the visualization.
 
         Contains the Plotly code that renders the visualization
@@ -181,20 +174,20 @@ class ResidualsLeverage(ModelVisualator):
         self.path = path
         # Create lowess smoothing line
         z1 = lowess(self.train_residuals, self.leverage, frac=1./3, it=0, 
-                    is_sorted=False, return_sorted=True)        
+                    is_sorted=False, return_sorted=True)    
 
-        # Format legend metric        
-        if self.model.metric == 'r2':
-            train_legend_name = r'$\text{{Train }} R^2 = \text{{{}}}$'.format(str(round(self.train_score,4)))            
-        else:
-            train_legend_name = 'Train %s: %s' % (self.model.metric_name, str(round(self.train_score,4)))
+        # Grab data for Cooks Distance lines
+        cooks_line_1_upper = self._cooks_contour(distance=0.05)
+        cooks_line_1_lower = self._cooks_contour(distance=0.05, sign=-1)
+        cooks_line_2_upper = self._cooks_contour(distance=1)
+        cooks_line_2_lower = self._cooks_contour(distance=1, sign=-1)
         
         # Create scatterplot traces
         data = [
             go.Scattergl(x=self.leverage, y=self.train_residuals,
                         mode='markers',
                         marker=dict(color=self.train_color),
-                        name=train_legend_name,
+                        name="Residual vs Leverage",
                         showlegend=True,
                         opacity=self.train_alpha),
             go.Scattergl(x=z1[:,0], y=z1[:,1],
@@ -202,8 +195,46 @@ class ResidualsLeverage(ModelVisualator):
                         marker=dict(color='red'),
                         name="Training Set Lowess",
                         opacity=self.train_alpha,
-                        showlegend=False)                                           
-        ]
+                        showlegend=False),
+            go.Scatter(x=cooks_line_1_upper[0],
+                       y=cooks_line_1_upper[1],
+                       mode='lines',
+                       line=dict(dash='dash'),
+                       marker=dict(color='red'),
+                       name="Cooks Distance = 0.5",
+                       opacity=self.train_alpha,
+                       showlegend=True),
+            go.Scatter(x=cooks_line_1_lower[0],
+                       y=cooks_line_1_lower[1],
+                       mode='lines',
+                       line=dict(dash='dash'),
+                       marker=dict(color='red'),
+                       name="Cooks Distance = 0.5 (Lower)",
+                       opacity=self.train_alpha,
+                       showlegend=False),
+            go.Scatter(x=cooks_line_2_upper[0],
+                       y=cooks_line_2_upper[1],
+                       mode='lines',
+                       line=dict(dash='dot'),
+                       marker=dict(color='red'),
+                       name="Cooks Distance = 1",
+                       opacity=self.train_alpha,
+                       showlegend=True),
+            go.Scatter(x=cooks_line_2_lower[0],
+                       y=cooks_line_2_lower[1],
+                       mode='lines',
+                       line=dict(dash='dot'),
+                       marker=dict(color='red'),
+                       name="Cooks Distance = 0.5 (Lower)",
+                       opacity=self.train_alpha,
+                       showlegend=False)                                                                                                                                   
+       ]
+
+        # Compute x and y axis limits based 110% of the data range
+        xmin = np.min(self.leverage) + (0.1 * np.min(self.leverage))
+        xmax = np.max(self.leverage) + (0.1 * np.max(self.leverage)) 
+        ymin = np.min(self.train_residuals) + (0.1 * np.min(self.train_residuals))
+        ymax = np.max(self.train_residuals) + (0.1 * np.max(self.train_residuals))
 
         # Designate Layout
         layout = go.Layout(title=self.title, 
@@ -211,8 +242,10 @@ class ResidualsLeverage(ModelVisualator):
                         width=self.width,
                         xaxis_title="Leverage",
                         yaxis_title="Standardized Residuals",
-                        xaxis=dict(domain=[0,0.85],  zeroline=False),
-                        yaxis=dict(domain=[0,0.85],  zeroline=False),
+                        xaxis=dict(domain=[0,0.85],  zeroline=False, 
+                                    range=[xmin, xmax]),
+                        yaxis=dict(domain=[0,0.85],  zeroline=False, 
+                                    range=[ymin, ymax]),
                         xaxis2=dict(domain=[0.85,1], zeroline=False),
                         yaxis2=dict(domain=[0.85,1], zeroline=False),                        
                         showlegend=True,
