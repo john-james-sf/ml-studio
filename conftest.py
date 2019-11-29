@@ -36,6 +36,14 @@ import warnings
 warnings.filterwarnings('ignore')
 warnings.filterwarnings("ignore", category=PendingDeprecationWarning)
 
+@fixture(scope="session")
+def split_regression_data():
+    X, y = datasets.load_boston(return_X_y=True)
+    scaler = StandardScaler()    
+    X = scaler.fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3,
+                            random_state=50)
+    return X_train, X_test, y_train, y_test
 
 @fixture(scope="session")
 def get_regression_data():
