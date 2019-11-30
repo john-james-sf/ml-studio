@@ -8,10 +8,12 @@ Welcome to ML Studio's documentation!
    readme
    installation
    usage
-   modules
    contributing
    authors
    history
+
+.. automodule:: ml_studio.model_evaluation.influence
+    :members:
 
 Indices and tables
 ==================

@@ -19,7 +19,7 @@ test_requirements = ['pytest', ]
 
 setup(
     author="John James",
-    author_email='jjames@scientanalytics.com',
+    author_email='jjames@decisionscients.com',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
@@ -38,13 +38,13 @@ setup(
     license="BSD license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
-    keywords='ml_studio',
-    name='ml_studio',
+    keywords='deep learning machine learning gradient descent',
+    name='ml-studio',
     packages=find_packages(include=['ml_studio']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/scientanalytics/ml_studio',
-    version='0.1.0',
+    url='https://github.com/decisionscients/ml-studio',
+    version='0.1.14',
     zip_safe=False,
 )

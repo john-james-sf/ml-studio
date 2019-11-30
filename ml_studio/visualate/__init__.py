@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Top-level package for Machine Learning Studio."""
+"""Top-level package for Visualate."""
 
 __author__ = """John James"""
 __email__ = 'jjames@decisionscients.com'

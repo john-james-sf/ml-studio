@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from pytest import mark
 
-from ml_studio.operations.regularizers import L1, L2, ElasticNet
+from ml_studio.supervised_learning.training.regularizers import L1, L2, ElasticNet
 
 class L1Tests:
 

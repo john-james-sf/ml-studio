@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* John James <jjames@scientanalytics.com>
+* John James <decisionscients@gmail.com>
 
 Contributors
 ------------
