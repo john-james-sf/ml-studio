@@ -25,6 +25,11 @@ wheels/
 .installed.cfg
 *.egg
 
+# Ignore directory
+notes/
+tests/test_visuals/test_figures
+development_lab/
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.

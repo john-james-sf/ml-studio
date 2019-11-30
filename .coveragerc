@@ -1,2 +1,4 @@
 [run]
-source=ml-studio
+source = ml_studio
+include = /ml_studio/*
+omit = */setup.py
