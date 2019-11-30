@@ -13,6 +13,8 @@ Welcome to ML Studio's documentation!
    authors
    history
 
+Source Code Documentation
+======================================
 .. automodule:: ml_studio.model_evaluation.influence
     :members:
 
