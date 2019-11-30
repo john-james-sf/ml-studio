@@ -1,0 +1,416 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to ML Studio’s documentation! &#8212; ML Studio 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ML Studio" href="readme.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-ml-studio-s-documentation">
+<h1>Welcome to ML Studio’s documentation!<a class="headerlink" href="#welcome-to-ml-studio-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">ML Studio</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="readme.html#features">Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#stable-release">Stable release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#from-sources">From sources</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#tips">Tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#deploying">Deploying</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.1.0 (2019-08-19)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<span class="target" id="module-ml_studio.model_evaluation.influence"></span><p>Model data influence analysis and diagnostics.</p>
+<dl class="function">
+<dt id="ml_studio.model_evaluation.influence.cooks_distance">
+<code class="sig-prename descclassname">ml_studio.model_evaluation.influence.</code><code class="sig-name descname">cooks_distance</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">X</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ml_studio/model_evaluation/influence.html#cooks_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ml_studio.model_evaluation.influence.cooks_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes Cook’s Distance, a commonly used measure of data point influence.</p>
+<p>Cook’s Distance is used in least-squares regression analysis to identify
+influencial data points. Cook’s distance for a given data point is given by:
+.. math:: mathbb{D}_i = frac{epsilon^2_i}{ps^2}big[frac{h_{ii}}{(1-h_{ii})^2}][1]_</p>
+<p>An alternative formulation relates Cooks Distance to studentized
+residuals.
+.. math:: mathbb{D}_i =bigg[frac{1}{p}frac{n}{n-p}]t_i^2frac{h_{ii}}{1-h{ii}}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>Estimator</em><em> or </em><em>BaseEstimator</em>) – ML Studio or Scikit Learn estimator</p></li>
+<li><p><strong>X</strong> (<em>ndarray</em><em> or </em><em>DataFrame of shape n x m</em>) – A matrix of n instances with m features</p></li>
+<li><p><strong>y</strong> (<em>ndarray</em><em> or </em><em>Series of length n</em>) – An array or series of target or class values</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>cooks_distance</strong> (<em>ndarray or DataFrame of shape n x 1</em>) – A matrix of cooks distances computed for each observation</p></li>
+<li><p><em>Reference</em></p></li>
+<li><p><em>———</em></p></li>
+<li><p><em>.. [1]  Wikipedia contributors. (2019, October 24). Cook’s distance.</em> – In Wikipedia, The Free Encyclopedia. Retrieved 01:32,
+November 29, 2019, from
+<a class="reference external" href="https://en.wikipedia.org/w/index.php?title=Cook%27s_distance&amp;oldid=922838890">https://en.wikipedia.org/w/index.php?title=Cook%27s_distance&amp;oldid=922838890</a></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ml_studio.model_evaluation.influence.dffits">
+<code class="sig-prename descclassname">ml_studio.model_evaluation.influence.</code><code class="sig-name descname">dffits</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">X</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ml_studio/model_evaluation/influence.html#dffits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ml_studio.model_evaluation.influence.dffits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the difference in fits (DFFITS).</p>
+<p>The difference in fits for observation i, denoted (DFFITS_i), is defined
+as:
+.. math:: DFFITS_i = frac{hat{y}_i-hat{y}_{(i)}}{sqrt{MSE_{(i)}h_{ii}}}.</p>
+<p>The numerator measures the difference in the predicted response obtained
+with and without the ith data point. The denominator is the estimated
+standard deviation of the difference between predicted responses. Hence,
+the diffeence in fits quantifies the number of standard deviations that
+the fitted value changes when the ith observation is omitted.</p>
+<p>An observation is deemed influential if the absolute value of its DFFITS
+value is greater than:</p>
+<div class="system-message">
+<p class="system-message-title">System Message: WARNING/2 (<span class="docutils literal">2\sqrt{\frac{p+1}{n-p-1}}
+
+</span>)</p>
+<p>latex exited with error
+[stderr]
+
+Sorry, but C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\install\miktex\bin\latex.exe did not succeed.
+
+The log file hopefully contains the information to get MiKTeX going again:
+
+  C:/Users/John/AppData/Local/MiKTeX/2.9/miktex/log/latex.log
+
+You may want to visit the MiKTeX project page, if you need help.
+
+[stdout]
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6730)
+entering extended mode
+(math.tex
+LaTeX2e &lt;2018-04-01&gt; patch level 5
+
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\base\article.cls
+Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
+
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\base\size12.clo))
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\base\inputenc.sty)
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsmath.sty
+For additional information on amsmath, use the `?' option.
+
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amstext.sty
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsgen.sty))
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsbsy.sty)
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsopn.sty))
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amscls\amsthm.sty)
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsfonts\amssymb.sty
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsfonts\amsfonts.sty))
+======================================================================
+</p>
+</div>
+<p>where n is the number of observations, p is the number of predictors
+including the bias term.</p>
+<p>DFFITS is also related to the students residual, and is in fact the latter
+times</p>
+<div class="system-message">
+<p class="system-message-title">System Message: WARNING/2 (<span class="docutils literal">\sqrt(\frac{h_{ii}}{1-h_{ii}})[1]_
+
+</span>)</p>
+<p>latex exited with error
+[stderr]
+
+Sorry, but C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\install\miktex\bin\latex.exe did not succeed.
+
+The log file hopefully contains the information to get MiKTeX going again:
+
+  C:/Users/John/AppData/Local/MiKTeX/2.9/miktex/log/latex.log
+
+You may want to visit the MiKTeX project page, if you need help.
+
+[stdout]
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6730)
+entering extended mode
+(math.tex
+LaTeX2e &lt;2018-04-01&gt; patch level 5
+
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\base\article.cls
+Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
+
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\base\size12.clo))
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\base\inputenc.sty)
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsmath.sty
+For additional information on amsmath, use the `?' option.
+
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amstext.sty
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsgen.sty))
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsbsy.sty)
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsopn.sty))
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amscls\amsthm.sty)
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsfonts\amssymb.sty
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsfonts\amsfonts.sty))
+======================================================================
+</p>
+</div>
+<p>Observations with DFFITS greater that 2sqrt{frac{p}{n}}, where p is the
+number of predictors including the bias and n is the number of observations,
+should be investigated.[2]_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>Estimator</em><em> or </em><em>BaseEstimator</em>) – ML Studio or Scikit Learn estimator</p></li>
+<li><p><strong>X</strong> (<em>ndarray</em><em> or </em><em>DataFrame of shape n x m</em>) – A matrix of n instances with m features</p></li>
+<li><p><strong>y</strong> (<em>ndarray</em><em> or </em><em>Series of length n</em>) – An array or series of target or class values</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id1"><span class="brackets">1</span></dt>
+<dd><p>Montogomery, Douglas C.; Peck, Elizabeth A.; Vining, G.
+Geoffrey (2012). Introduction to Linear Regression Analysis
+(5th ed.). Wiley. p. 218. ISBN 978-0-470-54281-1. Retrieved
+22 February 2013. Thus, DFFITSi is the value of R-student
+multiplied by the leverage of the ith observation [hii/(1-hii)]1/2.</p>
+</dd>
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dd><p>Belsley, David A.; Kuh, Edwin; Welsh, Roy E. (1980).
+Regression Diagnostics: Identifying Influential Data and
+Sources of Collinearity. Wiley Series in Probability
+and Mathematical Statistics. New York: John Wiley &amp; Sons.
+pp. 11–16. ISBN 0-471-05856-4.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ml_studio.model_evaluation.influence.leverage">
+<code class="sig-prename descclassname">ml_studio.model_evaluation.influence.</code><code class="sig-name descname">leverage</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ml_studio/model_evaluation/influence.html#leverage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ml_studio.model_evaluation.influence.leverage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes leverage scores for a data set.</p>
+<p>Leverage is a measure of how much the independent variables of an
+observation differs from the other observations. The leverage score for
+the ith osbservation is defined as:</p>
+<div class="system-message">
+<p class="system-message-title">System Message: WARNING/2 (<span class="docutils literal">h_{ii} =
+
+</span>)</p>
+<p>latex exited with error
+[stdout]
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6730)
+entering extended mode
+(math.tex
+LaTeX2e &lt;2018-04-01&gt; patch level 5
+
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\base\article.cls
+Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
+
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\base\size12.clo))
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\base\inputenc.sty)
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsmath.sty
+For additional information on amsmath, use the `?' option.
+
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amstext.sty
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsgen.sty))
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsbsy.sty)
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsmath\amsopn.sty))
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amscls\amsthm.sty)
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsfonts\amssymb.sty
+(C:\Users\John\AppData\Local\conda\conda\envs\ml_studio\Library\miktex\texmfs\i
+nstall\tex\latex\amsfonts\amsfonts.sty))
+
+! LaTeX Error: File `anyfontsize.sty' not found.
+
+Type X to quit or &lt;RETURN&gt; to proceed,
+or enter new name. (Default extension: sty)
+
+Enter file name: 
+! Emergency stop.
+&lt;read *&gt; 
+         
+l.8 \usepackage
+               {bm}
+No pages of output.
+Transcript written on math.log.
+</p>
+</div>
+<p>the ith diagonal element of the project matrix mathbb{H}=X(X^TX)^{-1}X^T,
+where X is the design matrix whose rows are observations and columns
+are the independent variables.</p>
+<p>The diagonal of the projection matrix, commonly known as the hat matrix,
+is a standardized measure of the distance from the ith observation from
+the center (or centroid) of the x-space.</p>
+<p>Points with leverage greater than frac{2p}{n}, where p is the number
+independent variables, including the bias, and n is the number of
+observations, are considered remote enough from the rest of the
+data to be designated a leverage point. <a class="footnote-reference brackets" href="#id2" id="id3">2</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>ndarray</em><em> or </em><em>DataFrame of shape n x m</em>) – A matrix of n instances with m features</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>leverage</strong> – Contains the leverage scores for each observation.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray or DataFrame of shape n x 1</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">ML Studio</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">ML Studio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="readme.html" title="next chapter">ML Studio</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, John James.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
