@@ -1,9 +1,9 @@
 # =========================================================================== #
-#                                VALIDATION                                   #
+#                                VALIDITY                                     #
 # =========================================================================== #
 # =========================================================================== #
-# Project: Visualate                                                          #
-# Version: 0.1.0                                                              #
+# Project: ML Studio                                                          #
+# Version: 0.1.14                                                             #
 # File: \validity.py                                                          #
 # Python Version: 3.8.0                                                       #
 # ---------------                                                             #
@@ -11,13 +11,15 @@
 # Company: Decision Scients                                                   #
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
-# Create Date: Wednesday November 27th 2019, 10:07:13 am                      #
-# Last Modified: Thursday November 28th 2019, 2:19:31 am                      #
+# Create Date: Thursday November 28th 2019, 8:53:35 am                        #
+# Last Modified: Saturday November 30th 2019, 10:31:24 am                     #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
 # Copyright (c) 2019 Decision Scients                                         #
 # =========================================================================== #
+
+
 """Visualators used to assess the validity of regression models.""" 
 import numpy as np
 import plotly.graph_objs as go
@@ -27,8 +29,8 @@ import statsmodels.api as sm
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
 from ml_studio.supervised_learning.regression import LinearRegression
-from ml_studio.model_evaluation.model_validation import standardized_residuals
-from ml_studio.model_evaluation.model_validation import studentized_residuals
+from ml_studio.model_evaluation.validity import standardized_residuals
+from ml_studio.model_evaluation.validity import studentized_residuals
 
 from ..base import ModelVisualator
 from ...utils.model import get_model_name
@@ -309,7 +311,8 @@ class StandardizedResiduals(ModelVisualator):
         if self.title is None:
             self.title = "Standardized Residuals Plot: " + self.model.name        
         # Compute predictions and standardized residuals                
-        self.train_residuals, self.y_train_pred = standardized_residuals(self.model, X,y)        
+        self.train_residuals, self.y_train_pred = \
+            standardized_residuals(self.model, X,y, return_predictions=True)        
         return self           
 
 
@@ -495,7 +498,8 @@ class StudentizedResiduals(ModelVisualator):
         if self.title is None:
             self.title = "Studentized Residuals Plot: " + self.model.name        
         # Compute predictions and studentized residuals                
-        self.train_residuals, self.y_train_pred = studentized_residuals(self.model,X,y)        
+        self.train_residuals, self.y_train_pred = \
+            studentized_residuals(self.model,X,y, return_predictions=True)        
         return self           
 
     def show(self, path=None, **kwargs):
@@ -682,7 +686,8 @@ class ScaleLocation(ModelVisualator):
         if self.title is None:
             self.title = "Scale Location: : " + self.model.name        
         # Compute predictions and standardized residuals        
-        self.train_residuals, self.y_train_pred = standardized_residuals(self.model, X, y)
+        self.train_residuals, self.y_train_pred = \
+            standardized_residuals(self.model, X,y, return_predictions=True) 
         
         return self           
 

@@ -1,6 +1,24 @@
 # =========================================================================== #
 #                               REGULARIZERS                                  #
 # =========================================================================== #
+# =========================================================================== #
+# Project: ML Studio                                                          #
+# Version: 0.1.14                                                             #
+# File: \regularizers.py                                                      #
+# Python Version: 3.8.0                                                       #
+# ---------------                                                             #
+# Author: John James                                                          #
+# Company: Decision Scients                                                   #
+# Email: jjames@decisionscients.com                                           #
+# ---------------                                                             #
+# Create Date: Monday August 19th 2019, 7:36:03 pm                            #
+# Last Modified: Saturday November 30th 2019, 10:37:34 am                     #
+# Modified By: John James (jjames@decisionscients.com)                        #
+# ---------------                                                             #
+# License: Modified BSD                                                       #
+# Copyright (c) 2019 Decision Scients                                         #
+# =========================================================================== #
+
 """Classes for L1, L2, and Elasticnet Regularization"""
 from abc import ABC, abstractmethod
 import numpy as np

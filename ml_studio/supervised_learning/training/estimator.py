@@ -1,6 +1,24 @@
 # =========================================================================== #
 #                             ESTIMATOR CLASS                                 #
 # =========================================================================== #
+# =========================================================================== #
+# Project: ML Studio                                                          #
+# Version: 0.1.14                                                             #
+# File: \estimator.py                                                         #
+# Python Version: 3.8.0                                                       #
+# ---------------                                                             #
+# Author: John James                                                          #
+# Company: Decision Scients                                                   #
+# Email: jjames@decisionscients.com                                           #
+# ---------------                                                             #
+# Create Date: Tuesday September 24th 2019, 3:16:03 am                        #
+# Last Modified: Saturday November 30th 2019, 10:36:44 am                     #
+# Modified By: John James (jjames@decisionscients.com)                        #
+# ---------------                                                             #
+# License: Modified BSD                                                       #
+# Copyright (c) 2019 Decision Scients                                         #
+# =========================================================================== #
+
 """Gradient Descent base class, from which regression and classification inherit."""
 from abc import ABC, abstractmethod, ABCMeta
 import datetime
