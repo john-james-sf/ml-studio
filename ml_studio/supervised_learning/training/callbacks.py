@@ -2,6 +2,24 @@
 # =========================================================================== #
 #                                  CALLBACKS                                  #
 # =========================================================================== #
+# =========================================================================== #
+# Project: ML Studio                                                          #
+# Version: 0.1.14                                                             #
+# File: \callbacks.py                                                         #
+# Python Version: 3.8.0                                                       #
+# ---------------                                                             #
+# Author: John James                                                          #
+# Company: Decision Scients                                                   #
+# Email: jjames@decisionscients.com                                           #
+# ---------------                                                             #
+# Create Date: Monday August 19th 2019, 7:36:03 pm                            #
+# Last Modified: Saturday November 30th 2019, 10:35:55 am                     #
+# Modified By: John James (jjames@decisionscients.com)                        #
+# ---------------                                                             #
+# License: Modified BSD                                                       #
+# Copyright (c) 2019 Decision Scients                                         #
+# =========================================================================== #
+
 """Module containing functionality called during the training process.
 
 Note: The CallbackList and Callback abstract base classes were inspired by

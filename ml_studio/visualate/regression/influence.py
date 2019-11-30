@@ -1,23 +1,25 @@
 # =========================================================================== #
-#                                VALIDATION                                   #
+#                                INFLUENCE                                    #
 # =========================================================================== #
 # =========================================================================== #
-# Project: Visualate                                                          #
-# Version: 0.1.0                                                              #
-# File: \validity.py                                                          #
+# Project: ML Studio                                                          #
+# Version: 0.1.14                                                             #
+# File: \influence.py                                                         #
 # Python Version: 3.8.0                                                       #
 # ---------------                                                             #
 # Author: John James                                                          #
 # Company: Decision Scients                                                   #
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
-# Create Date: Wednesday November 27th 2019, 10:07:13 am                      #
-# Last Modified: Thursday November 28th 2019, 2:19:31 am                      #
+# Create Date: Thursday November 28th 2019, 8:46:35 pm                        #
+# Last Modified: Saturday November 30th 2019, 10:32:04 am                     #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
 # Copyright (c) 2019 Decision Scients                                         #
 # =========================================================================== #
+
+
 """Visualators used to analyze outliers and observations with influence.""" 
 import numpy as np
 import plotly.graph_objs as go
@@ -25,11 +27,11 @@ import plotly.offline as py
 from plotly.subplots import make_subplots
 import statsmodels.api as sm
 from statsmodels.nonparametric.smoothers_lowess import lowess
-
+ 
 from ml_studio.supervised_learning.regression import LinearRegression
-from ml_studio.model_evaluation.model_validation import standardized_residuals
-from ml_studio.model_evaluation.model_validation import studentized_residuals
-from ml_studio.model_diagnostics.influence import leverage, cooks_distance
+from ml_studio.model_evaluation.validity import standardized_residuals
+from ml_studio.model_evaluation.validity import studentized_residuals
+from ml_studio.model_evaluation.influence import leverage, cooks_distance
 
 from ..base import ModelVisualator
 from ...utils.model import get_model_name      
@@ -129,7 +131,8 @@ class ResidualsLeverage(ModelVisualator):
             self.title = "Residual vs. Leverage Plot : " + self.model.name        
         
         # Compute predictions and standardized residuals        
-        self.train_residuals, self.y_train_pred = standardized_residuals(self.model, X, y)
+        self.train_residuals, self.y_train_pred =\
+            standardized_residuals(self.model, X, y, return_predictions=True)
         
         # Compute leverage and cooks distances
         self.leverage = leverage(X)
@@ -181,6 +184,13 @@ class ResidualsLeverage(ModelVisualator):
         cooks_line_1_lower = self._cooks_contour(distance=0.05, sign=-1)
         cooks_line_2_upper = self._cooks_contour(distance=1)
         cooks_line_2_lower = self._cooks_contour(distance=1, sign=-1)
+
+        # Format text annotation for points beyond 0.5 Cooks Distance
+        all_indices = np.arange(len(self.cooks_d))        
+        far_indices = np.argwhere(self.cooks_d > 0.5)
+        print(far_indices)
+        all_indices[~far_indices] = 0
+        annotation = ["" if x == 0 else x for x in all_indices]         
         
         # Create scatterplot traces
         data = [
@@ -188,7 +198,9 @@ class ResidualsLeverage(ModelVisualator):
                         mode='markers',
                         marker=dict(color=self.train_color),
                         name="Residual vs Leverage",
-                        showlegend=True,
+                        text=annotation,
+                        textposition="top center",
+                        showlegend=False,
                         opacity=self.train_alpha),
             go.Scattergl(x=z1[:,0], y=z1[:,1],
                         mode='lines',
