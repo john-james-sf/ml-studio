@@ -69,7 +69,7 @@
 <span class="kn">from</span> <span class="nn">ml_studio.supervised_learning.training.early_stop</span> <span class="k">import</span> <span class="n">EarlyStopImprovement</span>
 <span class="c1"># --------------------------------------------------------------------------- #</span>
 
-<span class="k">class</span> <span class="nc">Estimator</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+<div class="viewcode-block" id="Estimator"><a class="viewcode-back" href="../../../../modules.html#ml_studio.supervised_learning.training.estimator.Estimator">[docs]</a><span class="k">class</span> <span class="nc">Estimator</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base class gradient descent estimator.&quot;&quot;&quot;</span>
 
     <span class="n">DEFAULT_METRIC</span> <span class="o">=</span> <span class="s1">&#39;mse&#39;</span>
@@ -127,11 +127,11 @@
     <span class="k">def</span> <span class="nf">_set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Estimator.set_params"><a class="viewcode-back" href="../../../../modules.html#ml_studio.supervised_learning.training.estimator.Estimator.set_params">[docs]</a>    <span class="k">def</span> <span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets parameters to **kwargs and validates.&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_params</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
     <span class="k">def</span> <span class="nf">_validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Validate parameters.&quot;&quot;&quot;</span>
@@ -344,7 +344,7 @@
     <span class="k">def</span> <span class="nf">_end_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cbks</span><span class="o">.</span><span class="n">on_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<div class="viewcode-block" id="Estimator.fit"><a class="viewcode-back" href="../../../../modules.html#ml_studio.supervised_learning.training.estimator.Estimator.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Trains model until stop condition is met.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -389,7 +389,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_end_epoch</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_end_training</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
     
     <span class="k">def</span> <span class="nf">_linear_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes prediction as linear combination of inputs and thetas.&quot;&quot;&quot;</span>
@@ -410,12 +410,12 @@
     <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="k">pass</span>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Estimator.score"><a class="viewcode-back" href="../../../../modules.html#ml_studio.supervised_learning.training.estimator.Estimator.score">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
     <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">summary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span>
+        <span class="n">summary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

@@ -1,4 +1,8 @@
 Source Code Documentation
 ======================================
-.. automodule:: ml_studio.supervised_learning.regression
+Estimator
+---------
+.. automodule:: ml_studio.supervised_learning.training.estimator
     :members:
+
+    
