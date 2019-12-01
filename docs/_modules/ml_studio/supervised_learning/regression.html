@@ -1,0 +1,792 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ml_studio.supervised_learning.regression &#8212; ML Studio 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for ml_studio.supervised_learning.regression</h1><div class="highlight"><pre>
+<span></span><span class="c1"># =========================================================================== #</span>
+<span class="c1">#                          REGRESSION CLASSES                                 #</span>
+<span class="c1"># =========================================================================== #</span>
+<span class="c1"># =========================================================================== #</span>
+<span class="c1"># Project: ML Studio                                                          #</span>
+<span class="c1"># Version: 0.1.14                                                             #</span>
+<span class="c1"># File: \regression.py                                                        #</span>
+<span class="c1"># Python Version: 3.8.0                                                       #</span>
+<span class="c1"># ---------------                                                             #</span>
+<span class="c1"># Author: John James                                                          #</span>
+<span class="c1"># Company: Decision Scients                                                   #</span>
+<span class="c1"># Email: jjames@decisionscients.com                                           #</span>
+<span class="c1"># ---------------                                                             #</span>
+<span class="c1"># Create Date: Tuesday September 24th 2019, 3:16:03 am                        #</span>
+<span class="c1"># Last Modified: Saturday November 30th 2019, 10:34:31 am                     #</span>
+<span class="c1"># Modified By: John James (jjames@decisionscients.com)                        #</span>
+<span class="c1"># ---------------                                                             #</span>
+<span class="c1"># License: Modified BSD                                                       #</span>
+<span class="c1"># Copyright (c) 2019 Decision Scients                                         #</span>
+<span class="c1"># =========================================================================== #</span>
+
+<span class="sd">&quot;&quot;&quot;Regression, Linear Regression, L1, L2 and ElasticNet Regression classes.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">ml_studio.supervised_learning.training.regularizers</span> <span class="k">import</span> <span class="n">L1</span><span class="p">,</span> <span class="n">L2</span><span class="p">,</span> <span class="n">ElasticNet</span>
+<span class="kn">from</span> <span class="nn">ml_studio.supervised_learning.training.estimator</span> <span class="k">import</span> <span class="n">Estimator</span>
+<span class="kn">from</span> <span class="nn">ml_studio.supervised_learning.training.metrics</span> <span class="k">import</span> <span class="n">RegressionMetric</span>
+<span class="kn">from</span> <span class="nn">ml_studio.supervised_learning.training.metrics</span> <span class="k">import</span> <span class="n">RegressionMetricFactory</span>
+<span class="kn">from</span> <span class="nn">ml_studio.supervised_learning.training.cost</span> <span class="k">import</span> <span class="n">RegressionCostFunction</span>
+<span class="kn">from</span> <span class="nn">ml_studio.supervised_learning.training.cost</span> <span class="k">import</span> <span class="n">RegressionCostFactory</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="c1"># --------------------------------------------------------------------------- #</span>
+<span class="c1">#                          REGRESSION CLASS                                   #</span>
+<span class="c1"># --------------------------------------------------------------------------- #</span>
+
+<div class="viewcode-block" id="Regression"><a class="viewcode-back" href="../../../modules.html#ml_studio.supervised_learning.regression.Regression">[docs]</a><span class="k">class</span> <span class="nc">Regression</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for all regression classes.&quot;&quot;&quot;</span>
+
+    <span class="n">DEFAULT_METRIC</span> <span class="o">=</span> <span class="s1">&#39;mse&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span> 
+                 <span class="n">early_stop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Regression</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span> 
+                                         <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> 
+                                         <span class="n">theta_init</span><span class="o">=</span><span class="n">theta_init</span><span class="p">,</span> 
+                                         <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="n">cost</span><span class="p">,</span> 
+                                         <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> 
+                                         <span class="n">early_stop</span><span class="o">=</span><span class="n">early_stop</span><span class="p">,</span> 
+                                         <span class="n">val_size</span><span class="o">=</span><span class="n">val_size</span><span class="p">,</span> 
+                                         <span class="n">patience</span><span class="o">=</span><span class="n">patience</span><span class="p">,</span> 
+                                         <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span>
+                                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> 
+                                         <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>     
+ 
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>    
+
+    <span class="k">def</span> <span class="nf">_get_cost_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Obtains the cost function associated with the cost parameter.&quot;&quot;&quot;</span>
+        <span class="n">cost_function</span> <span class="o">=</span> <span class="n">RegressionCostFactory</span><span class="p">()(</span><span class="n">cost</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="n">RegressionCostFunction</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; is not a supported regression cost function.&#39;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cost_function</span>
+
+    <span class="k">def</span> <span class="nf">_get_scorer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Obtains the scoring function associated with the metric parameter.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">scorer</span> <span class="o">=</span> <span class="n">RegressionMetricFactory</span><span class="p">()(</span><span class="n">metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scorer</span><span class="p">,</span> <span class="n">RegressionMetric</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; is not a supported regression metric.&#39;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="o">=</span> <span class="n">scorer</span><span class="o">.</span><span class="n">label</span>
+                <span class="k">return</span> <span class="n">scorer</span>
+        
+    <span class="k">def</span> <span class="nf">_predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes predictions during training with current weights.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_prediction</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Regression.predict"><a class="viewcode-back" href="../../../modules.html#ml_studio.supervised_learning.regression.Regression.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Predicts output as a linear function of inputs and final parameters.</span>
+
+<span class="sd">        The method computes predictions based upon final parameters; therefore,</span>
+<span class="sd">        the model must have been trained.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like, shape (n_samples, n_features)</span>
+<span class="sd">            Feature matrix for which predictions will be rendered.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array, shape(n_samples,)</span>
+<span class="sd">            Returns the linear regression prediction.        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Regression.score"><a class="viewcode-back" href="../../../modules.html#ml_studio.supervised_learning.regression.Regression.score">[docs]</a>    <span class="k">def</span> <span class="nf">score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes a score for the current model, given inputs X and output y.</span>
+
+<span class="sd">        The score uses the class associated the metric parameter from class</span>
+<span class="sd">        instantiation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like, shape (n_samples, n_features)</span>
+<span class="sd">            Feature matrix for which predictions will be rendered.</span>
+
+<span class="sd">        y : numpy array, shape (n_samples,)</span>
+<span class="sd">            Target values             </span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Returns the score for the designated metric.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">)</span>    
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">RegressionMetricFactory</span><span class="p">()(</span><span class="n">metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_METRIC</span><span class="p">)(</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">)</span>        
+        <span class="k">return</span> <span class="n">score</span></div></div>
+
+<span class="c1"># --------------------------------------------------------------------------- #</span>
+<span class="c1">#                         LINEAR REGRESSION CLASS                             #</span>
+<span class="c1"># --------------------------------------------------------------------------- #</span>
+
+
+<div class="viewcode-block" id="LinearRegression"><a class="viewcode-back" href="../../../modules.html#ml_studio.supervised_learning.regression.LinearRegression">[docs]</a><span class="k">class</span> <span class="nc">LinearRegression</span><span class="p">(</span><span class="n">Regression</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Trains linear regression models using Gradient Descent.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    learning_rate : float or LearningRateSchedule instance, optional (default=0.01)</span>
+<span class="sd">        Learning rate or learning rate schedule.</span>
+
+<span class="sd">    batch_size : None or int, optional (default=None)</span>
+<span class="sd">        The number of examples to include in a single batch.</span>
+
+<span class="sd">    theta_init : None or array_like, optional (default=None)</span>
+<span class="sd">        Initial values for the parameters :math:`\\theta`</span>
+
+<span class="sd">    epochs : int, optional (default=1000)</span>
+<span class="sd">        The number of epochs to execute during training</span>
+
+<span class="sd">    cost : str, (default=&#39;quadratic&#39;)</span>
+<span class="sd">        The string name for the cost function</span>
+
+<span class="sd">        &#39;quadratic&#39;:</span>
+<span class="sd">            Quadratic or Mean Squared Error (MSE) cost </span>
+<span class="sd">        &#39;mae&#39;:</span>
+<span class="sd">            Mean Absolute Error (MAE)</span>
+<span class="sd">        &#39;huber&#39;:</span>
+<span class="sd">            Computes Huber cost</span>
+
+<span class="sd">    metric : str, optional (default=&#39;mse&#39;)</span>
+<span class="sd">        Metrics used to evaluate regression scores:</span>
+
+<span class="sd">        &#39;r2&#39;: </span>
+<span class="sd">            R2 - The coefficient of determination</span>
+<span class="sd">        &#39;var_explained&#39;: </span>
+<span class="sd">            Percentage of variance explained</span>
+<span class="sd">        &#39;mae&#39;:</span>
+<span class="sd">            Mean absolute error</span>
+<span class="sd">        &#39;mape&#39;:</span>
+<span class="sd">            Mean absolute percentage error</span>
+<span class="sd">        &#39;mse&#39;:</span>
+<span class="sd">            Mean squared error</span>
+<span class="sd">        &#39;nmse&#39;:</span>
+<span class="sd">            Negative mean squared error</span>
+<span class="sd">        &#39;rmse&#39;:</span>
+<span class="sd">            Root mean squared error</span>
+<span class="sd">        &#39;nrmse&#39;:</span>
+<span class="sd">            Negative root mean squared error</span>
+<span class="sd">        &#39;msle&#39;:</span>
+<span class="sd">            Mean squared log error</span>
+<span class="sd">        &#39;rmsle&#39;:</span>
+<span class="sd">            Root mean squared log error</span>
+<span class="sd">        &#39;medae&#39;:</span>
+<span class="sd">            Median absolute error</span>
+
+<span class="sd">    early_stop : Bool or EarlyStop subclass, optional (default=True)</span>
+<span class="sd">        The early stopping algorithm to use during training.</span>
+
+<span class="sd">    val_size : Float, default=0.3</span>
+<span class="sd">        The proportion of the training set to allocate to the validation set.</span>
+<span class="sd">        Must be between 0 and 1. Only used when early_stop is not False.</span>
+
+<span class="sd">    patience : int, default=5</span>
+<span class="sd">        The number of consecutive iterations with no improvement to wait before</span>
+<span class="sd">        early stopping.</span>
+
+<span class="sd">    precision : float, default=0.01</span>
+<span class="sd">        The stopping criteria. The precision with which improvement in training</span>
+<span class="sd">        cost or validation score is measured e.g. training cost at time k+1</span>
+<span class="sd">        has improved if it has dropped training cost (k) * precision.</span>
+
+<span class="sd">    verbose : bool, optional (default=False)</span>
+<span class="sd">        If true, performance during training is summarized to sysout.</span>
+
+<span class="sd">    checkpoint : None or int, optional (default=100)</span>
+<span class="sd">        If verbose, report performance each &#39;checkpoint&#39; epochs</span>
+
+<span class="sd">    name : None or str, optional (default=None)</span>
+<span class="sd">        The name of the model used for plotting</span>
+
+<span class="sd">    seed : None or int, optional (default=None)</span>
+<span class="sd">        Random state seed        </span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    coef_ : array-like shape (n_features,1) or (n_features, n_classes)</span>
+<span class="sd">        Coefficient of the features in X. </span>
+
+<span class="sd">    intercept_ : array-like, shape(1,) or (n_classes,) </span>
+<span class="sd">        Intercept (a.k.a. bias) added to the decision function. </span>
+
+<span class="sd">    epochs_ : int</span>
+<span class="sd">        Total number of epochs executed.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    fit(X,y) Fits the model to input X and output y</span>
+<span class="sd">    predict(X) Renders predictions for input X using learned parameters</span>
+<span class="sd">    score(X,y) Computes a score using metric designated in __init__.</span>
+<span class="sd">    summary() Prints a summary of the model to sysout.  </span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    regression.LassoRegression : Lasso Regression</span>
+<span class="sd">    regression.RidgeRegression : Ridge Regression</span>
+<span class="sd">    regression.ElasticNetRegression : ElasticNet Regression</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span> 
+                 <span class="n">early_stop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LinearRegression</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span> 
+                                         <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> 
+                                         <span class="n">theta_init</span><span class="o">=</span><span class="n">theta_init</span><span class="p">,</span> 
+                                         <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="n">cost</span><span class="p">,</span> 
+                                         <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> 
+                                         <span class="n">early_stop</span><span class="o">=</span><span class="n">early_stop</span><span class="p">,</span> 
+                                         <span class="n">val_size</span><span class="o">=</span><span class="n">val_size</span><span class="p">,</span> 
+                                         <span class="n">patience</span><span class="o">=</span><span class="n">patience</span><span class="p">,</span> 
+                                         <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span>
+                                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> 
+                                         <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>   
+
+    <span class="k">def</span> <span class="nf">_set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_algorithm_name</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="s2">&quot;Linear Regression&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">+</span> <span class="s1">&#39; with &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span></div>
+
+
+<span class="c1"># --------------------------------------------------------------------------- #</span>
+<span class="c1">#                         LASSO REGRESSION CLASS                              #</span>
+<span class="c1"># --------------------------------------------------------------------------- #</span>
+
+
+<div class="viewcode-block" id="LassoRegression"><a class="viewcode-back" href="../../../modules.html#ml_studio.supervised_learning.regression.LassoRegression">[docs]</a><span class="k">class</span> <span class="nc">LassoRegression</span><span class="p">(</span><span class="n">Regression</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Trains lasso regression models using Gradient Descent.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    learning_rate : float or LearningRateSchedule instance, optional (default=0.01)</span>
+<span class="sd">        Learning rate or learning rate schedule.</span>
+
+<span class="sd">    batch_size : None or int, optional (default=None)</span>
+<span class="sd">        The number of examples to include in a single batch.</span>
+
+<span class="sd">    theta_init : None or array_like, optional (default=None)</span>
+<span class="sd">        Initial values for the parameters :math:`\\theta`</span>
+
+<span class="sd">    alpha : Float, default=0.001</span>
+<span class="sd">        Constant that multiplies the regularization term.</span>
+
+<span class="sd">    epochs : int, optional (default=1000)</span>
+<span class="sd">        The number of epochs to execute during training</span>
+
+<span class="sd">    cost : str, (default=&#39;quadratic&#39;)</span>
+<span class="sd">        The string name for the cost function</span>
+
+<span class="sd">        &#39;quadratic&#39;:</span>
+<span class="sd">            Quadratic or Mean Squared Error (MSE) cost </span>
+<span class="sd">        &#39;mae&#39;:</span>
+<span class="sd">            Mean Absolute Error (MAE)</span>
+<span class="sd">        &#39;huber&#39;:</span>
+<span class="sd">            Computes Huber cost</span>
+
+<span class="sd">    metric : str, optional (default=&#39;mse&#39;)</span>
+<span class="sd">        Metrics used to evaluate regression scores:</span>
+
+<span class="sd">        &#39;r2&#39;: </span>
+<span class="sd">            R2 - The coefficient of determination</span>
+<span class="sd">        &#39;var_explained&#39;: </span>
+<span class="sd">            Percentage of variance explained</span>
+<span class="sd">        &#39;mae&#39;:</span>
+<span class="sd">            Mean absolute error</span>
+<span class="sd">        &#39;mape&#39;:</span>
+<span class="sd">            Mean absolute percentage error</span>
+<span class="sd">        &#39;mse&#39;:</span>
+<span class="sd">            Mean squared error</span>
+<span class="sd">        &#39;nmse&#39;:</span>
+<span class="sd">            Negative mean squared error</span>
+<span class="sd">        &#39;rmse&#39;:</span>
+<span class="sd">            Root mean squared error</span>
+<span class="sd">        &#39;nrmse&#39;:</span>
+<span class="sd">            Negative root mean squared error</span>
+<span class="sd">        &#39;msle&#39;:</span>
+<span class="sd">            Mean squared log error</span>
+<span class="sd">        &#39;rmsle&#39;:</span>
+<span class="sd">            Root mean squared log error</span>
+<span class="sd">        &#39;medae&#39;:</span>
+<span class="sd">            Median absolute error</span>
+
+<span class="sd">    early_stop : Bool or EarlyStop subclass, optional (default=True)</span>
+<span class="sd">        The early stopping algorithm to use during training.</span>
+
+<span class="sd">    val_size : Float, default=0.3</span>
+<span class="sd">        The proportion of the training set to allocate to the validation set.</span>
+<span class="sd">        Must be between 0 and 1. Only used when early_stop is not False.</span>
+
+<span class="sd">    patience : int, default=5</span>
+<span class="sd">        The number of consecutive iterations with no improvement to wait before</span>
+<span class="sd">        early stopping.</span>
+
+<span class="sd">    precision : float, default=0.01</span>
+<span class="sd">        The stopping criteria. The precision with which improvement in training</span>
+<span class="sd">        cost or validation score is measured e.g. training cost at time k+1</span>
+<span class="sd">        has improved if it has dropped training cost (k) * precision.</span>
+
+<span class="sd">    verbose : bool, optional (default=False)</span>
+<span class="sd">        If true, performance during training is summarized to sysout.</span>
+
+<span class="sd">    checkpoint : None or int, optional (default=100)</span>
+<span class="sd">        If verbose, report performance each &#39;checkpoint&#39; epochs</span>
+
+<span class="sd">    name : None or str, optional (default=None)</span>
+<span class="sd">        The name of the model used for plotting</span>
+
+<span class="sd">    seed : None or int, optional (default=None)</span>
+<span class="sd">        Random state seed        </span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    coef_ : array-like shape (n_features,1) or (n_features, n_classes)</span>
+<span class="sd">        Coefficient of the features in X. </span>
+
+<span class="sd">    intercept_ : array-like, shape(1,) or (n_classes,) </span>
+<span class="sd">        Intercept (a.k.a. bias) added to the decision function. </span>
+
+<span class="sd">    epochs_ : int</span>
+<span class="sd">        Total number of epochs executed.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    fit(X,y) Fits the model to input X and output y</span>
+<span class="sd">    predict(X) Renders predictions for input X using learned parameters</span>
+<span class="sd">    score(X,y) Computes a score using metric designated in __init__.</span>
+<span class="sd">    summary() Prints a summary of the model to sysout.  </span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    regression.LinearRegression : Lasso Regression</span>
+<span class="sd">    regression.RidgeRegression : Ridge Regression</span>
+<span class="sd">    regression.ElasticNetRegression : ElasticNet Regression</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">alpha</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> 
+                 <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span>  <span class="n">early_stop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">val_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LassoRegression</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span> 
+                                         <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> 
+                                         <span class="n">theta_init</span><span class="o">=</span><span class="n">theta_init</span><span class="p">,</span> 
+                                         <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="n">cost</span><span class="p">,</span> 
+                                         <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> 
+                                         <span class="n">early_stop</span><span class="o">=</span><span class="n">early_stop</span><span class="p">,</span> 
+                                         <span class="n">val_size</span><span class="o">=</span><span class="n">val_size</span><span class="p">,</span> 
+                                         <span class="n">patience</span><span class="o">=</span><span class="n">patience</span><span class="p">,</span> 
+                                         <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span>
+                                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> 
+                                         <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regularizer</span> <span class="o">=</span> <span class="n">L1</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_algorithm_name</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="s2">&quot;Lasso Regression&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">+</span> <span class="s1">&#39; with &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span></div>
+
+<span class="c1"># --------------------------------------------------------------------------- #</span>
+<span class="c1">#                         RIDGE REGRESSION CLASS                              #</span>
+<span class="c1"># --------------------------------------------------------------------------- #</span>
+<div class="viewcode-block" id="RidgeRegression"><a class="viewcode-back" href="../../../modules.html#ml_studio.supervised_learning.regression.RidgeRegression">[docs]</a><span class="k">class</span> <span class="nc">RidgeRegression</span><span class="p">(</span><span class="n">Regression</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Trains ridge regression models using Gradient Descent.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    learning_rate : float or LearningRateSchedule instance, optional (default=0.01)</span>
+<span class="sd">        Learning rate or learning rate schedule.</span>
+
+<span class="sd">    batch_size : None or int, optional (default=None)</span>
+<span class="sd">        The number of examples to include in a single batch.</span>
+
+<span class="sd">    theta_init : None or array_like, optional (default=None)</span>
+<span class="sd">        Initial values for the parameters :math:`\\theta`</span>
+
+<span class="sd">    alpha : Float, default=0.0001</span>
+<span class="sd">        Constant that multiplies the regularization term.</span>
+
+<span class="sd">    epochs : int, optional (default=1000)</span>
+<span class="sd">        The number of epochs to execute during training</span>
+
+<span class="sd">    cost : str, (default=&#39;quadratic&#39;)</span>
+<span class="sd">        The string name for the cost function</span>
+
+<span class="sd">        &#39;quadratic&#39;:</span>
+<span class="sd">            Quadratic or Mean Squared Error (MSE) cost </span>
+<span class="sd">        &#39;mae&#39;:</span>
+<span class="sd">            Mean Absolute Error (MAE)</span>
+<span class="sd">        &#39;huber&#39;:</span>
+<span class="sd">            Computes Huber cost</span>
+
+<span class="sd">    metric : str, optional (default=&#39;mse&#39;)</span>
+<span class="sd">        Metrics used to evaluate regression scores:</span>
+
+<span class="sd">        &#39;r2&#39;: </span>
+<span class="sd">            R2 - The coefficient of determination</span>
+<span class="sd">        &#39;var_explained&#39;: </span>
+<span class="sd">            Percentage of variance explained</span>
+<span class="sd">        &#39;mae&#39;:</span>
+<span class="sd">            Mean absolute error</span>
+<span class="sd">        &#39;mape&#39;:</span>
+<span class="sd">            Mean absolute percentage error</span>
+<span class="sd">        &#39;mse&#39;:</span>
+<span class="sd">            Mean squared error</span>
+<span class="sd">        &#39;nmse&#39;:</span>
+<span class="sd">            Negative mean squared error</span>
+<span class="sd">        &#39;rmse&#39;:</span>
+<span class="sd">            Root mean squared error</span>
+<span class="sd">        &#39;nrmse&#39;:</span>
+<span class="sd">            Negative root mean squared error</span>
+<span class="sd">        &#39;msle&#39;:</span>
+<span class="sd">            Mean squared log error</span>
+<span class="sd">        &#39;rmsle&#39;:</span>
+<span class="sd">            Root mean squared log error</span>
+<span class="sd">        &#39;medae&#39;:</span>
+<span class="sd">            Median absolute error</span>
+
+<span class="sd">    early_stop : Bool or EarlyStop subclass, optional (default=True)</span>
+<span class="sd">        The early stopping algorithm to use during training.</span>
+
+<span class="sd">    val_size : Float, default=0.3</span>
+<span class="sd">        The proportion of the training set to allocate to the validation set.</span>
+<span class="sd">        Must be between 0 and 1. Only used when early_stop is not False.</span>
+
+<span class="sd">    patience : int, default=5</span>
+<span class="sd">        The number of consecutive iterations with no improvement to wait before</span>
+<span class="sd">        early stopping.</span>
+
+<span class="sd">    precision : float, default=0.01</span>
+<span class="sd">        The stopping criteria. The precision with which improvement in training</span>
+<span class="sd">        cost or validation score is measured e.g. training cost at time k+1</span>
+<span class="sd">        has improved if it has dropped training cost (k) * precision.</span>
+
+<span class="sd">    verbose : bool, optional (default=False)</span>
+<span class="sd">        If true, performance during training is summarized to sysout.</span>
+
+<span class="sd">    checkpoint : None or int, optional (default=100)</span>
+<span class="sd">        If verbose, report performance each &#39;checkpoint&#39; epochs</span>
+
+<span class="sd">    name : None or str, optional (default=None)</span>
+<span class="sd">        The name of the model used for plotting</span>
+
+<span class="sd">    seed : None or int, optional (default=None)</span>
+<span class="sd">        Random state seed        </span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    coef_ : array-like shape (n_features,1) or (n_features, n_classes)</span>
+<span class="sd">        Coefficient of the features in X. </span>
+
+<span class="sd">    intercept_ : array-like, shape(1,) or (n_classes,) </span>
+<span class="sd">        Intercept (a.k.a. bias) added to the decision function. </span>
+
+<span class="sd">    epochs_ : int</span>
+<span class="sd">        Total number of epochs executed.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    fit(X,y) Fits the model to input X and output y</span>
+<span class="sd">    predict(X) Renders predictions for input X using learned parameters</span>
+<span class="sd">    score(X,y) Computes a score using metric designated in __init__.</span>
+<span class="sd">    summary() Prints a summary of the model to sysout.  </span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    regression.LinearRegression : Linear Regression</span>
+<span class="sd">    regression.LassoRegression : Lasso Regression</span>
+<span class="sd">    regression.ElasticNetRegression : ElasticNet Regression</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">alpha</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> 
+                 <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span>  <span class="n">early_stop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">val_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RidgeRegression</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span> 
+                                         <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> 
+                                         <span class="n">theta_init</span><span class="o">=</span><span class="n">theta_init</span><span class="p">,</span> 
+                                         <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="n">cost</span><span class="p">,</span> 
+                                         <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> 
+                                         <span class="n">early_stop</span><span class="o">=</span><span class="n">early_stop</span><span class="p">,</span> 
+                                         <span class="n">val_size</span><span class="o">=</span><span class="n">val_size</span><span class="p">,</span> 
+                                         <span class="n">patience</span><span class="o">=</span><span class="n">patience</span><span class="p">,</span> 
+                                         <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span>
+                                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> 
+                                         <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>     
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regularizer</span> <span class="o">=</span> <span class="n">L2</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets name of model for plotting purposes.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_algorithm_name</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="s2">&quot;Ridge Regression&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">+</span> <span class="s1">&#39; with &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span></div>
+
+<span class="c1"># --------------------------------------------------------------------------- #</span>
+<span class="c1">#                        ELASTICNET REGRESSION CLASS                          #</span>
+<span class="c1"># --------------------------------------------------------------------------- #</span>
+
+
+<div class="viewcode-block" id="ElasticNetRegression"><a class="viewcode-back" href="../../../modules.html#ml_studio.supervised_learning.regression.ElasticNetRegression">[docs]</a><span class="k">class</span> <span class="nc">ElasticNetRegression</span><span class="p">(</span><span class="n">Regression</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Trains lasso regression models using Gradient Descent.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    learning_rate : float or LearningRateSchedule instance, optional (default=0.01)</span>
+<span class="sd">        Learning rate or learning rate schedule.</span>
+
+<span class="sd">    batch_size : None or int, optional (default=None)</span>
+<span class="sd">        The number of examples to include in a single batch.</span>
+
+<span class="sd">    theta_init : None or array_like, optional (default=None)</span>
+<span class="sd">        Initial values for the parameters :math:`\\theta`</span>
+
+<span class="sd">    alpha : Float, default=0.0001</span>
+<span class="sd">        Constant that multiplies the regularization term.</span>
+
+<span class="sd">    ratio : Float, default=0.5</span>
+<span class="sd">        The L1 ratio with 0 &lt;= ratio &lt;= 1. For ratio = 0 the penalty is an L2 </span>
+<span class="sd">        penalty. For ratio = 1 it is an L1 penalty. For 0 &lt; ratio &lt; 1, the </span>
+<span class="sd">        penalty is a combination of L1 and L2. </span>
+
+<span class="sd">    epochs : int, optional (default=1000)</span>
+<span class="sd">        The number of epochs to execute during training</span>
+
+<span class="sd">    cost : str, (default=&#39;quadratic&#39;)</span>
+<span class="sd">        The string name for the cost function</span>
+
+<span class="sd">        &#39;quadratic&#39;:</span>
+<span class="sd">            Quadratic or Mean Squared Error (MSE) cost </span>
+<span class="sd">        &#39;mae&#39;:</span>
+<span class="sd">            Mean Absolute Error (MAE)</span>
+<span class="sd">        &#39;huber&#39;:</span>
+<span class="sd">            Computes Huber cost</span>
+
+<span class="sd">    metric : str, optional (default=&#39;mse&#39;)</span>
+<span class="sd">        Metrics used to evaluate classification scores:</span>
+
+<span class="sd">        &#39;r2&#39;: </span>
+<span class="sd">            R2 - The coefficient of determination</span>
+<span class="sd">        &#39;var_explained&#39;: </span>
+<span class="sd">            Percentage of variance explained</span>
+<span class="sd">        &#39;mae&#39;:</span>
+<span class="sd">            Mean absolute error</span>
+<span class="sd">        &#39;mape&#39;:</span>
+<span class="sd">            Mean absolute percentage error</span>
+<span class="sd">        &#39;mse&#39;:</span>
+<span class="sd">            Mean squared error</span>
+<span class="sd">        &#39;nmse&#39;:</span>
+<span class="sd">            Negative mean squared error</span>
+<span class="sd">        &#39;rmse&#39;:</span>
+<span class="sd">            Root mean squared error</span>
+<span class="sd">        &#39;nrmse&#39;:</span>
+<span class="sd">            Negative root mean squared error</span>
+<span class="sd">        &#39;msle&#39;:</span>
+<span class="sd">            Mean squared log error</span>
+<span class="sd">        &#39;rmsle&#39;:</span>
+<span class="sd">            Root mean squared log error</span>
+<span class="sd">        &#39;medae&#39;:</span>
+<span class="sd">            Median absolute error</span>
+
+<span class="sd">    early_stop : Bool or EarlyStop subclass, optional (default=True)</span>
+<span class="sd">        The early stopping algorithm to use during training.</span>
+
+<span class="sd">    val_size : Float, default=0.3</span>
+<span class="sd">        The proportion of the training set to allocate to the validation set.</span>
+<span class="sd">        Must be between 0 and 1. Only used when early_stop is not False.</span>
+
+<span class="sd">    patience : int, default=5</span>
+<span class="sd">        The number of consecutive iterations with no improvement to wait before</span>
+<span class="sd">        early stopping.</span>
+
+<span class="sd">    precision : float, default=0.01</span>
+<span class="sd">        The stopping criteria. The precision with which improvement in training</span>
+<span class="sd">        cost or validation score is measured e.g. training cost at time k+1</span>
+<span class="sd">        has improved if it has dropped training cost (k) * precision.</span>
+
+<span class="sd">    verbose : bool, optional (default=False)</span>
+<span class="sd">        If true, performance during training is summarized to sysout.</span>
+
+<span class="sd">    checkpoint : None or int, optional (default=100)</span>
+<span class="sd">        If verbose, report performance each &#39;checkpoint&#39; epochs</span>
+
+<span class="sd">    name : None or str, optional (default=None)</span>
+<span class="sd">        The name of the model used for plotting</span>
+
+<span class="sd">    seed : None or int, optional (default=None)</span>
+<span class="sd">        Random state seed        </span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    coef_ : array-like shape (n_features,1) or (n_features, n_classes)</span>
+<span class="sd">        Coefficient of the features in X. </span>
+
+<span class="sd">    intercept_ : array-like, shape(1,) or (n_classes,) </span>
+<span class="sd">        Intercept (a.k.a. bias) added to the decision function. </span>
+
+<span class="sd">    epochs_ : int</span>
+<span class="sd">        Total number of epochs executed.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    fit(X,y) Fits the model to input X and output y</span>
+<span class="sd">    predict(X) Renders predictions for input X using learned parameters</span>
+<span class="sd">    score(X,y) Computes a score using metric designated in __init__.</span>
+<span class="sd">    summary() Prints a summary of the model to sysout.  </span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    regression.LinearRegression : Linear Regression</span>
+<span class="sd">    regression.RidgeRegression : Ridge Regression</span>
+<span class="sd">    regression.LassoRegression : Lasso Regression</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">alpha</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> 
+                 <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span>  <span class="n">early_stop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">val_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ElasticNetRegression</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span> 
+                                         <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> 
+                                         <span class="n">theta_init</span><span class="o">=</span><span class="n">theta_init</span><span class="p">,</span> 
+                                         <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="n">cost</span><span class="p">,</span> 
+                                         <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> 
+                                         <span class="n">early_stop</span><span class="o">=</span><span class="n">early_stop</span><span class="p">,</span> 
+                                         <span class="n">val_size</span><span class="o">=</span><span class="n">val_size</span><span class="p">,</span> 
+                                         <span class="n">patience</span><span class="o">=</span><span class="n">patience</span><span class="p">,</span> 
+                                         <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span>
+                                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> 
+                                         <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ratio</span> <span class="o">=</span> <span class="n">ratio</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regularizer</span> <span class="o">=</span> <span class="n">ElasticNet</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="n">ratio</span><span class="p">)</span>    
+        
+    <span class="k">def</span> <span class="nf">_set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets name of model for plotting purposes.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_algorithm_name</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="s2">&quot;ElasticNet Regression&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">+</span> <span class="s1">&#39; with &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">ML Studio</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">ML Studio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Source Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, John James.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
