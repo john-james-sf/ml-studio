@@ -33,4 +33,5 @@ goto end
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
 
 :end
+xcopy /s/v/h/k/y "_build/html" "."
 popd
