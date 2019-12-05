@@ -76,7 +76,7 @@ class EarlyStopImprovement(EarlyStop):
         stop training.    
     """
 
-    def __init__(self, monitor='val_score', precision=0.01, patience=5):
+    def __init__(self, monitor='val_score', precision=0.01, patience=10):
         super(EarlyStopImprovement, self).__init__()
         self.monitor = monitor
         self.precision = precision
@@ -276,7 +276,7 @@ class EarlyStopProgress(EarlyStop):
 class EarlyStopStrips(EarlyStop):
     """Stop when validation error has not improved over 'patience' successive strips."""
 
-    def __init__(self, strip_size=5, patience=5):
+    def __init__(self, strip_size=5, patience=10):
         super(EarlyStopStrips,self).__init__()
         self.strip_size = strip_size
         self.strip = deque([], strip_size)

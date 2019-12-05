@@ -107,7 +107,7 @@ class Progress(Callback):
         logs : Dict
             Statistics obtained at end of epoch
         """
-        if epoch % self.model.checkpoint == 0:
+        if self.model.verbose and (epoch % self.model.checkpoint == 0):
             items_to_report = ('epoch', 'train', 'val')
             logs = {k:v for k,v in logs.items() if k.startswith(items_to_report)}
             progress = "".join(str(key) + ': ' + str(round(value,4)) + ' ' \

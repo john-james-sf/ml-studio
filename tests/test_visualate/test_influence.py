@@ -26,6 +26,7 @@ import numpy as np
 from ml_studio.supervised_learning.regression import LinearRegression
 
 from ml_studio.visualate.regression.influence import ResidualsLeverage
+from ml_studio.visualate.regression.influence import CooksDistance
 # --------------------------------------------------------------------------- #
 #                            RESIDUAL PLOT                                    #
 # --------------------------------------------------------------------------- #
@@ -41,3 +42,12 @@ class InfluencePlotTests:
         v.score(X_test, y_test)
         v.show()
 
+    @mark.influence
+    @mark.cooks_distance
+    def test_cooks_distance_plot(self, split_regression_data):
+        X_train, X_test, y_train, y_test = split_regression_data
+        model = LinearRegression(epochs=1000, metric='mape')                       
+        v = CooksDistance(model=model)
+        v.fit(X_train, y_train)
+        v.score(X_test, y_test)
+        v.show()
