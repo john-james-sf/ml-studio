@@ -30,10 +30,6 @@ requirements:
       # update all dependencies and pin them
       update: all
       pin: True
-  - requirements_dev.txt:
-      # update all dependencies and pin them
-      update: all
-      pin: True
 
 # add a label to pull requests, default is not set
 # requires private repo permissions, even on public repos
