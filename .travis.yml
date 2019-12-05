@@ -10,7 +10,6 @@ before_install:
 - pip install codecov
 install:
 - pip install -r requirements.txt
-- pip install -r requirements_dev.txt
 script:
 - pytest --cov-report term --cov=ml_studio
 deploy:
