@@ -71,23 +71,11 @@ def get_generated_large_regression_data():
 
 @fixture(scope="session")
 def get_generated_medium_regression_data():
-    X_path = "./tests/test_data/medium_regression_X.npy"
-    y_path = "./tests/test_data/medium_regression_y.npy"
-    if os.path.exists(X_path):
-        X = np.load(file=X_path, allow_pickle=False)
-        y = np.load(file=y_path, allow_pickle=False)
-    else:
-        X, y = datasets.make_regression(n_samples=1000, 
-                    n_features=10, bias=567,
-                    effective_rank=20, noise=20)
-        scaler = StandardScaler()    
-        X = scaler.fit_transform(X)
-        # Save numpy arrays as .npy files
-        directory = os.path.dirname(X_path)
-        X_file = os.path.basename(X_path)
-        y_file = os.path.basename(y_path)
-        save_numpy(X, directory, X_file)
-        save_numpy(y, directory, y_file)        
+    X, y = datasets.make_regression(n_samples=1000, 
+                n_features=10, bias=567,
+                effective_rank=20, noise=20)
+    scaler = StandardScaler()    
+    X = scaler.fit_transform(X)
     return X, y    
 
 @fixture(scope="session")
