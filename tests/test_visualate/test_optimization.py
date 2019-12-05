@@ -41,7 +41,7 @@ class OptimizationPlotTests:
         model = LinearRegression(epochs=1000, metric='mape')                       
         v = TrainingCurve(model=model)
         v.fit(X_train, y_train)
-        v.show(dataset='score')            
+        #v.show(dataset='score')            
 
 
     @mark.optimization
@@ -50,8 +50,7 @@ class OptimizationPlotTests:
         X_train, y_train = get_generated_medium_regression_data
         model = LinearRegression(epochs=500, batch_size=32, metric='r2', 
                                  verbose=False, val_size=0, early_stop=False)                       
-        sizes = np.arange(start=100,stop=1100,step=100, dtype=np.int32)
-        print(sizes)         
+        sizes = np.arange(start=100,stop=1100,step=100, dtype=np.int32)        
         k = 5
         est = KFoldCV(model=model, sizes=sizes, k=k)
         est.fit(X_train, y_train)
@@ -67,7 +66,7 @@ class OptimizationPlotTests:
         cv = 5
         est = LearningCurve(model=model,sizes=sizes, cv=cv)
         est.fit(X_train, y_train)
-        est.show()
+        #est.show()
 
     @mark.optimization
     @mark.scalability_curve
@@ -79,7 +78,7 @@ class OptimizationPlotTests:
         cv = 5
         est = ScalabilityCurve(model=model,sizes=sizes, cv=cv)
         est.fit(X_train, y_train)
-        est.show()        
+        #est.show()        
         
     @mark.optimization
     @mark.productivity_curve
@@ -91,4 +90,4 @@ class OptimizationPlotTests:
         cv = 5
         est = ProductivityCurve(model=model,sizes=sizes, cv=cv)
         est.fit(X_train, y_train)
-        est.show()             
+        #est.show()             
