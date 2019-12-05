@@ -52,58 +52,24 @@ class ResidualsLeverage(ModelVisualator):
     model : a Scikit-Learn or an ML Studio estimator
         A Scikit-Learn or ML Studio estimator.
 
+    refit : Bool. Default is False
+        Refit if True. Otherwise, only fit of model has not been trained        
+
     hist : bool, 'density', 'frequency', default: True
         Draw a histogram showing the distribution of the residuals on the 
         right side of the figure. If set to 'density', the probability
         density will be plotted. If set to 'frequency', the frequency will
-        be plotted.
-
-    train_color : color, default: 'darkblue'
-        Residuals from the training set are plotted with this color. Can
-        be any matplotlib color.
-
-    test_color : color, default: 'green'
-        Residuals from the test set are plotted with this color. Can
-        be any matplotlib color.
-
-    line_color : color, default: dark grey
-        Defines the color of the zero error line, can be any matplotlib color.
+        be plotted.  
     
-    train_alpha : float, default: 0.75
-        Specify a transparency for training data, where 1 is completely opaque
-        and 0 is completely transparent. This property makes densely clustered
-        points more visible.
-
-    test_alpha : float, default: 0.75
-        Specify a transparency for test data, where 1 is completely opaque
-        and 0 is completely transparent. This property makes densely clustered
-        points more visible.    
-    
-    kwargs : dict
-        Keyword arguments that are passed to the base class and may influence
-        the visualization as defined in other Visualizers.
-
-        ===========  ==========================================================
-        Property     Description
-        -----------  ----------------------------------------------------------
-        height       specify the height in pixels for the figure
-        width        specify the width in pixels of the figure
-        template     specify the theme template 
-        title        specify the title for the visualization
-        ===========  ==========================================================
+    kwargs : see PlotKwargs class documentation
 
     """
 
-    def __init__(self, model, hist=False, train_color='#0272a2', 
-                 test_color='#9fc377', line_color='darkgray', train_alpha=0.75, 
-                 test_alpha=0.75, **kwargs):    
-        super(ResidualsLeverage, self).__init__(model, **kwargs)                
+    def __init__(self, model, refit=False, hist=False, **kwargs):    
+        super(ResidualsLeverage, self).__init__(model=model, 
+                                                refit=refit, 
+                                                **kwargs)
         self.hist = hist
-        self.train_color = train_color
-        self.test_color = test_color
-        self.line_color = line_color
-        self.train_alpha = train_alpha
-        self.test_alpha = test_alpha    
 
     def fit(self, X, y, **kwargs):
         """ Fits the visualator to the data.
@@ -145,16 +111,22 @@ class ResidualsLeverage(ModelVisualator):
         # Compute F-distribution degrees of freedom
         n = self.X_train.shape[0]
         p = self.X_train.shape[1]
-        df = (1/p) * (n/(n-p))
+
         # Designate the leverage range being plotted
         min_leverage = np.min(self.leverage)
         max_leverage = np.max(self.leverage)
-        leverage = np.linspace(start=min_leverage, stop=max_leverage)
+        leverage = np.linspace(start=min_leverage, stop=max_leverage, num=n)
+
         # Compute standard residuals
-        std_resid_squared = distance/df * ((1-leverage)/leverage)
-        std_resid = sign * np.sqrt(std_resid_squared)
-        return (leverage, std_resid)
-        
+        std_resid = sign * np.sqrt(distance * ((1-leverage)/leverage) * (p+1))        
+
+        # Establish evaluator
+        better = {1:np.greater, -1:np.less}
+
+        # Find outliers better than threshold
+        threshold = sign * np.sqrt(distance * ((1-self.leverage)/self.leverage) * (p+1))        
+        outliers = np.argwhere(better[sign](self.train_residuals,threshold))
+        return leverage, std_resid, outliers
 
     def show(self, path=None, **kwargs):        
         """Renders the visualization.
@@ -179,65 +151,87 @@ class ResidualsLeverage(ModelVisualator):
         z1 = lowess(self.train_residuals, self.leverage, frac=1./3, it=0, 
                     is_sorted=False, return_sorted=True)    
 
-        # Grab data for Cooks Distance lines
-        cooks_line_1_upper = self._cooks_contour(distance=0.05)
-        cooks_line_1_lower = self._cooks_contour(distance=0.05, sign=-1)
-        cooks_line_2_upper = self._cooks_contour(distance=1)
-        cooks_line_2_lower = self._cooks_contour(distance=1, sign=-1)
+        # Grab the outliers 
+        outliers = []
+        l1u_leverage, l1u_residual, outlier = \
+            self._cooks_contour(distance=0.5, sign=1)
+        if len(outlier) > 0:
+            outliers.append(outlier)
+        
+        l1l_leverage, l1l_residual, outlier = \
+            self._cooks_contour(distance=0.5, sign=-1)
+        if len(outlier) > 0:
+            outliers.append(outlier)
 
-        # Format text annotation for points beyond 0.5 Cooks Distance
-        all_indices = np.arange(len(self.cooks_d))        
-        far_indices = np.argwhere(self.cooks_d > 0.5)
-        print(far_indices)
-        all_indices[~far_indices] = 0
-        annotation = ["" if x == 0 else x for x in all_indices]         
+        l2u_leverage, l2u_residual, outlier = \
+            self._cooks_contour(distance=1, sign=1)
+        if len(outlier) > 0:
+            outliers.append(outlier)
+
+        l2l_leverage, l2l_residual, outlier = \
+            self._cooks_contour(distance=1, sign=-1)
+        if len(outlier) > 0:
+            outliers.append(outlier)
+
+        # Format the annotations
+        annotations = np.arange(len(self.train_residuals))
+        annotations = annotations.astype(object)
+        notoutlier = np.array([i for i in np.arange(len(self.train_residuals)) if i not in outliers])
+        annotations[notoutlier] = " "
         
         # Create scatterplot traces
         data = [
-            go.Scattergl(x=self.leverage, y=self.train_residuals,
-                        mode='markers',
+            go.Scatter(x=self.leverage, y=self.train_residuals,
+                        mode='markers+text',
                         marker=dict(color=self.train_color),
                         name="Residual vs Leverage",
-                        text=annotation,
+                        text=annotations,
                         textposition="top center",
                         showlegend=False,
                         opacity=self.train_alpha),
+            go.Scattergl(x=l1u_leverage[outliers], 
+                        y=l1u_residual[outliers], 
+                        mode='markers',
+                        marker=dict(color='red'),
+                        name="Bad Points",
+                        opacity=self.train_alpha,
+                        showlegend=True),                        
             go.Scattergl(x=z1[:,0], y=z1[:,1],
                         mode='lines',
                         marker=dict(color='red'),
                         name="Training Set Lowess",
                         opacity=self.train_alpha,
                         showlegend=False),
-            go.Scatter(x=cooks_line_1_upper[0],
-                       y=cooks_line_1_upper[1],
+            go.Scatter(x=l1u_leverage,
+                       y=l1u_residual,
                        mode='lines',
                        line=dict(dash='dash'),
                        marker=dict(color='red'),
-                       name="Cooks Distance = 0.5",
+                       name="Cooks' D = 0.5",
                        opacity=self.train_alpha,
                        showlegend=True),
-            go.Scatter(x=cooks_line_1_lower[0],
-                       y=cooks_line_1_lower[1],
+            go.Scatter(x=l1l_leverage,
+                       y=l1l_residual,
                        mode='lines',
                        line=dict(dash='dash'),
                        marker=dict(color='red'),
-                       name="Cooks Distance = 0.5 (Lower)",
+                       name="Cooks' D = 0.5 (Lower)",
                        opacity=self.train_alpha,
                        showlegend=False),
-            go.Scatter(x=cooks_line_2_upper[0],
-                       y=cooks_line_2_upper[1],
+            go.Scatter(x=l2u_leverage,
+                       y=l2u_residual,
                        mode='lines',
                        line=dict(dash='dot'),
                        marker=dict(color='red'),
-                       name="Cooks Distance = 1",
+                       name="Cooks' D = 1.0",
                        opacity=self.train_alpha,
                        showlegend=True),
-            go.Scatter(x=cooks_line_2_lower[0],
-                       y=cooks_line_2_lower[1],
+            go.Scatter(x=l2l_leverage,
+                       y=l2l_residual,
                        mode='lines',
                        line=dict(dash='dot'),
                        marker=dict(color='red'),
-                       name="Cooks Distance = 0.5 (Lower)",
+                       name="Cooks' D = 1 (Lower)",
                        opacity=self.train_alpha,
                        showlegend=False)                                                                                                                                   
        ]
@@ -252,6 +246,7 @@ class ResidualsLeverage(ModelVisualator):
         layout = go.Layout(title=self.title, 
                         height=self.height,
                         width=self.width,
+                        margin=self.margin,
                         xaxis_title="Leverage",
                         yaxis_title="Standardized Residuals",
                         xaxis=dict(domain=[0,0.85],  zeroline=False, 
@@ -286,3 +281,128 @@ class ResidualsLeverage(ModelVisualator):
         else:
             py.plot(self.fig, auto_open=True, include_mathjax='cdn')            
 
+# --------------------------------------------------------------------------- #
+#                              COOKS DISTANCE                                 #
+# --------------------------------------------------------------------------- #
+class CooksDistance(ModelVisualator):
+    """Cooks Distance.
+
+    Cook's distance" is a measure of the influence of each observation on the 
+    regression coefficients. The Cook's distance statistic is a measure, 
+    for each observation in turn, of the extent of change in model 
+    estimates when that particular observation is omitted. Any observation 
+    for which the Cook's distance is close to 0.5 or more, or that is 
+    substantially larger than other Cook's distances 
+    (highly influential data points), requires investigation.
+
+    Parameters
+    ----------
+    model : a Scikit-Learn or an ML Studio estimator
+        A Scikit-Learn or ML Studio estimator.
+
+    refit : Bool. Default is False
+        Refit if True. Otherwise, only fit of model has not been trained           
+    
+    kwargs : see PlotKwargs class documentation
+
+    """
+
+    def __init__(self, model, refit=False, hist=False, **kwargs):    
+        super(CooksDistance, self).__init__(model=model, 
+                                            refit=refit, 
+                                            **kwargs)               
+        self.hist = hist
+
+    def fit(self, X, y, **kwargs):
+        """ Fits the visualator to the data.
+        
+        Parameters
+        ----------
+        X : ndarray or DataFrame of shape n x m
+            A matrix of n instances with m features
+
+        y : ndarray or Series of length n
+            An array or series of target or class values
+
+        kwargs: dict
+            Keyword arguments passed to the scikit-learn API. 
+            See visualizer specific details for how to use
+            the kwargs to modify the visualization or fitting process.    
+
+        Returns
+        -------
+        self : visualator
+        """
+        super(CooksDistance, self).fit(X,y)        
+        # Format plot title
+        if self.title is None:
+            self.title = "Cooks Distance : " + self.model.name        
+        
+        # Compute Cooks Distance
+        self.cooks_d = cooks_distance(self.model, X, y)
+
+        return self                   
+
+    def show(self, path=None, **kwargs):        
+        """Renders the visualization.
+
+        Contains the Plotly code that renders the visualization
+        in a notebook or in a pop-up GUI. If the  path variable
+        is not None, the visualization will be saved to disk.
+        Subclasses will override with visualization specific logic.
+
+        Parameters
+        ----------
+        path : str
+            The relative directory and file name to which the visualization
+            will be saved.
+
+        kwargs : dict
+            Various keyword arguments
+
+        """
+        self.path = path        
+        # Print format options                
+        
+        # Create scatterplot traces
+        data = [
+            go.Scattergl(x=np.arange(len(self.cooks_d)), y=[round(x,4) for x in self.cooks_d],
+                        mode='lines',
+                        marker=dict(color=self.train_color),
+                        name="Residual vs Leverage",                                                
+                        showlegend=False,
+                        opacity=self.train_alpha)                                                                                                                             
+       ]
+        # Designate Layout
+        layout = go.Layout(title=self.title, 
+                        height=self.height,
+                        width=self.width,
+                        xaxis_title="Observation",
+                        yaxis_title="Cooks Distance",
+                        showlegend=False,
+                        template=self.template)
+
+        # Create figure object
+        self.fig = go.Figure(data=data, layout=layout)  
+
+        # Add horizontal line if any appoach Cooks Distance of 0.5
+        if len(self.cooks_d[self.cooks_d > 0.5]) > 0:
+           self.fig.add_shape(
+               go.layout.Shape(
+                   type="line",
+                   x0=0,
+                   y0=0.5,
+                   x1=len(self.cooks_d),
+                   y1=0.5,
+                   line=dict(
+                       color="darkgrey",
+                       width=2
+                   )
+               )
+           )
+                                
+        # Render plot and save if path is provided
+        if self.path:
+            py.plot(self.fig, filename=self.path, auto_open=True, include_mathjax='cdn')
+        else:
+            py.plot(self.fig, auto_open=True, include_mathjax='cdn')            

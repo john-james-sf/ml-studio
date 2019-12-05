@@ -7,6 +7,7 @@ import os
 from matplotlib import animation, rc
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 def save_fig(fig, directory, filename):
@@ -34,3 +35,11 @@ def save_csv(df, directory, filename):
     else:
         os.makedirs(directory)                
         df.to_csv(path, index=False)
+
+def save_numpy(a, directory, filename):
+    path = os.path.join(os.path.abspath(directory), filename)
+    if os.path.exists(directory):
+        np.save(file=path, arr=a)
+    else:
+        os.makedirs(directory)                
+        np.save(file=path, arr=a)

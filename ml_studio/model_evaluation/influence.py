@@ -60,9 +60,10 @@ def leverage(X):
         Contains the leverage scores for each observation.
 
     """
-    # Compute Leverage
-    leverage = (X * np.linalg.pinv(X).T).sum(1)
-    return leverage
+
+    hat = X.dot(np.linalg.inv(X.T.dot(X)).dot(X.T))
+    hii = np.diagonal(hat)
+    return hii
 
 def cooks_distance(model, X, y):
     """Computes Cook's Distance, a commonly used measure of data point influence.
@@ -99,14 +100,17 @@ def cooks_distance(model, X, y):
             https://en.wikipedia.org/w/index.php?title=Cook%27s_distance&oldid=922838890
 
     """
-    # Compute leverage
-    hat = leverage(X)
-    # Obtain studentized residuals 
-    standard_resid = standardized_residuals(model, X, y)
-    p = X.shape[1]
+    # Compute residual
+    e = y - model.predict(X)
+    # Set number of observations and predictors
     n = X.shape[0]
-    # Compute Cooks
-    cooks_d = 1/p * n/(n-p) * standard_resid**2 * hat / (1-hat)
+    p = X.shape[1]
+    # S squared 
+    s2 = np.matmul(e.T,e) / (n-p)
+    # Compute leverage
+    hii = leverage(X)
+    # Obtain studentized residuals 
+    cooks_d = (e**2/ (p * s2)) * (hii/(1-hii)**2)    
     return cooks_d
 
 def dffits(model, X, y):
@@ -165,8 +169,8 @@ def dffits(model, X, y):
 
     """
     r_student = studentized_residuals(model, X, y)
-    hat = leverage(X)
-    df = r_student * np.sqrt(hat/(1-hat))
+    hii = leverage(X)
+    df = r_student * np.sqrt(hii/(1-hii))
     return df
 
 

@@ -29,6 +29,7 @@ from ml_studio.visualate.regression.validity import Residuals
 from ml_studio.visualate.regression.validity import StandardizedResiduals
 from ml_studio.visualate.regression.validity import StudentizedResiduals
 from ml_studio.visualate.regression.validity import ScaleLocation
+from ml_studio.visualate.regression.validity import QQPlot
 # --------------------------------------------------------------------------- #
 #                            RESIDUAL PLOT                                    #
 # --------------------------------------------------------------------------- #
@@ -73,3 +74,12 @@ class ResidualPlotTests:
         v.fit(X_train, y_train)
         v.score(X_test, y_test)
         v.show()          
+
+    @mark.validity
+    @mark.qq_plot
+    def test_qq_plot_plot(self, split_regression_data):
+        X_train, _, y_train, _, = split_regression_data
+        model = LinearRegression(epochs=1000, metric='mae')                       
+        v = QQPlot(model=model)
+        v.fit(X_train, y_train)
+        v.show()               

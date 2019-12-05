@@ -98,7 +98,7 @@ class StandardScaler(BaseEstimator, TransformerMixin):
         return X
         
 # --------------------------------------------------------------------------- #
-#                               FUNCTIONS                                     #
+#                            SHUFFLE DATA                                     #
 # --------------------------------------------------------------------------- #
 def shuffle_data(X, y=None, seed=None):
     """ Random shuffle of the samples in X and y.
@@ -127,6 +127,43 @@ def shuffle_data(X, y=None, seed=None):
     np.random.shuffle(idx)
     return X[idx], y[idx]
 
+# --------------------------------------------------------------------------- #
+#                              SAMPLE                                         #
+# --------------------------------------------------------------------------- #    
+def sampler(X, y, size=1, replace=True, seed=None):
+    """Generates a random sample of a given size from a data set.
+
+        Parameters
+    ----------
+    X : array_like of shape (m, n_features)
+        Input data
+
+    y : array_like of shape (m,)
+        Target data    
+
+    size : int
+        The size of the dataset.
+
+    replace : Bool. 
+        Whether to sample with or without replacement
+
+    seed : int
+        Seed for reproducibility
+    
+    Returns
+    -------
+    X, y    : Random samples from data sets X, and y of the designated size.
+
+    """
+    import numpy as np
+
+    nobs = X.shape[0]
+    idx = np.random.choice(a=nobs, size=size, replace=True)
+    return X[idx], y[idx]
+
+# --------------------------------------------------------------------------- #
+#                            SPLIT DATA                                       #
+# --------------------------------------------------------------------------- #
 def data_split(X, y, test_size=0.3, shuffle=True, stratify=False, seed=None):
     """ Split the data into train and test sets 
     

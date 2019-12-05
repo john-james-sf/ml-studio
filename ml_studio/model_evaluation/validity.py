@@ -20,7 +20,10 @@
 # =========================================================================== #
 """Model validation and verification module.""" 
 #%%
+import math
+from math import erf
 import numpy as np
+from scipy.stats import norm
 # --------------------------------------------------------------------------- #
 #                                 LEVERAGE                                    #
 # --------------------------------------------------------------------------- #
@@ -32,7 +35,7 @@ def leverage(X):
 
     The formula is:
     ..math::
-        h_{ii} = [\mathbb{H}]_{ii}, where
+        h_{ii} = [\\mathbb{H}]_{ii}, where
         H = X(X^TX)^{-1}X^T
     """
     hat = X.dot(np.linalg.inv(X.T.dot(X)).dot(X.T)) 
@@ -67,15 +70,15 @@ def standardized_residuals(model, X, y, return_predictions=False):
     residuals = y - y_pred
     
     # Compute Leverage
-    leverage = (X * np.linalg.pinv(X).T).sum(1)
+    hii = leverage(X)
     
     # Compute degrees of freedom and MSE
     rank = np.linalg.matrix_rank(X)
     df = X.shape[0] - rank
-    mse = np.dot(residuals, residuals) / df
+    mse = np.matmul(residuals, residuals) / df
 
     # Calculate standardized 
-    standardized_residuals = residuals / np.sqrt(mse) * np.sqrt(1-leverage)        
+    standardized_residuals = residuals / np.sqrt(mse  * (1-hii))
     
     # Return standardized residuals and optionally the predictions
     if return_predictions:
@@ -105,24 +108,82 @@ def studentized_residuals(model, X, y, return_predictions=False):
     """
     # Compute residuals
     y_pred = model.predict(X)
-    residuals = y - y_pred
     
-    # Compute Leverage
-    leverage = (X * np.linalg.pinv(X).T).sum(1)
-    
-    # Compute degrees of freedom and MSE
-    rank = np.linalg.matrix_rank(X)
-    df = X.shape[0] - rank
-    mse = np.dot(residuals, residuals) / df
+    # Using the calculation from 
+    # https://newonlinecourses.science.psu.edu/stat462/node/247/
+    n = X.shape[0]
+    k = X.shape[1]
+    r = standardized_residuals(model=model, X=X, y=y)
 
     # Calculate studentized residuals 
-    studentized_residuals = residuals / np.sqrt(mse) * np.sqrt(1-leverage)
+    studentized_residuals = r * np.sqrt((n-k-2)/(n-k-1-np.square(r)))
 
     # Return studentized residuals and optionally the predictions
     if return_predictions:
         return studentized_residuals, y_pred
     else:
         return studentized_residuals   
+
+# --------------------------------------------------------------------------- #
+#                  INVERSE CUMULATIVE DISTRIBUTION FUNCTION                   #
+# --------------------------------------------------------------------------- #
+def quantile(p):
+    """Inverse Cumulative Distribution Function for Normal Distribution.
+
+    The cumulative distribution function (CDF) of the random variable X
+    has the following definition: 
+    .. math:: 
+                    \\mathbb{F}_X(t) = \\mathbb{P}(X \\le t)
+    The notation \\mathbb{F}_X(t) means that \\mathbb{F} is the cdf for 
+    the random variable \\mathbb{X} but it is a function of t. It can be 
+    defined for any kind of random variable (discrete, continuous, and 
+    mixed).
+
+    Parameters
+    ----------
+    p : Array-like
+        Sample vector of real numbers
+
+    Note
+    ----
+    The original function was obtained from the google courtesy of
+    Dr. John Cook and his group of consultants. The following code 
+    first appeared as A literate program to compute the inverse of 
+    the normal CDF. See that page for a detailed explanation of the 
+    algorithm. Ultimately had to swap it out because it could only
+    handle positive values.
+    Source: Author  : John D. Cook
+             Date   : December 1, 2019
+            Title   : Inverse Normal CDF
+          Website   : https://www.johndcook.com/blog/python_phi_inverse/
+    
+    The second algorithm was obtained from stackoverflow
+    https://stackoverflow.com/questions/809362/how-to-calculate-cumulative-normal-distribution
+    """  
+    #'Cumulative distribution function for the standard normal distribution'
+    #i_cdf = normal_CDF_inverse(p)    
+    return (1.0 + erf(p / np.sqrt(2.0))) / 2.0    
+    #i_cdf = normal_CDF_inverse(p)    
+
+def rational_approximation(t):
+
+    # Abramowitz and Stegun formula 26.2.23.
+    c = [2.515517, 0.802853, 0.010328]
+    d = [1.432788, 0.189269, 0.001308]
+    numerator = (c[2]*t + c[1])*t + c[0]
+    denominator = ((d[2]*t + d[1])*t + d[0])*t + 1.0
+    return t - numerator / denominator
     
 
-# %%
+def normal_CDF_inverse(p):
+
+    assert p > 0.0 and p < 1
+
+    # See article above for explanation of this section.
+    if p < 0.5:
+        # F^-1(p) = - G^-1(p)
+        return -rational_approximation( math.sqrt(-2.0*math.log(p)) )
+    else:
+        # F^-1(p) = G^-1(1-p)
+        return rational_approximation( math.sqrt(-2.0*math.log(1.0-p)) )        
+

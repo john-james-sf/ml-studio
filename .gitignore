@@ -28,7 +28,11 @@ wheels/
 # Ignore directory
 notes/
 tests/test_visuals/test_figures
+tests/test_data/
 development_lab/
+
+# Temporary html files
+temp-plot.html
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

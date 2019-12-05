@@ -169,13 +169,13 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         # Compute costs 
         y_pred = self._predict(self._X_design)
         log['train_cost'] = self.cost_function(y=self.y, y_pred=y_pred)
-        if self.val_size > 0 and self.early_stop:
+        if self.val_size:
             y_pred_val = self._predict(self.X_val)
             log['val_cost'] = self.cost_function(y=self.y_val, y_pred=y_pred_val)        
         # Compute scores 
         if self.metric is not None:            
             log['train_score'] = self.score(self._X_design, self.y)
-            if self.val_size > 0 and self.early_stop:
+            if self.val_size:
                 log['val_score'] = self.score(self.X_val, self.y_val)        
 
         return log
@@ -263,6 +263,8 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
     def _begin_training(self, log=None):
         """Performs initializations required at the beginning of training."""
+        self.epoch = 0
+        self.batch = 0
         self.converged = False
         self.fitted = False
         self._validate_params()

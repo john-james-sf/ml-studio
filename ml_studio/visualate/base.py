@@ -35,6 +35,31 @@ from ..supervised_learning.regression import LinearRegression
 from ..utils.model import get_model_name
 
 # --------------------------------------------------------------------------- #
+#                            PlotKwargs                                       #
+# --------------------------------------------------------------------------- #
+class PlotKwargs():
+    """
+    Keyword Parameters
+    ------------------
+    kwargs : dict
+        Keyword arguments that define the plot layout for visualization subclasses.   
+
+        ===========  ========== ===============================================
+        Property     Format     Description
+        -----------  ---------- -----------------------------------------------
+        height       int        the height in pixels for the figure
+        line_color   str        default line color
+        margin       dict       margin in pixels. dict keys are l, t, and b        
+        template     str        the theme template 
+        test_alpha   float      opacity for objects associated with test data
+        test_color   str        color for objects associated with test data                
+        train_alpha  float      opacity for objects associated with training data
+        train_color  str        color for objects associated with training data
+        width        int        the width in pixels of the figure
+        ===========  ========== ===============================================    
+    """
+
+# --------------------------------------------------------------------------- #
 #                            BASE VISUALATOR                                  #
 # --------------------------------------------------------------------------- #
 
@@ -46,17 +71,11 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
 
     Parameters
     ----------
-    kwargs : dict
-        Keyword arguments that define the layout for visualization subclasses.   
+    title : str
+        The title for the plot. It defaults to the plot name and optionally
+        the model name.
 
-        ===========  ==========================================================
-        Property     Description
-        -----------  ----------------------------------------------------------
-        height       specify the height in pixels for the figure
-        width        specify the width in pixels of the figure
-        template     specify the theme template 
-        title        specify the title for the visualization
-        ===========  ==========================================================
+    kwargs : see docstring for PlotKwargs class.        
 
     Notes
     -----
@@ -69,15 +88,31 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
     Scikit-Learn GridSearchCV or RandomizedSearchCV  object and presents 
     model selection visualizations.  Those inherit directly from this class.
     """
-    PLOT_DEFAULT_HEIGHT = 450
-    PLOT_DEFAULT_WIDTH  = 700   
-    PLOT_DEFAULT_TEMPLATE = "plotly_white"    
+    DEFAULT_PARAMETERS = {'height': 450, 'line_color': 'darkgrey', 
+                          'margin': {'l':80, 't':100, 'b':80}, 'template': "plotly_white",
+                          'test_alpha': 0.75, 'test_color': '#9fc377',
+                          'train_alpha': 0.75, 'train_color': '#0272a2',
+                          'width': 700}
 
-    def __init__(self, **kwargs):     
-        self.height = kwargs.pop("height", self.PLOT_DEFAULT_HEIGHT)
-        self.width = kwargs.pop("width", self.PLOT_DEFAULT_WIDTH)
-        self.template = kwargs.pop("template", self.PLOT_DEFAULT_TEMPLATE)
-        self.title = kwargs.pop("title", None)        
+    def __init__(self, title=None, **kwargs):     
+        self.title = title
+        self.height = kwargs.get('height', self.DEFAULT_PARAMETERS['height'])
+        self.width = kwargs.get('width', self.DEFAULT_PARAMETERS['width'])
+        self.line_color = kwargs.get('line_color', \
+            self.DEFAULT_PARAMETERS['line_color'])
+        self.train_color = kwargs.get('train_color', \
+            self.DEFAULT_PARAMETERS['train_color'])
+        self.test_color = kwargs.get('test_color', \
+            self.DEFAULT_PARAMETERS['test_color'])
+        self.train_alpha = kwargs.get('train_alpha', \
+            self.DEFAULT_PARAMETERS['train_alpha'])
+        self.test_alpha = kwargs.get('test_alph', \
+            self.DEFAULT_PARAMETERS['test_alpha'])
+        self.template = kwargs.get('template', \
+            self.DEFAULT_PARAMETERS['template'])
+        self.margin = kwargs.get('margin', \
+            self.DEFAULT_PARAMETERS['margin'])
+
 
     @abstractmethod
     def fit(self, X, y, **kwargs):
@@ -141,22 +176,17 @@ class DataVisualator(BaseVisualator):
 
     Parameters
     ----------
-    kwargs : dict
-        Keyword arguments that define the layout for visualization subclasses.   
+    title : str
+        The title for the plot. It defaults to the plot name and optionally
+        the model name.
 
-        ===========  ==========================================================
-        Property     Description
-        -----------  ----------------------------------------------------------
-        height       specify the height in pixels for the figure
-        width        specify the width in pixels of the figure
-        template     specify the theme template 
-        title        specify the title for the visualization
-        ===========  ==========================================================
+    kwargs : see docstring for PlotKwargs class.  
 
     """
 
-    def __init__(self, **kwargs):    
-        super(DataVisualator, self).__init__(**kwargs)
+    def __init__(self, title=None, **kwargs):    
+        super(DataVisualator, self).__init__(title=title,
+                                             **kwargs)
 
     def transform(self, X, y=None):
         """Transforms the data.
@@ -227,23 +257,18 @@ class ModelVisualator(BaseVisualator):
     model : a Scikit-Learn or an ML Studio estimator
         A Scikit-Learn estimator which wraps functionality
 
-    kwargs : dict
-        Keyword arguments that define the layout for visualization subclasses.   
+    refit : Bool. Default is False
+        Refit if True. Otherwise, only fit of model has not been trained        
 
-        ===========  ==========================================================
-        Property     Description
-        -----------  ----------------------------------------------------------
-        height       specify the height in pixels for the figure
-        width        specify the width in pixels of the figure
-        template     specify the theme template 
-        title        specify the title for the visualization
-        ===========  ==========================================================
+    kwargs : see PlotKwargs class documentation
 
     """
 
-    def __init__(self, model,**kwargs):    
-        super(ModelVisualator, self).__init__(**kwargs)
+    def __init__(self, model, refit=False, title=None, **kwargs):    
+        super(ModelVisualator, self).__init__(title=title,
+                                              **kwargs)
         self.model = model
+        self.refit = refit
         self.name = get_model_name(model)
 
     def transform(self, X, y=None):
@@ -296,7 +321,8 @@ class ModelVisualator(BaseVisualator):
         """
         self.X_train = X
         self.y_train = y
-        self.model.fit(X,y)
+        if self.refit or not self.model.fitted:        
+            self.model.fit(X,y)
         return self        
     
     def score(self, X, y, **kwargs):
@@ -396,16 +422,13 @@ class Visualators(BaseVisualator):
         subclasses.   
 
     """
-    SUBPLOT_DEFAULT_HEIGHT = 250
-    SUBPLOT_DEFAULT_WIDTH = 400
+    DEFAULT_PARAMETERS = {'height': 250, 'width': 400, 'template': "plotly_white"}
 
-    def __init__(self, visualators=[], nrows=None, ncols=None, **kwargs):    
-        super(Visualators, self).__init__(**kwargs)
+    def __init__(self, title=None, visualators=[], nrows=None, ncols=None, **kwargs):    
+        super(Visualators, self).__init__(title=title, **kwargs)
         self.visualators = visualators
         self.nrows = nrows
         self.ncols = ncols
-        self.height = self.SUBPLOT_DEFAULT_HEIGHT
-        self.width = self.SUBPLOT_DEFAULT_WIDTH
 
     def fit(self, X, y, **kwargs):
         """ Fits the visualators.
@@ -519,7 +542,7 @@ class Visualators(BaseVisualator):
         self.fig.update_layout(title={"text": self.title},
                            height=self.height,
                            width=self.width,
-                           template=self.PLOT_DEFAULT_TEMPLATE)
+                           template=self.template)
         
 
 # --------------------------------------------------------------------------- #
@@ -536,17 +559,7 @@ class CrossVisualator(BaseVisualator):
     cv : a Scikit-Learn GridSearchCv or RandomizedSearchCV object
         Contains results of k-fold cross validations
 
-    kwargs : dict
-        Keyword arguments that define the layout for visualization subclasses.   
-
-        ===========  ==========================================================
-        Property     Description
-        -----------  ----------------------------------------------------------
-        height       specify the height in pixels for the figure
-        width        specify the width in pixels of the figure
-        template     specify the theme template 
-        title        specify the title for the visualization
-        ===========  ==========================================================
+    kwargs : see PlotKwargs class documentation.
 
     Attributes
     ----------
@@ -582,8 +595,9 @@ class CrossVisualator(BaseVisualator):
 
     """
 
-    def __init__(self, cv,**kwargs):    
-        super(CrossVisualator, self).__init__(**kwargs)
+    def __init__(self, cv, title=None, **kwargs):    
+        super(CrossVisualator, self).__init__(title=title,
+                                              **kwargs)        
         self.cv = cv
         self.name = get_model_name(cv)
     

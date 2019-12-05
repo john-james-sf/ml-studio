@@ -80,7 +80,7 @@ class Quadratic(RegressionCostFunction):
     """Computes cost."""
 
     def __init__(self):        
-        self.name = "Quadratic Loss Function"
+        self.name = "Mean Squared Error"
 
     def __call__(self, y, y_pred):
         """Computes quadratic costs e.g. squared error cost"""
@@ -111,7 +111,7 @@ class BinaryCrossEntropy(BinaryClassificationCostFunction):
     """Computes cost and gradient w.r.t. weights and bias."""
     
     def __init__(self):        
-        self.name = "Binary Cross Entropy Loss Function"
+        self.name = "Binary Cross Entropy Loss"        
 
     def __call__(self, y, y_pred):
         """Computes binary cross entropy (w/sigmoid) costs"""
@@ -144,7 +144,7 @@ class CategoricalCrossEntropy(MultinomialClassificationCostFunction):
     """Computes softmax cross entropy (w/softmax) cost and gradient w.r.t. parameters."""
     
     def __init__(self):        
-        self.name = "Categorical Cross Entropy Loss Function"
+        self.name = "Categorical Cross Entropy Loss"
 
     def __call__(self, y, y_pred):
         """Computes cross entropy (w/softmax) costs"""
