@@ -42,7 +42,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     DEFAULT_METRIC = 'mse'
 
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None, 
-                 epochs=1000, cost='quadratic', metric='mse', 
+                 epochs=1000, cost='quadratic', metric='mse', nominal='test',
                  early_stop=False, val_size=0.3, patience=5, precision=0.001,
                  verbose=False, checkpoint=100, name=None, seed=None):
         self.learning_rate = learning_rate
@@ -51,6 +51,7 @@ class Estimator(ABC, BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self.epochs = epochs
         self.cost = cost
         self.metric = metric
+        self.nominal = nominal
         self.early_stop = early_stop
         self.val_size = val_size
         self.patience = patience

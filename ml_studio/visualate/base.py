@@ -270,6 +270,7 @@ class ModelVisualator(BaseVisualator):
         self.model = model
         self.refit = refit
         self.name = get_model_name(model)
+        self.nobs = 0
 
     def transform(self, X, y=None):
         """Transforms the data.
@@ -321,6 +322,8 @@ class ModelVisualator(BaseVisualator):
         """
         self.X_train = X
         self.y_train = y
+        self.nobs = X.shape[0]
+        self.n_features = X.shape[1]
         if self.refit or not self.model.fitted:        
             self.model.fit(X,y)
         return self        
