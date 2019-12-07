@@ -32,11 +32,6 @@ def leverage(X):
 
     Leverage is a measure of how far away an independent variable values of an 
     observation are from those of other observations.
-
-    The formula is:
-    ..math::
-        h_{ii} = [\\mathbb{H}]_{ii}, where
-        H = X(X^TX)^{-1}X^T
     """
     hat = X.dot(np.linalg.inv(X.T.dot(X)).dot(X.T)) 
     hii = np.diagonal(hat)
