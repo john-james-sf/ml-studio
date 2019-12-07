@@ -25,6 +25,9 @@ wheels/
 .installed.cfg
 *.egg
 
+# Ignore data 
+ml_studio/data_gathering/
+
 # Ignore directory
 notes/
 tests/test_visuals/test_figures
