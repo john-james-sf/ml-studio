@@ -23,22 +23,22 @@
 from pytest import mark
 import numpy as np
 
-from ml_studio.visualate.data_preparation.data_explorer import generate_data
+from ml_studio.visualate.dashboards.data_explorer import generate_data
 # --------------------------------------------------------------------------- #
-class DataPreparationTests:
+# class DashboardTests:
 
-    @mark.data_preparation
-    @mark.data_explorer
-    def test_data_explorer(self):
-        datasets = ['california_housing', 'msd', 'online_news', 'speed_dating', 'regression']
-        X_shape_0 = [20640, 515345 ,39644, 8378, 1000]
-        X_shape_1 = [8, 90, 60, 194, 50]
-        n_samples = 1000
-        n_features = 50
-        seed = 5
+#     @mark.dashboards
+#     @mark.data_explorer
+#     @mark.skip(reason="Not coded yet")
+#     def test_data_explorer(self):
+#         datasets = ['california_housing', 'msd', 'online_news', 'speed_dating', 'regression']
+#         X_shape_0 = [20640, 515345 ,39644, 8378, 1000]
+#         X_shape_1 = [8, 90, 60, 194, 50]
+#         n_samples = 1000
+#         n_features = 50
+#         seed = 5
 
-        for i, d in enumerate(datasets):
-            X, y = generate_data(d, n_samples, n_features, seed)            
-            assert X.shape[0] == X_shape_0[i], "Expected %d samples. Observed %d samples" % (X_shape_0[i], X.shape[0])
-            assert X.shape[1] == X_shape_1[i], "Expected %d features. Observed %d features" % (X_shape_1[i], X.shape[1])
-
+#         for i, d in enumerate(datasets):
+#             X, y = generate_data(d, n_samples, n_features, seed)            
+#             assert X.shape[0] == X_shape_0[i], "Expected %d samples. Observed %d samples" % (X_shape_0[i], X.shape[0])
+#             assert X.shape[1] == X_shape_1[i], "Expected %d features. Observed %d features" % (X_shape_1[i], X.shape[1])

@@ -2,7 +2,8 @@
 #                                 MISC                                        #
 # =========================================================================== #
 """Miscellaneous utilities and functions."""
-
+#%%
+import re
 import random
 import string
 
@@ -16,3 +17,10 @@ def proper(s):
     s = s.replace("-", " ").title()
     s = s.replace("_", " ").title()
     return s    
+
+def snake(s):
+    """Converts string to snake case suitable for filenames."""
+    s = re.sub(r"[^a-zA-Z0-9._// ]+", '', s)
+    s = re.sub(r'\s+', ' ', s).strip().lower()
+    s = s.replace(" ", "_")
+    return s

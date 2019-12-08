@@ -86,6 +86,18 @@ def get_regression_data():
     return X, y
 
 @fixture(scope="session")
+def get_regression_data_df_plus():    
+    boston = datasets.load_boston()    
+    scaler = StandardScaler()
+    # pylint: disable=locally-disabled, no-member
+    X = scaler.fit_transform(boston.data)
+    X_df = pd.DataFrame(data=X, columns=boston.feature_names)
+    y_np = boston.target
+    y_series = pd.Series(y_np)
+    y_df = pd.DataFrame(data=y_np, columns=['MEDV'])
+    return X_df, y_df, y_series, y_np
+
+@fixture(scope="session")
 def get_binary_classification_data():
     X, y = datasets.load_breast_cancer(return_X_y=True)
     scaler = StandardScaler()    

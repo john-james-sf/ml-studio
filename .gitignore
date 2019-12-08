@@ -32,6 +32,7 @@ ml_studio/data_gathering/
 notes/
 tests/test_visuals/test_figures
 tests/test_data/
+tests/test_visualate/test_figures/
 development_lab/
 
 # Temporary html files

@@ -19,6 +19,9 @@
 # Copyright (c) 2019 Decision Scients                                         #
 # =========================================================================== #
 """Base class and interface for all Visualators"""
+import os
+import time
+
 from abc import ABC, abstractmethod, ABCMeta
 from itertools import chain
 import math
@@ -31,8 +34,9 @@ from sklearn.base import BaseEstimator
 
 from ..supervised_learning.training.estimator import Estimator
 from ..supervised_learning.regression import LinearRegression
-
 from ..utils.model import get_model_name
+from ..utils.misc import snake
+from ..utils.file_manager import save_plotly
 
 # --------------------------------------------------------------------------- #
 #                            PlotKwargs                                       #
@@ -89,10 +93,13 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
     model selection visualizations.  Those inherit directly from this class.
     """
     DEFAULT_PARAMETERS = {'height': 450, 'line_color': 'darkgrey', 
-                          'margin': {'l':80, 't':100, 'b':80}, 'template': "plotly_white",
+                          'margin': {'l':80, 't':100, 'b':80}, 'template': "none",
                           'test_alpha': 0.75, 'test_color': '#9fc377',
                           'train_alpha': 0.75, 'train_color': '#0272a2',
                           'width': 700}
+
+    ARRAY_LIKE = (np.ndarray, np.generic, list, dict, pd.Series, \
+                pd.DataFrame, tuple)
 
     def __init__(self, title=None, **kwargs):     
         self.title = title
@@ -112,6 +119,7 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
             self.DEFAULT_PARAMETERS['template'])
         self.margin = kwargs.get('margin', \
             self.DEFAULT_PARAMETERS['margin'])
+        self.filetype = ".html"
 
 
     @abstractmethod
@@ -164,6 +172,43 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
         """
         pass
 
+    def _get_filename(self, object_name=None, element_name=None):
+        """Creates a standard format filename for saving plots."""    
+
+        # Obtain user id, class name and date time        
+        userhome = os.path.expanduser('~')          
+        username = os.path.split(userhome)[-1] 
+        object_name = object_name or ""       
+        clsname = self.__class__.__name__
+        element_name = element_name or ""
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        # Snake case format filename
+        filename = username + '_' + object_name + '_' + clsname + '_' + \
+        element_name + '_' + timestr + self.filetype
+        filename = snake(filename)        
+        return filename
+
+
+    def save(self, fig, directory, filename):
+        """Saves a plot to file.
+        
+        Parameters
+        ----------
+        fig : plotly figure object
+            The figure to be saved
+
+        directory : str
+            The name of the directory to which the file is to be saved
+
+        filename : str
+            The name of the file to be saved.
+        
+        """
+
+        save_plotly(fig, directory=directory, filename=filename)    
+
+
+
 
 # --------------------------------------------------------------------------- #
 #                            DATA VISUALATOR                                  #
@@ -182,11 +227,47 @@ class DataVisualator(BaseVisualator):
 
     kwargs : see docstring for PlotKwargs class.  
 
+    Attributes
+    ----------
+    n_features : int
+        The number of features in the dataset X
+
+    n_numeric_features : int
+        The number of numeric features in the dataset X
+
+    n_categorical_features : int
+        The number of categorical features in the dataset X
+
+    feature_names : list
+        List of the names of the features in the dataset X
+
+    numeric_feature_names : list
+        List of the names of the numeric features in the dataset X
+
+    categorical_feature_names : list
+        List of the names of the categorical features in the dataset X        
+
+    figures : list
+        List of figure objects 
+
     """
 
-    def __init__(self, title=None, **kwargs):    
+    def __init__(self, dataset_name=None, title=None, **kwargs):    
         super(DataVisualator, self).__init__(title=title,
                                              **kwargs)
+                                
+        self.dataset_name = dataset_name
+        self.n_features = None
+        self.n_numeric_features = None
+        self.n_categorical_features = None
+        self.feature_names = None
+        self.numeric_feature_names = None
+        self.categorical_feature_names = None
+        self._numeric_data_types = ['int16', 'int32', 'int64', 'float16', \
+                                    'float32', 'float64']
+        self._categorical_data_types = ['category', 'object']                                    
+        
+
 
     def transform(self, X, y=None):
         """Transforms the data.
@@ -211,18 +292,91 @@ class DataVisualator(BaseVisualator):
             Not used in this base class.
 
         """
-        pass
-        
+        pass        
 
-    @abstractmethod
+    def _validate(self, X, y):
+        """Validates type of X and y."""
+
+        # Validate types
+        if not isinstance(X,  self.ARRAY_LIKE):
+            raise TypeError("X must be an np.ndarray, pd.DataFrame, "
+                            "pd.Series or list")
+        if y is None:
+            pass
+        elif not isinstance(y,  self.ARRAY_LIKE):
+            raise TypeError("y must be an np.ndarray, pd.DataFrame, "
+                                "pd.Series or list")
+
+        # Validate compatible lengths
+        if isinstance(y,  self.ARRAY_LIKE):
+            try:
+                X_len = X.shape[0]
+            except AttributeError:
+                X_len = len(X)
+            if X_len != len(y):
+                raise ValueError("X and y have incompatible lengths. "
+                                "X has a length of %d, y's length is %d" 
+                                % (X_len, len(y)))
+
+    def _get_object_names(self, x):
+        """Gets (col) names from pandas or numpy object or returns None."""        
+        if isinstance(x, pd.DataFrame):            
+            names = x.columns
+        elif isinstance(x, pd.Series):            
+            names = x.name
+        elif isinstance(x, (np.generic, np.ndarray)):            
+            names = x.dtype.names
+        else:
+            names = None
+        return names
+
+    def _generate_variable_names(self, x, target=False):
+        """Generates a list of variable names based upon shape of x."""
+        if target:
+            var_names = ['target']
+        elif len(x.shape) == 1:
+            var_names = ['var_0']            
+        elif x.shape[1] == 1:
+            var_names = ['var_0']
+        else:
+            var_names = ["var_" + str(i) for i in range(x.shape[1])] 
+        return var_names        
+
+    def _get_variable_names(self, x, target=False, **kwargs):
+        """Gets variable names from object or generate a dummy name."""
+        # Obtain variable names from kwargs if available
+        var_names = None
+        if target:
+            var_names = kwargs.get('target_name', None)
+        else:
+            var_names = kwargs.get('feature_names', None)
+        if isinstance(var_names, self.ARRAY_LIKE):
+            return var_names
+        
+        # Ok, try extracting variable names from the objects themselves
+        var_names = self._get_object_names(x)
+        if isinstance(var_names, self.ARRAY_LIKE):
+            return var_names
+        
+        # Alright, let's create dummy variable names since none are available.
+        var_names = self._generate_variable_names(x, target) 
+        return var_names
+
+
+    def _reformat(self, x, target=False, **kwargs):
+        """Reformats data into a dataframe."""
+        var_names = self._get_variable_names(x, target, **kwargs)
+        if isinstance(x, pd.DataFrame):
+            return x
+        else:
+            return pd.DataFrame(data=x, columns=var_names)  
+
     def fit(self, X, y, **kwargs):
         """ Fits the visualator to the data.
 
-        For DataVisualator classes, this method fits the data to the visualator.
-        For ModelVisulator classes, the fit method fits the data to an underlying
-        model. Visualators iteratively fits several models to the data. The 
-        CrossVisualators call the fit methods on GridSearchCV and RandomizedSearchCV 
-        objects.
+        Prepares the data for plotting. Numpy arrays are converted to pandas
+        DataFrames, a format more conducive to exploratory data analysis.
+        Feature names, types and counts are computed.  
 
         Parameters
         ----------
@@ -233,15 +387,58 @@ class DataVisualator(BaseVisualator):
             An array or series of target or class values
 
         kwargs: dict
-            Keyword arguments passed to the scikit-learn API. 
-            See visualizer specific details for how to use
-            the kwargs to modify the visualization or fitting process.    
+            Additional keyword arguments used for presenting visualizations,
+            including:
+
+            feature_names : array-like
+                Names of features in X
+
+            target_name : str
+                The name for the target variable in the dataset.    
 
         Returns
         -------
         self : visualator
-        """        
-        pass
+        """
+        # Validate data
+        self._validate(X,y)
+
+        # Store X, y as class instance variables
+        self.X = X
+        self.y = y
+
+        # Reformat data into pd.DataFrames 
+        X_df = self._reformat(X, target=False, **kwargs)
+        
+        # Obtain feature names, types and counts
+        self.feature_names = X_df.columns
+        self.n_features = len(self.feature_names)               
+        self.numeric_feature_names = \
+            X_df.select_dtypes(include=self._numeric_data_types).columns        
+        self.n_numeric_features = len(self.numeric_feature_names)
+        self.categorical_feature_names = \
+            X_df.select_dtypes(include=self._categorical_data_types).columns
+        self.n_categorical_features = len(self.categorical_feature_names)
+
+        # If y, reformat into a pd.DataFrame and concatenate with X to produce
+        # the dataframe that subclasses will analyze.            
+        if isinstance(y,  self.ARRAY_LIKE):
+            y_df = self._reformat(y, target=True, **kwargs)
+            self.df = pd.concat([X_df, y_df], axis=1)
+        else:
+            self.df = X_df
+
+
+        # Extract variable names, types and counts
+        self.numeric_variable_names = \
+            self.df.select_dtypes(include=self._numeric_data_types).columns
+        self.n_numeric_variables = len(self.numeric_variable_names)        
+        self.categorical_variable_names = \
+        self.df.select_dtypes(include=self._categorical_data_types).columns
+        self.n_categorical_variables = len(self.categorical_variable_names)
+
+        return self
+
 
 # --------------------------------------------------------------------------- #
 #                            MODEL VISUALATOR                                 #

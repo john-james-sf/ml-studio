@@ -9,6 +9,7 @@ from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plotly.offline as py
 
 def save_fig(fig, directory, filename):
     if os.path.exists(directory):
@@ -43,3 +44,12 @@ def save_numpy(a, directory, filename):
     else:
         os.makedirs(directory)                
         np.save(file=path, arr=a)
+
+def save_plotly(a, directory, filename):
+    path = os.path.join(os.path.abspath(directory), filename)
+    if os.path.exists(directory):
+        py.plot(a, filename=path, auto_open=False, include_mathjax='cdn')
+    else:
+        os.makedirs(directory)                
+        py.plot(a, filename=path, auto_open=False, include_mathjax='cdn')
+
