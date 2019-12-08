@@ -39,6 +39,9 @@ Note: This module was highly inspired by the plotly dash-svm
 """ 
 #%%
 import os
+import sys
+sys.path.append('ml_studio')
+sys.path.append('ml_studio/utils/visual')
 import time
 from textwrap import dedent
 import warnings
@@ -52,19 +55,38 @@ import numpy as np
 import pandas as pd
 
 from sklearn.datasets import fetch_california_housing, make_regression
+from sklearn.datasets import make_classification
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.svm import SVC
 
+from ml_studio.visualate.classification.figures import serve_prediction_plot, serve_roc_curve, \
+    serve_pie_confusion_matrix
+
+import ml_studio
 from ml_studio.utils.model import get_model_name
-from ml_studio.utils.data_manager import sampler, data_split      
+from ml_studio.utils.data_manager import sampler, data_split, StandardScaler      
 from ml_studio.utils.misc import proper
 import ml_studio.utils.visual as drc
 # --------------------------------------------------------------------------- #
-app = dash.Dash(__name__)
+external_scripts = [
+    # Normalize the CSS
+    "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css",
+    # Fonts
+    "https://fonts.googleapis.com/css?family=Open+Sans|Roboto",
+    "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+]
+
+app = dash.Dash(__name__, 
+        external_scripts=external_scripts)
+app.scripts.config.serve_locally = False
 server = app.server
+# --------------------------------------------------------------------------- #
+#                            Generate Data                                    #
+# --------------------------------------------------------------------------- #
+def generate_data(dataset, n_samples=None, n_features=None, noise=100, 
+                  seed=None):
 
-def generate_data(dataset, n_samples=None, n_features=None, seed=None):
-
-    if dataset == 'california_housing':
+    if dataset == 'california':
         return(fetch_california_housing(return_X_y=True))
     elif dataset == 'msd':
         data = pd.read_csv("ml_studio/data_gathering/msd/year_prediction.csv")
@@ -103,15 +125,46 @@ def generate_data(dataset, n_samples=None, n_features=None, seed=None):
 
         regression = (X, y)
         return regression
+
+    elif dataset == 'binary':
+        X, y = make_classification(
+            n_samples=100,
+            n_features=2,
+            n_redundant=0,
+            n_informative=2,
+            random_state=2,
+            n_clusters_per_class=1
+        )
+
+        linearly_separable = (X, y)
+
+        return linearly_separable        
     else:
         raise ValueError(
             'Data type incorrectly specified. Please choose an existing '
             'dataset.')
 
+# --------------------------------------------------------------------------- #
+#                            Define Tabs                                      #
+# --------------------------------------------------------------------------- #            
+tabs_styles = {
+    'height': '44px'
+}
+tab_style = {
+    'border': '1px solid #282b38',    
+    'borderBottom': '1px solid #282b38',    
+    'backgroundColor': '#282b38',
+    'padding': '6px',
+    'fontWeight': 'bold'
+}
 
-app = dash.Dash(__name__)
-server = app.server
-
+tab_selected_style = {
+    'border': '1px solid #282b38',
+    'borderBottom': '1px solid #31459E',
+    'backgroundColor': '#282b38',
+    'color': 'white',
+    'padding': '6px'
+}
 def build_tabs():
     return html.Div(
         id="tabs",
@@ -123,16 +176,11 @@ def build_tabs():
                 className="custom-tabs",
                 children=[
                     dcc.Tab(
-                        id="Source-data-tab",
-                        label="Source Data",
-                        value="tab2",
-                        className="custom-tab",
-                        selected_className="custom-tab--selected",
-                    ),
-                    dcc.Tab(
                         id="Analysis-tab",
                         label="Data Analysis",
                         value="tab3",
+                        style=tab_style,
+                        selected_style=tab_selected_style,                        
                         className="custom-tab",
                         selected_className="custom-tab--selected",
                     ),
@@ -140,6 +188,8 @@ def build_tabs():
                         id="Cleaning-tab",
                         label="Data Cleaning",
                         value="tab4",
+                        style=tab_style,
+                        selected_style=tab_selected_style,                        
                         className="custom-tab",
                         selected_className="custom-tab--selected",
                     ),
@@ -147,6 +197,8 @@ def build_tabs():
                         id="Feature-selection-tab",
                         label="Feature Selection",
                         value="tab5",
+                        style=tab_style,
+                        selected_style=tab_selected_style,                        
                         className="custom-tab",
                         selected_className="custom-tab--selected",
                     ),
@@ -154,6 +206,8 @@ def build_tabs():
                         id="Features-engineering-tab",
                         label="Feature Engineering",
                         value="tab6",
+                        style=tab_style,
+                        selected_style=tab_selected_style,                        
                         className="custom-tab",
                         selected_className="custom-tab--selected",
                     ),
@@ -161,6 +215,8 @@ def build_tabs():
                         id="Dimension-reduction-tab",
                         label="Dimension Reduction",
                         value="tab7",
+                        style=tab_style,
+                        selected_style=tab_selected_style,                        
                         className="custom-tab",
                         selected_className="custom-tab--selected",
                     ),                                                                                
@@ -168,6 +224,9 @@ def build_tabs():
             )
         ],
     )
+
+def build_analysis_tab():
+    pass
 
 app.layout = html.Div(children=[
     # .container class is fixed, .container.scalable is scalable
@@ -193,6 +252,12 @@ app.layout = html.Div(children=[
     ]),
 
     html.Div(id='body', className='container scalable', children=[
+        html.Div(
+            id="app-container",
+            children=[
+                build_tabs()
+            ],
+        ),        
         html.Div(className='row', children=[
             html.Div(
                 id='div-graphs',
@@ -201,7 +266,6 @@ app.layout = html.Div(children=[
                     style={'display': 'none'}
                 )
             ),
-
             html.Div(
                 className='three columns',
                 style={
@@ -213,137 +277,37 @@ app.layout = html.Div(children=[
                 children=[
                     drc.Card([
                         drc.NamedDropdown(
-                            name='Select Dataset',
-                            id='dropdown-select-dataset',
+                            name='Select Data Type',
+                            id='dropdown-select-datatype',
                             options=[
-                                {'label': 'Moons', 'value': 'moons'},
-                                {'label': 'Linearly Separable',
-                                 'value': 'linear'},
-                                {'label': 'Circles', 'value': 'circles'}
+                                {'label': 'Regression', 'value': 'regression'},
+                                {'label': 'Binary Classification','value': 'binary'},
+                                {'label': 'Multiclass Classification','value': 'multiclass'}
                             ],
                             clearable=False,
                             searchable=False,
-                            value='moons'
-                        ),
-
-                        drc.NamedSlider(
-                            name='Sample Size',
-                            id='slider-dataset-sample-size',
-                            min=100,
-                            max=500,
-                            step=100,
-                            marks={i: i for i in [100, 200, 300, 400, 500]},
-                            value=300
-                        ),
-
-                        drc.NamedSlider(
-                            name='Noise Level',
-                            id='slider-dataset-noise-level',
-                            min=0,
-                            max=1,
-                            marks={i / 10: str(i / 10) for i in
-                                   range(0, 11, 2)},
-                            step=0.1,
-                            value=0.2,
-                        ),
-                    ]),
-
-                    drc.Card([
-                        drc.NamedSlider(
-                            name='Threshold',
-                            id='slider-threshold',
-                            min=0,
-                            max=1,
-                            value=0.5,
-                            step=0.01
-                        ),
-
-                        html.Button(
-                            'Reset Threshold',
-                            id='button-zero-threshold'
-                        ),
-                    ]),
-
-                    drc.Card([
+                            value='regression'
+                        ),                        
                         drc.NamedDropdown(
-                            name='Kernel',
-                            id='dropdown-svm-parameter-kernel',
+                            name='Select Dataset',
+                            id='dropdown-select-dataset',
                             options=[
-                                {'label': 'Radial basis function (RBF)',
-                                 'value': 'rbf'},
-                                {'label': 'Linear', 'value': 'linear'},
-                                {'label': 'Polynomial', 'value': 'poly'},
-                                {'label': 'Sigmoid', 'value': 'sigmoid'}
+                                {'label': 'California Housing', 'value': 'california'},
+                                {'label': 'Million Song Dataset','value': 'msd'},
+                                {'label': 'Online News Popularity','value': 'online_news'},
+                                {'label': 'Speed Dating', 'value': 'speed_dating'},
+                                {'label': 'Regression', 'value': 'regression'},
+                                {'label': 'Binary', 'value': 'binary'}
                             ],
-                            value='rbf',
                             clearable=False,
-                            searchable=False
+                            searchable=False,
+                            value='california'
                         ),
-
-                        drc.NamedSlider(
-                            name='Cost (C)',
-                            id='slider-svm-parameter-C-power',
-                            min=-2,
-                            max=4,
-                            value=0,
-                            marks={i: '{}'.format(10 ** i) for i in
-                                   range(-2, 5)}
-                        ),
-
-                        drc.FormattedSlider(
-                            style={'padding': '5px 10px 25px'},
-                            id='slider-svm-parameter-C-coef',
-                            min=1,
-                            max=9,
-                            value=1
-                        ),
-
-                        drc.NamedSlider(
-                            name='Degree',
-                            id='slider-svm-parameter-degree',
-                            min=2,
-                            max=10,
-                            value=3,
-                            step=1,
-                            marks={i: i for i in range(2, 11, 2)},
-                        ),
-
-                        drc.NamedSlider(
-                            name='Gamma',
-                            id='slider-svm-parameter-gamma-power',
-                            min=-5,
-                            max=0,
-                            value=-1,
-                            marks={i: '{}'.format(10 ** i) for i in
-                                   range(-5, 1)}
-                        ),
-
-                        drc.FormattedSlider(
-                            style={'padding': '5px 10px 25px'},
-                            id='slider-svm-parameter-gamma-coef',
-                            min=1,
-                            max=9,
-                            value=5
-                        ),
-
-                        drc.NamedRadioItems(
-                            name='Shrinking',
-                            id='radio-svm-parameter-shrinking',
-                            labelStyle={
-                                'margin-right': '7px',
-                                'display': 'inline-block'
-                            },
-                            options=[
-                                {'label': ' Enabled', 'value': True},
-                                {'label': ' Disabled', 'value': False},
-                            ],
-                            value=True,
-                        ),
-                    ]),
-
+                    ]),              
+              
                     html.Div(
                         dcc.Markdown(dedent("""
-                        [Click here](https://github.com/plotly/dash-svm) to visit the project repo, and learn about how to use the app.
+                        [Click here](https://github.com/decisionscients/ml-studio) to visit the project repo, and learn about how to use the app.
                         """)),
                         style={'margin': '20px 0px', 'text-align': 'center'}
                     ),
@@ -356,18 +320,130 @@ app.layout = html.Div(children=[
 
 
 
+# @app.callback(Output('div-graphs', 'children'),
+#                Input('dropdown-select-dataset', 'value'),
+#                Input('slider-threshold', 'value')
+# def update_svm_graph(kernel,
+#                      degree,
+#                      C_coef,
+#                      C_power,
+#                      gamma_coef,
+#                      gamma_power,
+#                      dataset,
+#                      noise,
+#                      shrinking,
+#                      threshold,
+#                      sample_size):
+#     t_start = time.time()
+#     h = .3  # step size in the mesh
 
-external_css = [
-    # Normalize the CSS
-    "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
-    # Fonts
-    "https://fonts.googleapis.com/css?family=Open+Sans|Roboto",
-    "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
-]
+#     # Data Pre-processing
+#     X, y = generate_data(dataset=dataset)
+#     StandardScaler().fit(X)
+#     X = StandardScaler().transform(X)
+#     X_train, X_test, y_train, y_test = \
+#         data_split(X, y, test_size=.4, seed=42)
 
-for css in external_css:
-    app.css.append_css({"external_url": css})
+#     x_min = X[:, 0].min() - .5
+#     x_max = X[:, 0].max() + .5
+#     y_min = X[:, 1].min() - .5
+#     y_max = X[:, 1].max() + .5
+#     xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+#                          np.arange(y_min, y_max, h))
+
+#     C = C_coef * 10 ** C_power
+#     gamma = gamma_coef * 10 ** gamma_power
+
+#     # Train SVM
+#     clf = SVC(
+#         C=C,
+#         kernel=kernel,
+#         degree=degree,
+#         gamma=gamma,
+#         shrinking=shrinking
+#     )
+#     clf.fit(X_train, y_train)
+
+#     # Plot the decision boundary. For that, we will assign a color to each
+#     # point in the mesh [x_min, x_max]x[y_min, y_max].
+#     if hasattr(clf, "decision_function"):
+#         Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+#     else:
+#         Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+
+#     prediction_figure = serve_prediction_plot(
+#         model=clf,
+#         X_train=X_train,
+#         X_test=X_test,
+#         y_train=y_train,
+#         y_test=y_test,
+#         Z=Z,
+#         xx=xx,
+#         yy=yy,
+#         mesh_step=h,
+#         threshold=threshold
+#     )
+
+#     roc_figure = serve_roc_curve(
+#         model=clf,
+#         X_test=X_test,
+#         y_test=y_test
+#     )
+
+#     confusion_figure = serve_pie_confusion_matrix(
+#         model=clf,
+#         X_test=X_test,
+#         y_test=y_test,
+#         Z=Z,
+#         threshold=threshold
+#     )
+
+#     print(
+#         f"Total Time Taken: {time.time() - t_start:.3f} sec")
+
+    # return [
+    #     html.Div(
+    #         className='three columns',
+    #         style={
+    #             'min-width': '24.5%',
+    #             'height': 'calc(100vh - 90px)',
+    #             'margin-top': '5px',
+
+    #             # Remove possibility to select the text for better UX
+    #             'user-select': 'none',
+    #             '-moz-user-select': 'none',
+    #             '-webkit-user-select': 'none',
+    #             '-ms-user-select': 'none'
+    #         },
+    #         children=[
+    #             dcc.Graph(
+    #                 id='graph-line-roc-curve',
+    #                 style={'height': '40%'},
+    #                 figure=roc_figure
+    #             ),
+
+    #             dcc.Graph(
+    #                 id='graph-pie-confusion-matrix',
+    #                 figure=confusion_figure,
+    #                 style={'height': '60%'}
+    #             )
+    #         ]),
+
+    #     html.Div(
+    #         className='six columns',
+    #         style={'margin-top': '5px'},
+    #         children=[
+    #             dcc.Graph(
+    #                 id='graph-sklearn-svm',
+    #                 figure=prediction_figure,
+    #                 style={'height': 'calc(100vh - 90px)'}
+    #             )
+    #         ])
+    # ]
+
 
 # Running the server
 if __name__ == '__main__':
     app.run_server(debug=True)
+
+# %%
