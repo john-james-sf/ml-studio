@@ -86,16 +86,44 @@ def get_regression_data():
     return X, y
 
 @fixture(scope="session")
+def get_regression_hastie():    
+    X, y = datasets.make_hastie_10_2()    
+    scaler = StandardScaler()
+    # pylint: disable=locally-disabled, no-member
+    X = scaler.fit_transform(X)
+    n_features = X.shape[1]    
+    features = ['var_'+str(i) for i in range(n_features)]
+    variables = features + ['TGT']
+    y = np.atleast_2d(y).reshape(-1,1)
+    a = np.concatenate((X, y), axis=1)
+    df = pd.DataFrame(a, columns = variables)
+    idx = np.random.random_integers(len(variables)-2)
+    x = variables[idx]
+    y = "var_4"
+    z = "TGT"    
+
+    return x, y, z, df
+
+@fixture(scope="session")
 def get_regression_data_df_plus():    
     boston = datasets.load_boston()    
     scaler = StandardScaler()
     # pylint: disable=locally-disabled, no-member
-    X = scaler.fit_transform(boston.data)
+    X = scaler.fit_transform(boston.data)    
     X_df = pd.DataFrame(data=X, columns=boston.feature_names)
     y_np = boston.target
     y_series = pd.Series(y_np)
-    y_df = pd.DataFrame(data=y_np, columns=['MEDV'])
-    return X_df, y_df, y_series, y_np
+    y_df = pd.DataFrame(data=y_series, columns=['MEDV'])
+    df = pd.concat([X_df, y_df], axis=1)
+    # Randomly select a feature
+    x_idx = np.random.random_integers(len(boston.feature_names)-1)
+    y_idx = np.random.random_integers(len(boston.feature_names)-1)
+    z_idx = np.random.random_integers(len(boston.feature_names)-1)
+    x = boston.feature_names[x_idx]
+    y = boston.feature_names[y_idx]
+    z = boston.feature_names[z_idx]
+
+    return x, y, z, df
 
 @fixture(scope="session")
 def get_binary_classification_data():

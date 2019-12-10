@@ -23,4 +23,9 @@ def snake(s):
     s = re.sub(r"[^a-zA-Z0-9._// ]+", '', s)
     s = re.sub(r'\s+', ' ', s).strip().lower()
     s = s.replace(" ", "_")
+    pattern = '_' + '{2,}'
+    s = re.sub(pattern, '_', s)
     return s
+
+
+# %%
