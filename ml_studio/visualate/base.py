@@ -156,7 +156,6 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
         self : visualator
         """
         pass
-
     @abstractmethod
     def show(self, path=None, **kwargs):
         """Renders the visualization.
