@@ -373,7 +373,7 @@ class LassoRegression(Regression):
 
     See Also
     --------
-    regression.LinearRegression : Lasso Regression
+    regression.LinearRegression : Linear Regression
     regression.RidgeRegression : Ridge Regression
     regression.ElasticNetRegression : ElasticNet Regression
     """    

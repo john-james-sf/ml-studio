@@ -9,6 +9,7 @@ from sklearn import datasets
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 
+from ml_studio.entities.classes import Classes
 from ml_studio.supervised_learning.training.monitor import History
 from ml_studio.supervised_learning.training.estimator import Estimator
 from ml_studio.supervised_learning.regression import LinearRegression
@@ -68,6 +69,16 @@ def get_generated_large_regression_data():
         save_numpy(X, directory, X_file)
         save_numpy(y, directory, y_file)        
     return X, y    
+
+@fixture(scope='session')
+def get_classes():
+    c = Classes()
+    classes = [LinearRegression(), LassoRegression(), RidgeRegression(),
+               ElasticNetRegression(), LogisticRegression(), 
+               MultinomialLogisticRegression()]
+    for cls in classes:
+        c.add_class(cls)
+    return c
 
 @fixture(scope="session")
 def get_generated_medium_regression_data():

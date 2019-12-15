@@ -339,7 +339,7 @@ class MultinomialLogisticRegression(Classification):
     --------
     classification.LogisticRegression : Binary Classification
     """    
-
+    
     def __init__(self, learning_rate=0.01, batch_size=None, theta_init=None,
                  epochs=1000, cost='categorical_cross_entropy',                 
                  metric='accuracy',  early_stop=False, 

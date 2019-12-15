@@ -36,7 +36,7 @@ from ..supervised_learning.training.estimator import Estimator
 from ..supervised_learning.regression import LinearRegression
 from ..utils.model import get_model_name
 from ..utils.misc import snake
-from ..utils.file_manager import save_plotly
+from ..utils.file_manager import save_plotly, get_filename
 
 # --------------------------------------------------------------------------- #
 #                            PlotKwargs                                       #
@@ -54,7 +54,7 @@ class PlotKwargs():
         height       int        the height in pixels for the figure
         line_color   str        default line color
         margin       dict       margin in pixels. dict keys are l, t, and b        
-        template     str        the theme template 
+        template     str        See https://plot.ly/python/templates/ 
         test_alpha   float      opacity for objects associated with test data
         test_color   str        color for objects associated with test data                
         train_alpha  float      opacity for objects associated with training data
@@ -106,8 +106,7 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
     CATEGORICAL_DATA_TYPES = ['category', 'object']                                    
 
 
-    def __init__(self, name, title=None, **kwargs):  
-        self.name = name   
+    def __init__(self,title=None, **kwargs):  
         self.title = title
         self.height = kwargs.get('height', self.DEFAULT_PARAMETERS['height'])
         self.width = kwargs.get('width', self.DEFAULT_PARAMETERS['width'])
@@ -126,6 +125,7 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
         self.margin = kwargs.get('margin', \
             self.DEFAULT_PARAMETERS['margin'])
         self.filetype = ".html"
+        self.fig = None
 
 
     @abstractmethod
@@ -157,22 +157,6 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
         """
         pass
 
-    def _get_filename(self, object_name=None, element_name=None):
-        """Creates a standard format filename for saving plots."""    
-
-        # Obtain user id, class name and date time        
-        userhome = os.path.expanduser('~')          
-        username = os.path.split(userhome)[-1] 
-        object_name = object_name or ""       
-        clsname = self.__class__.__name__
-        element_name = element_name or ""
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        # Snake case format filename
-        filename = username + '_' + object_name + '_' + clsname + '_' + \
-        element_name + '_' + timestr + self.filetype
-        filename = snake(filename)        
-        return filename    
-    
     @abstractmethod
     def show(self, path=None, **kwargs):
         """Renders the visualization.
@@ -194,40 +178,35 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
         """
         pass
 
-    def _get_filename(self, object_name=None, element_name=None):
-        """Creates a standard format filename for saving plots."""    
-
-        # Obtain user id, class name and date time        
-        userhome = os.path.expanduser('~')          
-        username = os.path.split(userhome)[-1] 
-        object_name = object_name or ""       
-        clsname = self.__class__.__name__
-        element_name = element_name or ""
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        # Snake case format filename
-        filename = username + '_' + object_name + '_' + clsname + '_' + \
-        element_name + '_' + timestr + self.filetype
-        filename = snake(filename)        
-        return filename
-
-
-    def save(self, fig, directory, filename):
-        """Saves a plot to file.
+    def save_fig(self, path, element_name=None):
+        """Saves a figure to file.
         
+        Path can be a directory or filename. If it is a directory, a filename 
+        will be automatically generated in the following format:
+
+            'user.classname.objectname.element_name.time_stamp.html'
+
+        if the element_name is not provided, it is omitted from the filename
+
         Parameters
         ----------
-        fig : plotly figure object
-            The figure to be saved
+        path : str
+            Directory or full directory and filename
 
-        directory : str
-            The name of the directory to which the file is to be saved
-
-        filename : str
-            The name of the file to be saved.
+        element_name : str
+            The name of a specific element that is plotted.
         
         """
 
-        save_plotly(fig, directory=directory, filename=filename)    
+        if os.path.splitext(path)[1] == "":
+            # This is a directory and the filename is automatically generated
+            directory = path
+            filename = get_filename(self, ext=self.filetype, name=element_name)
+        else:
+            directory = os.path.dirname(path)
+            filename = os.path.basename(path)
+
+        save_plotly(self.fig, directory=directory, filename=filename)    
 
 
 
@@ -251,34 +230,35 @@ class DataVisualator(BaseVisualator):
 
     """
 
-    def __init__(self, name, title=None, **kwargs):    
+    def __init__(self, title=None, **kwargs):    
         """Instantiate the object and specify data input requirements."""
-        super(DataVisualator, self).__init__(name=name,
-                                             title=title,
+        super(DataVisualator, self).__init__(title=title,
                                              **kwargs)        
 
 
     def fit(self, x, y=None, z=None, dataset=None):
         """ Fits the visualator to the data.
 
-        Prepares the data for plotting. Numpy arrays are converted to pandas
-        DataFrames, a format more conducive to exploratory data analysis.
-        Feature names, types and counts are computed.  
-
+        For ModelVisulator classes, the fit method fits the data to an underlying
+        model. 
+        
         Parameters
         ----------
-        x : str, 1d numpy array, list or pd.Series
-            Either a name of a column in dataframe, or a pandas Series or 
-            array_like object. 
+        x : str, ndarray, pd.Series, pd.DataFrame of shape n x 1
+            If a str, this is a column name of the dataset object. Otherwise
+            it is an array-like containing values to be plotted
 
-        y : str, 1d numpy array, list or pd.Series
-            Either a name of a column in dataframe, or a pandas Series or 
-            array_like object. 
+        y : str, ndarray, pd.Series, pd.DataFrame of shape n x 1
+            If a str, this is a column name of the dataset object. Otherwise
+            it is an array-like containing values to be plotted
 
-        dataset : DataSet object or Array-like, or pd.DataFrame, 
-            A DataSet object, a pd.DataFrame or an array-like object of shape
-            (n,m), where n is the number of observations and m is the 
-            number of features plus one for the target variable.
+        z : str, ndarray, pd.Series, pd.DataFrame of shape n x 1
+            If a str, this is a column name of the dataset object. Otherwise
+            it is an array-like containing values to be plotted
+
+        dataset : pd.DataFrame DataSet, or array-like
+            Contains the data to be plotted. If not None, x and optionally
+            y and z must be strings indicating column names. 
 
         Returns
         -------
@@ -335,7 +315,6 @@ class ModelVisualator(BaseVisualator):
                                               **kwargs)
         self.model = model
         self.refit = refit
-        self.name = get_model_name(model)
         self.nobs = 0
 
     def transform(self, X, y=None):
