@@ -1459,7 +1459,6 @@ class CanvasColors(CanvasComponent):
         self.__coloraxis_colorbar_tickwidth = 1
         self.__coloraxis_colorbar_tickcolor = '#444'
         self.__coloraxis_colorbar_showticklabels = True
-        #TODO: pickup from here
         self.__coloraxis_colorbar_tickfont_family = None
         self.__coloraxis_colorbar_tickfont_size = 1
         self.__coloraxis_colorbar_tickfont_color = None
@@ -3052,7 +3051,7 @@ class CanvasColors(CanvasComponent):
         self.__coloraxis_colorbar_tickprefix = value            
 
     # ----------------------------------------------------------------------- #
-    #               COLORAXIS COLORBAR SHOWTICKPREFIX PROPERTIES                  #
+    #               COLORAXIS COLORBAR SHOWTICKPREFIX PROPERTIES              #
     # ----------------------------------------------------------------------- #
     @property
     def coloraxis_colorbar_showtickprefix(self):
@@ -3086,3 +3085,296 @@ class CanvasColors(CanvasComponent):
         else:
             raise ValueError("showtickprefix must be 'all', 'first', 'last'\
                 , or 'none'.")
+
+    # ----------------------------------------------------------------------- #
+    #               COLORAXIS COLORBAR TICKSUFFIX PROPERTIES                  #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_ticksuffix(self):
+        """Returns the coloraxis_colorbar_ticksuffix attribute.
+        
+        Sets a tick label suffix 
+        
+        """
+
+        return self.__coloraxis_colorbar_ticksuffix
+
+    @coloraxis_colorbar_ticksuffix.setter
+    def coloraxis_colorbar_ticksuffix(self, value):
+        """Sets the coloraxis_colorbar_ticksuffix attribute.
+        
+        Parameters
+        ----------
+        value : str
+             Sets a tick label suffix
+
+        """                
+        
+        self.__coloraxis_colorbar_ticksuffix = value                   
+
+    # ----------------------------------------------------------------------- #
+    #               COLORAXIS COLORBAR SHOWTICKSUFFIX PROPERTIES              #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_showticksuffix(self):
+        """Returns the coloraxis_colorbar_showticksuffix attribute.
+        
+        If "all", all tick labels are displayed with a suffix. If 
+        "first", only the first tick is displayed with a suffix. 
+        If "last", only the last tick is displayed with a suffix. 
+        If "none", tick suffixes are hidden.
+        
+        """
+
+        return self.__coloraxis_colorbar_showticksuffix
+
+    @coloraxis_colorbar_showticksuffix.setter
+    def coloraxis_colorbar_showticksuffix(self, value):
+        """Sets the coloraxis_colorbar_showticksuffix attribute.
+        
+        Parameters
+        ----------
+        value : str
+             If "all", all tick labels are displayed with a suffix. If 
+             "first", only the first tick is displayed with a suffix. 
+             If "last", only the last tick is displayed with a suffix. 
+             If "none", tick suffixes are hidden.
+
+        """                
+        valid_values = ['all', 'first', 'last', 'none']
+        if value in valid_values:
+            self.__coloraxis_colorbar_showticksuffix = value
+        else:
+            raise ValueError("showticksuffix must be 'all', 'first', 'last'\
+                , or 'none'.")
+
+    # ----------------------------------------------------------------------- #
+    #            COLORAXIS COLORBAR SEPARATETHOUSANDS PROPERTIES              #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_separatethousands(self):
+        """Returns the coloraxis_colorbar_separatethousands attribute.
+        
+        If "True", even 4-digit integers are separated.
+
+        """
+
+        return self.__coloraxis_colorbar_separatethousands
+
+    @coloraxis_colorbar_separatethousands.setter
+    def coloraxis_colorbar_separatethousands(self, value):
+        """Sets the coloraxis_colorbar_separatethousands attribute.
+        
+        Parameters
+        ----------
+        value : bool
+            If "True", even 4-digit integers are separated.
+
+        """                
+
+        self.__coloraxis_colorbar_separatethousands = value
+
+    # ----------------------------------------------------------------------- #
+    #            COLORAXIS COLORBAR EXPONENTIALFORMAT PROPERTIES              #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_exponentialformat(self):
+        """Returns the coloraxis_colorbar_exponentialformat attribute.
+        
+        Determines a formatting rule for the tick exponents.
+
+        """
+
+        return self.__coloraxis_colorbar_exponentialformat
+
+    @coloraxis_colorbar_exponentialformat.setter
+    def coloraxis_colorbar_exponentialformat(self, value):
+        """Sets the coloraxis_colorbar_exponentialformat attribute.
+        
+        Parameters
+        ----------
+        value : bool. One of "none" | "e" | "E" | "power" | "SI" | "B"
+            Determines a formatting rule for the tick exponents.
+
+        """                
+
+        valid_values = ["none", "e", "E", "power", "SI", "B"]
+        if value in valid_values:            
+            self.__coloraxis_colorbar_exponentialformat = value        
+        else:
+            raise ValueError("exponentialformat must be 'none', 'e'\
+                , 'E', 'power', 'SI', or 'B'.")
+
+    # ----------------------------------------------------------------------- #
+    #            COLORAXIS COLORBAR SHOWEXPONENT PROPERTIES                   #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_showexponent(self):
+        """Returns the coloraxis_colorbar_showexponent attribute.
+        
+        If "all", all exponents are shown besides their significands. 
+        If "first", only the exponent of the first tick is shown. If "last", 
+        only the exponent of the last tick is shown. If "none", 
+        no exponents appear.
+
+        """
+
+        return self.__coloraxis_colorbar_showexponent
+
+    @coloraxis_colorbar_showexponent.setter
+    def coloraxis_colorbar_showexponent(self, value):
+        """Sets the coloraxis_colorbar_showexponent attribute.
+        
+        Parameters
+        ----------
+        value : bool. One of "all" | "first" | "last" | "none" 
+            If "all", all exponents are shown besides their significands. 
+            If "first", only the exponent of the first tick is shown. If "last", 
+            only the exponent of the last tick is shown. If "none", 
+            no exponents appear.
+
+        """                
+
+        valid_values = ['all', 'first', 'last', 'none']
+        if value in valid_values:            
+            self.__coloraxis_colorbar_showexponent = value        
+        else:
+            raise ValueError("showexponent must be 'all', 'first', 'last'\
+                , 'none'.")                
+          
+    # ----------------------------------------------------------------------- #
+    #            COLORAXIS COLORBAR TITLE_TEXT PROPERTIES                     #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_title_text(self):
+        """Returns the coloraxis_colorbar_title_text attribute.
+        
+        Sets the title of the color bar. 
+
+        """
+
+        return self.__coloraxis_colorbar_title_text
+
+    @coloraxis_colorbar_title_text.setter
+    def coloraxis_colorbar_title_text(self, value):
+        """Sets the coloraxis_colorbar_title_text attribute.
+        
+        Parameters
+        ----------
+        value : str
+            Sets the title of the color bar. 
+
+        """                
+
+        self.__coloraxis_colorbar_title_text = value        
+          
+    # ----------------------------------------------------------------------- #
+    #            COLORAXIS COLORBAR TITLE_FONT_FAMILY PROPERTIES              #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_title_font_family(self):
+        """Returns the coloraxis_colorbar_title_font_family attribute.
+        
+        Sets the font family of the title of the color bar. 
+
+        """
+
+        return self.__coloraxis_colorbar_title_font_family
+
+    @coloraxis_colorbar_title_font_family.setter
+    def coloraxis_colorbar_title_font_family(self, value):
+        """Sets the coloraxis_colorbar_title_font_family attribute.
+        
+        Parameters
+        ----------
+        value : str
+            Sets the font family of the title of the color bar. 
+
+        """                
+
+        self.__coloraxis_colorbar_title_font_family = value                  
+
+    # ----------------------------------------------------------------------- #
+    #            COLORAXIS COLORBAR TITLE_FONT_SIZE PROPERTIES                #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_title_font_size(self):
+        """Returns the coloraxis_colorbar_title_font_size attribute.
+        
+        Sets the font size of the title of the color bar. 
+
+        """
+
+        return self.__coloraxis_colorbar_title_font_size
+
+    @coloraxis_colorbar_title_font_size.setter
+    def coloraxis_colorbar_title_font_size(self, value):
+        """Sets the coloraxis_colorbar_title_font_size attribute.
+        
+        Parameters
+        ----------
+        value : str
+            Sets the font size of the title of the color bar. 
+
+        """                
+
+        self.__coloraxis_colorbar_title_font_size = value          
+
+    # ----------------------------------------------------------------------- #
+    #            COLORAXIS COLORBAR TITLE_FONT_COLOR PROPERTIES               #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_title_font_color(self):
+        """Returns the coloraxis_colorbar_title_font_color attribute.
+        
+        Sets the font color of the title of the color bar. 
+
+        """
+
+        return self.__coloraxis_colorbar_title_font_color
+
+    @coloraxis_colorbar_title_font_color.setter
+    def coloraxis_colorbar_title_font_color(self, value):
+        """Sets the coloraxis_colorbar_title_font_color attribute.
+        
+        Parameters
+        ----------
+        value : str
+            Sets the font color of the title of the color bar. 
+
+        """                
+
+        self.__coloraxis_colorbar_title_font_color = value              
+
+    # ----------------------------------------------------------------------- #
+    #            COLORAXIS COLORBAR TITLE_SIDE PROPERTIES                     #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_title_side(self):
+        """Returns the coloraxis_colorbar_title_side attribute.
+        
+        Determines the location of color bar's title with respect to the 
+        color bar. 
+
+        """
+
+        return self.__coloraxis_colorbar_title_side
+
+    @coloraxis_colorbar_title_side.setter
+    def coloraxis_colorbar_title_side(self, value):
+        """Sets the coloraxis_colorbar_title_side attribute.
+        
+        Parameters
+        ----------
+        value : str. One of 'right', 'top', 'bottom'. Default = 'top'
+            Determines the location of color bar's title with respect to the 
+            color bar. 
+
+        """                
+
+        valid_values = ['right', 'top', 'bottom']
+        if value in valid_values:
+            self.__coloraxis_colorbar_title_side = value              
+        else:
+            raise ValueError("colorbar_title_side must be 'right', 'top', \
+                or 'bottom'.")
