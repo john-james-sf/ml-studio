@@ -39,31 +39,6 @@ from ..utils.misc import snake
 from ..utils.file_manager import save_plotly, get_filename
 
 # --------------------------------------------------------------------------- #
-#                            PlotKwargs                                       #
-# --------------------------------------------------------------------------- #
-class PlotKwargs():
-    """
-    Keyword Parameters
-    ------------------
-    kwargs : dict
-        Keyword arguments that define the plot layout for visualization subclasses.   
-
-        ===========  ========== ===============================================
-        Property     Format     Description
-        -----------  ---------- -----------------------------------------------
-        height       int        the height in pixels for the figure
-        line_color   str        default line color
-        margin       dict       margin in pixels. dict keys are l, t, and b        
-        template     str        See https://plot.ly/python/templates/ 
-        test_alpha   float      opacity for objects associated with test data
-        test_color   str        color for objects associated with test data                
-        train_alpha  float      opacity for objects associated with training data
-        train_color  str        color for objects associated with training data
-        width        int        the width in pixels of the figure
-        ===========  ========== ===============================================    
-    """
-
-# --------------------------------------------------------------------------- #
 #                            BASE VISUALATOR                                  #
 # --------------------------------------------------------------------------- #
 
@@ -75,11 +50,8 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
 
     Parameters
     ----------
-    title : str
-        The title for the plot. It defaults to the plot name and optionally
-        the model name.
-
-    kwargs : see docstring for PlotKwargs class.        
+    canvas : Canvas object
+        Object containing configurable plotting options.
 
     Notes
     -----
@@ -92,44 +64,12 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
     Scikit-Learn GridSearchCV or RandomizedSearchCV  object and presents 
     model selection visualizations.  Those inherit directly from this class.
     """
-    DEFAULT_PARAMETERS = {'height': 450, 'line_color': 'darkgrey', 
-                          'margin': {'l':80, 't':100, 'b':80}, 'template': "none",
-                          'test_alpha': 0.75, 'test_color': '#9fc377',
-                          'train_alpha': 0.75, 'train_color': '#0272a2',
-                          'width': 700}
 
-    ARRAY_LIKE = (np.ndarray, np.generic, list, pd.Series, \
-                pd.DataFrame, tuple)
-
-    NUMERIC_DATA_TYPES = ['int16', 'int32', 'int64', 'float16', \
-                                    'float32', 'float64']
-    CATEGORICAL_DATA_TYPES = ['category', 'object']                                    
-
-
-    def __init__(self,title=None, **kwargs):  
-        self.title = title
-        self.height = kwargs.get('height', self.DEFAULT_PARAMETERS['height'])
-        self.width = kwargs.get('width', self.DEFAULT_PARAMETERS['width'])
-        self.line_color = kwargs.get('line_color', \
-            self.DEFAULT_PARAMETERS['line_color'])
-        self.train_color = kwargs.get('train_color', \
-            self.DEFAULT_PARAMETERS['train_color'])
-        self.test_color = kwargs.get('test_color', \
-            self.DEFAULT_PARAMETERS['test_color'])
-        self.train_alpha = kwargs.get('train_alpha', \
-            self.DEFAULT_PARAMETERS['train_alpha'])
-        self.test_alpha = kwargs.get('test_alph', \
-            self.DEFAULT_PARAMETERS['test_alpha'])
-        self.template = kwargs.get('template', \
-            self.DEFAULT_PARAMETERS['template'])
-        self.margin = kwargs.get('margin', \
-            self.DEFAULT_PARAMETERS['margin'])
-        self.filetype = ".html"
-        self.fig = None
-
+    def __init__(self, canvas=None, *args, **kwargs):  
+        self.canvas = canvas
 
     @abstractmethod
-    def fit(self, X, y, **kwargs):
+    def fit(self, dataframe=None, x=None, y=None, z=None):
         """ Fits the visualator to the data.
 
         For DataVisualator classes, this method fits the data to the visualator.
@@ -140,16 +80,24 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
 
         Parameters
         ----------
-        X : ndarray or DataFrame of shape n x m
-            A matrix of n instances with m features
+        dataset : pandas DataFrame or ML Studio DataSet object.             
+            Tidy (“long-form”) dataframe where each column is a variable and 
+            each row is an observation or a DataSet object containing a 
+            DataFrame object.
 
-        y : ndarray or Series of length n
-            An array or series of target or class values
+        x : str or array-like of shape (m,), where m is the number 
+            of observations. if x is a str, it is a column in the dataframe 
+            argument.
 
-        kwargs: dict
-            Keyword arguments passed to the scikit-learn API. 
-            See visualizer specific details for how to use
-            the kwargs to modify the visualization or fitting process.    
+        y : str or array-like of shape (m,), where m is the number 
+            of observations. if y is a str, it is a column in the dataframe 
+            argument.
+
+        z : str or array-like of shape (m,), where m is the number 
+            of observations. if x is a str, it is a column in the dataframe 
+            argument. Whether z is an array-like or a str column name,
+            it typically represents categorical or grouping factors for
+            x, and optionally y.              
 
         Returns
         -------
@@ -157,7 +105,7 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
         """
         pass
     @abstractmethod
-    def show(self, path=None, **kwargs):
+    def show(self):
         """Renders the visualization.
 
         Contains the Plotly code that renders the visualization
@@ -177,33 +125,35 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
         """
         pass
 
-    def save_fig(self, path, element_name=None):
+    def save_fig(self, directory, filename=None):
         """Saves a figure to file.
         
-        Path can be a directory or filename. If it is a directory, a filename 
-        will be automatically generated in the following format:
+        If filename is not provided, a filename will be generated using the 
+        following format:
 
-            'user.classname.objectname.element_name.time_stamp.html'
+            'user_classname_dataframe_name_xvar_yvar_zvar_time_stamp.html'        
 
-        if the element_name is not provided, it is omitted from the filename
+        Variables 'dataframe name', 'xvar', 'yvar', and 'zvar', if provided, 
+        will be obtained or derived from the parameters of the fit method.
 
         Parameters
         ----------
-        path : str
-            Directory or full directory and filename
+        directory : str
+            Relative or absolute directory path
 
-        element_name : str
-            The name of a specific element that is plotted.
+        filename : str
+            Name of the file to which the plot is being saved. It should
+            end with an '.html' extension. If missing, it will be added to
+            the filename
         
         """
 
-        if os.path.splitext(path)[1] == "":
-            # This is a directory and the filename is automatically generated
-            directory = path
-            filename = get_filename(self, ext=self.filetype, name=element_name)
+        if filename:
+            if os.path.splitext(filename)[1] == "":
+                # The .html file extension must be added to the filename.
+                filename += '.html'
         else:
-            directory = os.path.dirname(path)
-            filename = os.path.basename(path)
+            filename = get_filename(self, ext='.html')
 
         save_plotly(self.fig, directory=directory, filename=filename)    
 

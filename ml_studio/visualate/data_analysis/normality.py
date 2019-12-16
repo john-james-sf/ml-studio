@@ -69,6 +69,31 @@ class Histogram(DataVisualator):
 
     Parameters
     ----------
+    dataframe : DataFrame or array-like
+        A pandas DataFrame or array-like with column names. If missing, a 
+        DataFrame is constructed using the other parameters.
+
+    x : str, int, Series or array-like
+        Either a column in the dataframe, or a pandas Series or array-like
+        object. Values from this argument are used to position marks along
+        the x-axis.
+
+    y : str, int, Series or array-like
+        Either a column in the dataframe, or a pandas Series or array-like
+        object. Values from this argument are used to position marks along
+        the y-axis.        
+
+    color : str or int or Series or array-like)
+        Either a name of a column in data_frame, or a pandas Series or 
+        array_like object. Values from this column or array_like are used 
+        to assign color to marks.
+
+    labels : dict with str keys and str values (default {})
+        By default, column names are used in the figure for axis titles, 
+        legend entries and hovers. This parameter allows this to be overridden. 
+        The keys of this dict should correspond to column names, and the 
+        values should correspond to the desired label to be displayed.    
+
     nbins : int. Defaults to 0.
         Specifies the maximum number of desired bins. This value will be used 
         in an algorithm that will decide the optimal bin size such that the 
@@ -78,17 +103,27 @@ class Histogram(DataVisualator):
         If True, A cumulative histogram is rendered, which maps the cumulative 
         number of observations in all of the bins up to the specified bin. 
 
-    group_by : str, Defaults to None
-        A string containing the grouping variable in the data set by which
-        data will be grouped to produce separate histograms, one for each
-        group.
-
     marginal : str. Default is None
         String indicating the type of plot to be added to the margin of the
         plot. Choices are None, 'box', 'violin', and 'rug'.
 
-    horizontal : bool. Default is False
-        If True, counts will be plotted on the x-axis.
+    orientation : str, Default = 'v'
+        Either 'h' for horizontal or 'v' for vertical orientation
+
+    xrange : list of two numbers
+        If provided, indicates the limits of the x-axis
+
+    yrange : list of two numbers
+          If provided, indicates the limits of the y-axis
+
+    template : plotly layout Template instance
+        The figure template
+
+    width : int, Default None
+        The width of figure in pixels
+
+    height : int, Default 600
+        The height of the figure in pixels.
 
     title : str. Defaults to Histogram + Variable name (if known) 
         The title for the plot. 
