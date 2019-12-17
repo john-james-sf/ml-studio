@@ -3,16 +3,17 @@
 #                                  CANVAS                                     #
 # =========================================================================== #
 # =========================================================================== #
-# Project: Visualate                                                          #
-# Version: 0.1.0                                                              #
-# File: \base.py                                                              #
+# Project: ML Studio                                                          #
+# Version: 0.1.14                                                             #
+# File: \canvas.py                                                            #
+# Python Version: 3.7.3                                                       #
 # ---------------                                                             #
 # Author: John James                                                          #
 # Company: Decision Scients                                                   #
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
-# Create Date: Wednesday November 27th 2019, 10:28:47 am                      #
-# Last Modified: Wednesday November 27th 2019, 12:51:57 pm                    #
+# Create Date: Sunday December 15th 2019, 7:17:51 am                          #
+# Last Modified: Tuesday December 17th 2019, 1:01:56 pm                       #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
@@ -39,18 +40,24 @@ The module is comprised of the following classes.
     Components
     ----------
     * CanvasComponent : Abstract base class for the following classes
-    * CanvasTitle : Configuration class for plot title options
-    * CanvasLegend : Configuration class for plot legend options
-    * CanvasMargins : Configuration class for plot margin options
-    * CanvasSize : Configuration class for plot size options
-    * CanvasFont : Configuration class for plot font options
-    * CanvasColors : Configuration class for plot color options
-    * CanvasXAxis : Configuration class for plot x-axis options
-    * CanvasYAxis : Configuration class for plot y-axis options
-
-    Factory
-    ---------
-    * CanvasFactor : Creates the appropriate component class
+    * CanvasTitle	:	Sets font and position of the plot title
+    * CanvasLegend	:	Sets style, font, position and behavior of the legend
+    * CanvasMargins	:	Sets plot margins
+    * CanvasSize	:	Sets plot width and height
+    * CanvasFont	:	Sets family, size and color of fonts
+    * CanvasColorBackground	:	Sets plot and page background colors
+    * CanvasColorScale	:	Sets sequential, divergent and colorway scales
+    * CanvasColorAxisDomain	:	Sets min, max, and mid values of the color scales
+    * CanvasColorAxisScales	:	Sets color scale
+    * CanvasColorAxisBarStyle	:	Sets color axis bar thickness, length and color
+    * CanvasColorAxisBarPosition	:	Sets the position of the color axis color bar
+    * CanvasColorAxisBarBoundary	:	Sets color axis border and outline color and width
+    * CanvasColorAxisBarTicks	:	Sets parameters for ticks
+    * CanvasColorAxisBarTickStyle	:	Sets the style of the ticks 
+    * CanvasColorAxisBarTickFont	:	Sets the font of the ticks.
+    * CanvasColorAxisBarTickFormatStops	:	Sets tick format stop parameters
+    * CanvasColorAxisBarNumbers	:	Set number format
+    * CanvasColorAxisBarTitle	:	Sets the axis bar title family, size and color.
 
 """
 import os
@@ -62,278 +69,142 @@ from abc import ABC, abstractmethod, ABCMeta
 #                                Canvas                                       #
 # --------------------------------------------------------------------------- #
 class Canvas():    
-    """
-    A container class holding the various Canvas components. A Canvas is a 
-    collection of configuration options for a visualization. The set of 
-    configurable options are divided into groups and classes for managing
-    the configurations in the group.
+    """A container class holding the various Canvas components. 
+    
+    A Canvas is a collection of CanvasComponents, each of which contains
+    a set of related visualization configuration parameters. Each 
+    CanvasComponent class exposes its parameters are accessor properties. At
+    instantiation, the parameters are set to their default values.
 
-    The Canvas components align, more or less, with the structure of the 
-    plotly layout structure and are:
-
-        * Title             * Font
-        * Legend            * Colors
-        * Margins           * X Axis
-        * Size              * Y Axis
-
-    Canvas components are exposed as properties of the Canvas class. 
-    Instantiation will generate a set of default components, containing 
-    its default settings.
-
-    Attributes
-    ----------
-    title : CanvasTitle, Optional 
-        Configuration options for the plot title.
-
-    legend : CanvasLegend, Optional 
-        Configuration options for the plot legend.
-
-    margins : CanvasMargins, Optional 
-        Configuration options for the plot margins.
-
-    size : CanvasSize, Optional 
-        Configuration options for the plot size.
-
-    font : CanvasFont, Optional 
-        Configuration options for the plot fonts.
-
-    colors : CanvasColors, Optional 
-        Configuration options for the plot colors.
-
-    x_axis : CanvasXAxis, Optional 
-        Configuration options for the plot x_axis.
-
-    y_axis : CanvasYAxis, Optional 
-        Configuration options for the plot y_axis.                                                
-
-    """
-    canvas_components = ['title', 'legend', 'margins', 'size', 'font', 'colors',
-                         'x_axis', 'y_axis']
+    """    
     def __init__(self):
-        self.components = {}
+        self.__components = {}
+
+    def print_components(self):
+        """Prints component parameters and values to sysout."""
+        if bool(self.__components):
+            for component in self.__components.values():
+                component.print_parameters()
+        else:
+            print("The Canvas object has no parameters.")
+
+    def add_component(self, component):
+        """Adds a CanvasComponent object to the collection.
+        
+        Parameters
+        ----------
+        component : CanvasComponent object
+            Class containing a group of parameters and accessors.
+
+        Returns
+        -------
+        self
+        
+        """
+
+        component_name = component.__class__.__name
+        if self.__components[component_name]:
+            raise Exception("CanvasComponent %s already exists in the Canvas."\
+                % component_name)
+        else:
+            self.__components[component_name] = component
+        
+        return self
+
+    def update_component(self, component):
+        """Updates an existing CanvasComponent with values from component.
+
+        Components are uniquely indexed by their class names. The existing
+        CanvasComponent is obtained via the class name of component. Then,
+        the existing CanvasComponent object parameter dictionary is updated 
+        with the values from the component parameter dictionary.
+
+        Parameters
+        ----------
+        component : CanvasComponent object
+            Object containing the parameter values to update.
+
+        Returns
+        -------
+        self
+
+        """ 
+
+        component_name = component.__class__.__name
+        if not self.__components[component_name]:
+            raise Exception("CanvasComponent object %s does not exist." \
+                % component_name)
+        else:
+            parameters = component.get_parameters()
+            self.__components[component_name].update(parameters)
+
+        return self
+
+    def delete_component(self, component_name=None):
+        """Removes a CanvasComponent object from the container.
+
+        Parameters
+        ----------
+        component_name : str. Optional
+            The class name for the CanvasComponent class to delete. If None,
+            all CanvasComponents will be deleted subject to verification.
+
+        Returns
+        -------
+        self
+
+        """
+
+        if component_name is None:
+
+            delete_all = input("Are you sure you want to delete all \
+            CanvasComponent objects from this class? (y/n)")
+
+            if delete_all in ['Y', 'y', 'Yes', 'yes', 'YES']:
+                print('Deleting CanvasComponent objects.')
+                self.__components[component_name] = dict()
+            else:
+                print('Leaving CanvasComponents in place.')
+        else:
+            try:
+                del self.__components[component_name]
+            except KeyError:
+                print("CanvasComponent object %s does not exist." \
+                        % component_name)
+        return self
+
+    def __iter__(self):
+        return iter(self.__components)
 
     # ----------------------------------------------------------------------- #
-    #                          RESET METHODS                                  #
+    #                          RESET METHOD                                   #
     # ----------------------------------------------------------------------- #       
-    def reset(self):
-        """Resets the Canvas with default components."""
-        # Instantiate a factory for obtaining the Canvas* component.
-        factory = CanvasFactory()
-        for component in canvas_components:
-            self.components[component] = factory.get_component(component)
+    def reset(self, component_name=None):
+        """Resets CanvasComponent(s) to its/their default values."""
+
+        if component_name is None:
+
+            reset_all = input("Are you sure you want to reset all \
+            CanvasComponent objects to their default values? (y/n)")
+
+            if reset_all in ['Y', 'y', 'Yes', 'yes', 'YES']:
+                print('Resetting all CanvasComponent objects.')
+                for component in self.__components.values():
+                    component.reset()                
+            else:
+                print('Leaving CanvasComponents unchanged.')        
+
+        else:
+            try:
+                self.__components[component_name].reset()
+            except KeyError:
+                print("CanvasComponent object %s does not exist." \
+                        % component_name)
+        return self
+
+   
 
 
-    # ----------------------------------------------------------------------- #
-    #                            TITLE PROPERTIES                             #
-    # ----------------------------------------------------------------------- #
-    @property
-    def title(self):
-        """Returns the CanvasTitle object."""
-        return self.components.get('title')
-
-    @title.setter
-    def title(self, value):
-        """Sets the CanvasTitle object."""
-        self.components['title'] = value
-
-    @title.deleter
-    def title(self, value):
-        """Deletes the CanvasTitle object."""
-        try:
-            del self.components['title']
-        except KeyError:
-            print("There is no 'title' attribute for the Canvas class.")
-
-    # ----------------------------------------------------------------------- #
-    #                            LEGEND PROPERTIES                            #
-    # ----------------------------------------------------------------------- #
-    @property
-    def legend(self):
-        """Returns the CanvasLegend object."""
-        return self.components.get('legend')
-
-    @legend.setter
-    def legend(self, value):
-        """Sets the CanvasLegend object."""
-        self.components['legend'] = value
-
-    @legend.deleter
-    def legend(self, value):
-        """Deletes the CanvasLegend object."""
-        try:
-            del self.components['legend']
-        except KeyError:
-            print("There is no 'legend' attribute for the Canvas class.")
-
-    # ----------------------------------------------------------------------- #
-    #                            MARGINS PROPERTIES                           #
-    # ----------------------------------------------------------------------- #
-    @property
-    def margins(self):
-        """Returns the CanvasMargins object."""
-        return self.components.get('margins')
-
-    @margins.setter
-    def margins(self, value):
-        """Sets the CanvasMargins object."""
-        self.components['margins'] = value
-
-    @margins.deleter
-    def margins(self, value):
-        """Deletes the CanvasMargins object."""
-        try:
-            del self.components['margins']
-        except KeyError:
-            print("There is no 'margins' attribute for the Canvas class.")
-
-    # ----------------------------------------------------------------------- #
-    #                            SIZE PROPERTIES                              #
-    # ----------------------------------------------------------------------- #
-    @property
-    def size(self):
-        """Returns the CanvasSize object."""
-        return self.components.get('size')
-
-    @size.setter
-    def size(self, value):
-        """Sets the CanvasSize object."""
-        self.components['size'] = value
-
-    @size.deleter
-    def size(self, value):
-        """Deletes the CanvasSize object."""
-        try:
-            del self.components['size']
-        except KeyError:
-            print("There is no 'size' attribute for the Canvas class.")
-
-    # ----------------------------------------------------------------------- #
-    #                            FONT PROPERTIES                              #
-    # ----------------------------------------------------------------------- #
-    @property
-    def font(self):
-        """Returns the CanvasFont object."""
-        return self.components.get('font')
-
-    @font.setter
-    def font(self, value):
-        """Sets the CanvasFont object."""
-        self.components['font'] = value
-
-    @font.deleter
-    def font(self, value):
-        """Deletes the CanvasFont object."""
-        try:
-            del self.components['font']
-        except KeyError:
-            print("There is no 'font' attribute for the Canvas class.")
-    # ----------------------------------------------------------------------- #
-    #                           COLORS PROPERTIES                             #
-    # ----------------------------------------------------------------------- #
-    @property
-    def colors(self):
-        """Returns the CanvasColors object."""
-        return self.components.get('colors')
-
-    @colors.setter
-    def colors(self, value):
-        """Sets the CanvasColors object."""
-        self.components['colors'] = value
-
-    @colors.deleter
-    def colors(self, value):
-        """Deletes the CanvasColors object."""
-        try:
-            del self.components['colors']
-        except KeyError:
-            print("There is no 'colors' attribute for the Canvas class.")
-    # ----------------------------------------------------------------------- #
-    #                           X_AXIS PROPERTIES                             #
-    # ----------------------------------------------------------------------- #
-    @property
-    def x_axis(self):
-        """Returns the CanvasXAxis object."""
-        return self.components.get('x_axis')
-
-    @x_axis.setter
-    def x_axis(self, value):
-        """Sets the CanvasXAxis object."""
-        self.components['x_axis'] = value
-
-    @x_axis.deleter
-    def x_axis(self, value):
-        """Deletes the CanvasXAxis object."""
-        try:
-            del self.components['x_axis']
-        except KeyError:
-            print("There is no 'x_axis' attribute for the Canvas class.")       
-
-    # ----------------------------------------------------------------------- #
-    #                           Y_AXIS PROPERTIES                             #
-    # ----------------------------------------------------------------------- #
-    @property
-    def y_axis(self):
-        """Returns the CanvasYAxis object."""
-        return self.components.get('y_axis')
-
-    @y_axis.setter
-    def y_axis(self, value):
-        """Sets the CanvasYAxis object."""
-        self.components['y_axis'] = value
-
-    @y_axis.deleter
-    def y_axis(self, value):
-        """Deletes the CanvasYAxis object."""
-        try:
-            del self.components['y_axis']
-        except KeyError:
-            print("There is no 'y_axis' attribute for the Canvas class.")     
-
-
-# --------------------------------------------------------------------------- #
-#                            CanvasFactory                                    #
-# --------------------------------------------------------------------------- #
-class CanvasFactory():    
-    """
-    The CanvasFactory class determines on the basis of the component parameter,
-    which component to create, instantiates the component and returns the 
-    Canvas* component to the user.
-
-    The factory currently supports the following Canvas components:
-
-        * Title             * Font
-        * Legend            * Colors
-        * Margins           * X Axis
-        * Size              * Y Axis
-
-    Canvas components are instantiated with default settings for the 
-    configurable options they contain. 
-
-    """
-    canvas_components = ['title', 'legend', 'margins', 'size', 'font', 'colors',
-                         'x_axis', 'y_axis']
-    def __init__(self):
-        pass
-
-    def make_component(self, component):
-        """Returns the component specified by the component str parameter."""
-
-        if component not in canvas_components:
-            raise ValueError("Component %s is not a valid component. Valid \
-                              Canvas components include %s." \
-                                  % (component, canvas_components))
-
-        dispatcher = {
-            'title' : CanvasTitle(),
-            'legend' : CanvasLegend(),
-            'margins' : CanvasMargins(),
-            'size' : CanvasSize(),
-            'font' : CanvasFont(),
-            'colors' : CanvasColors(),
-            'x_axis' : CanvasXAxis(),
-            'y_axis' : CanvasYAxis()
-        }
-        return dispatcher.get(component)
 
 # --------------------------------------------------------------------------- #
 #                            CanvasComponent                                  #
@@ -342,12 +213,21 @@ class CanvasComponent(ABC):
     """Abstract base class for Canvas component classes."""
 
     def __init__(self):
-        pass
+        self.__parameters = {}
 
     @abstractmethod
     def reset(self):
         """Resets configuration to default values."""
         pass
+
+    def print_parameters(self):
+        """Prints current parameters and values."""
+        classname = self.__class__.__name__
+        print('\nParameters for %s' % classname)
+        for k, v in self.__parameters.items():
+            message = '   ' + k + ' = ' + str(v)
+            print(message)
+
 
 # --------------------------------------------------------------------------- #
 #                              CanvasTitle                                    #
@@ -370,30 +250,34 @@ class CanvasTitle(CanvasComponent):
     }
 
     def __init__(self):
-        self.__title_text = ''
-        self.__title_font_family = ''   
-        self.__title_font_size = None
-        self.__title_font_color = ''
-        self.__title_xref = 'container'
-        self.__title_yref = 'container'
-        self.__title_x = 0.5
-        self.__title_y = 'auto'
-        self.__title_xanchor = 'auto'
-        self.__title_yanchor = 'auto'
-        self.__title_pad = {'t':0, 'b': 0, 'l':0}
+        self.__parameters = {
+            'title_text' : '',
+            'title_font_family' : '',   
+            'title_font_size' : None,
+            'title_font_color' : '',
+            'title_xref' : 'container',
+            'title_yref' : 'container',
+            'title_x' : 0.5,
+            'title_y' : 'auto',
+            'title_xanchor' : 'auto',
+            'title_yanchor' : 'auto',
+            'title_pad' : {'t':0, 'b': 0, 'l':0}
+        }
 
     def reset(self):
-        self.__title_text = self.DEFAULTS['text']
-        self.__title_font_family = self.DEFAULTS['font_family']
-        self.__title_font_size = self.DEFAULTS['font_size']
-        self.__title_font_color = self.DEFAULTS['font_color']
-        self.__title_xref = self.DEFAULTS['xref']
-        self.__title_yref = self.DEFAULTS['yref']
-        self.__title_x = self.DEFAULTS['x']
-        self.__title_y = self.DEFAULTS['y']
-        self.__title_xanchor = self.DEFAULTS['xanchor']
-        self.__title_yanchor = self.DEFAULTS['yanchor']
-        self.__title_pad = self.DEFAULTS['pad']
+        self.__parameters = {
+            'title_text' : self.DEFAULTS['text'],
+            'title_font_family' : self.DEFAULTS['font_family'],
+            'title_font_size' : self.DEFAULTS['font_size'],
+            'title_font_color' : self.DEFAULTS['font_color'],
+            'title_xref' : self.DEFAULTS['xref'],
+            'title_yref' : self.DEFAULTS['yref'],
+            'title_x' : self.DEFAULTS['x'],
+            'title_y' : self.DEFAULTS['y'],
+            'title_xanchor' : self.DEFAULTS['xanchor'],
+            'title_yanchor' : self.DEFAULTS['yanchor'],
+            'title_pad' : self.DEFAULTS['pad']
+        }
 
     # ----------------------------------------------------------------------- #
     #                        TITLE TEXT PROPERTIES                            #
@@ -401,12 +285,12 @@ class CanvasTitle(CanvasComponent):
     @property
     def title_text(self):
         """Returns the title_text attribute."""
-        return self.__title_text
+        return self.__parameters['title_text']
 
     @title_text.setter
     def title_text(self, value):
         """Sets the title_text attribute."""
-        self.__title_text = value
+        self.__parameters['title_text'] = value
 
     # ----------------------------------------------------------------------- #
     #                     TITLE FONT FAMILY PROPERTIES                        #
@@ -414,12 +298,12 @@ class CanvasTitle(CanvasComponent):
     @property
     def title_font_family(self):
         """Returns the title_font_family attribute."""
-        return self.__title_font_family
+        return self.__parameters['title_font_family']
 
     @title_font_family.setter
     def title_font_family(self, value):
         """Sets the title_font_family attribute."""
-        self.__title_font_family = value
+        self.__parameters['title_font_family'] = value
 
     # ----------------------------------------------------------------------- #
     #                        TITLE FONT SIZE PROPERTIES                       #
@@ -427,13 +311,13 @@ class CanvasTitle(CanvasComponent):
     @property
     def title_font_size(self):
         """Returns the title_font_size attribute."""
-        return self.__title_font_size
+        return self.__parameters['title_font_size']
 
     @title_font_size.setter
     def title_font_size(self, value):
         """Sets the title_font_size attribute."""
         if value >= 1:            
-            self.__title_font_size = value
+            self.__parameters['title_font_size'] = value
         else:
             raise ValueError("Font size must be greater or equal to 1.")
 
@@ -443,12 +327,12 @@ class CanvasTitle(CanvasComponent):
     @property
     def title_font_color(self):
         """Returns the title_font_color attribute."""
-        return self.__title_font_color
+        return self.__parameters['title_font_color']
 
     @title_font_color.setter
     def title_font_color(self, value):
         """Sets the title_font_color attribute."""
-        self.__title_font_color = value        
+        self.__parameters['title_font_color'] = value        
 
     # ----------------------------------------------------------------------- #
     #                        TITLE XREF PROPERTIES                            #
@@ -461,7 +345,7 @@ class CanvasTitle(CanvasComponent):
         width of the plot and 'paper', which refers to the plotting area 
         only.
         """
-        return self.__title_xref
+        return self.__parameters['title_xref']
 
     @title_xref.setter
     def title_xref(self, value):
@@ -476,7 +360,7 @@ class CanvasTitle(CanvasComponent):
         """
         valid_values = ['container', 'paper']
         if value in valid_values:
-            self.__title_xref = value                
+            self.__parameters['title_xref'] = value                
         else:
             raise ValueError("xref must be equal to 'container', or 'paper'. ")
 
@@ -491,7 +375,7 @@ class CanvasTitle(CanvasComponent):
         width of the plot and 'paper', which refers to the plotting area 
         only.
         """
-        return self.__title_yref
+        return self.__parameters['title_yref']
 
     @title_yref.setter
     def title_yref(self, value):
@@ -506,7 +390,7 @@ class CanvasTitle(CanvasComponent):
         """
         valid_values = ['container', 'paper']
         if value in valid_values:
-            self.__title_yref = value                
+            self.__parameters['title_yref'] = value                
         else:
             raise ValueError("yref must be equal to 'container', or 'paper'. ")        
 
@@ -521,7 +405,7 @@ class CanvasTitle(CanvasComponent):
         Specifies the x position with respect to 'xref' in normalized 
         coordinates from '0' (left) to '1' (right)
         """
-        return self.__title_x
+        return self.__parameters['title_x']
 
     @title_x.setter
     def title_x(self, value):
@@ -534,7 +418,7 @@ class CanvasTitle(CanvasComponent):
             coordinates from '0' (left) to '1' (right)
         """        
         if value >= 0 and value <= 1:
-            self.__title_x = value                
+            self.__parameters['title_x'] = value                
         else:
             raise ValueError("x must be between 0 and 1 inclusive.")               
 
@@ -550,7 +434,7 @@ class CanvasTitle(CanvasComponent):
 
         """
 
-        return self.__title_y
+        return self.__parameters['title_y']
 
     @title_y.setter
     def title_y(self, value):
@@ -565,7 +449,7 @@ class CanvasTitle(CanvasComponent):
         """ 
 
         if value >= 0 and value <= 1:
-            self.__title_y = value                
+            self.__parameters['title_y'] = value                
         else:
             raise ValueError("x must be between 0 and 1 inclusive.")                       
 
@@ -584,7 +468,7 @@ class CanvasTitle(CanvasComponent):
 
         """
 
-        return self.__title_xanchor
+        return self.__parameters['title_xanchor']
 
     @title_xanchor.setter
     def title_xanchor(self, value):
@@ -602,7 +486,7 @@ class CanvasTitle(CanvasComponent):
 
         valid_values = ['auto', 'left', 'center', 'right']        
         if value in valid_values:
-            self.__title_xanchor = value                
+            self.__parameters['title_xanchor'] = value                
         else:
             raise ValueError("xanchor must be 'auto', 'left', 'center',\
                              or 'right'.")             
@@ -622,7 +506,7 @@ class CanvasTitle(CanvasComponent):
 
         """
 
-        return self.__title_yanchor
+        return self.__parameters['title_yanchor']
 
     @title_yanchor.setter
     def title_yanchor(self, value):
@@ -641,7 +525,7 @@ class CanvasTitle(CanvasComponent):
 
         valid_values = ['auto', 'top', 'middle', 'bottom']        
         if value in valid_values:
-            self.__title_yanchor = value                
+            self.__parameters['title_yanchor'] = value                
         else:
             raise ValueError("yanchor must be 'auto', 'top', 'middle',\
                              or 'bottom'.")                                          
@@ -663,7 +547,7 @@ class CanvasTitle(CanvasComponent):
 
         """
 
-        return self.__title_pad
+        return self.__parameters['title_pad']
 
     @title_pad.setter
     def title_pad(self, value):
@@ -687,7 +571,7 @@ class CanvasTitle(CanvasComponent):
         if isinstance(value, dict):
             if all(item in valid_keys for item in value.keys()):
                 if all(isinstance(v,int) for v in value.values()):
-                    self.__title_pad = value
+                    self.__parameters['title_pad'] = value
                 else:
                     raise TypeError("Pad values must be integers")
             else:
@@ -720,38 +604,40 @@ class CanvasLegend(CanvasComponent):
     }
 
     def __init__(self):
-        self.__legend_show = True
-        self.__legend_bgcolor = ''   
-        self.__legend_bordercolor = '#444'
-        self.__legend_borderwidth = 0
-        self.__legend_font_family = ''
-        self.__legend_font_size = None
-        self.__legend_font_color = ''
-        self.__legend_orientation = 'v'
-        self.__legend_itemsizing = 'trace'
-        self.__legend_itemclick = 'toggle'
-        self.__legend_x = 1.02
-        self.__legend_y = 1
-        self.__legend_xanchor = 'left'
-        self.__legend_yanchor = 'auto'
-        self.__legend_valign = 'middle'
+        self.__parameters = {}
+        self.__parameters['legend_show'] = True
+        self.__parameters['legend_bgcolor'] = ''   
+        self.__parameters['legend_bordercolor'] = '#444'
+        self.__parameters['legend_borderwidth'] = 0
+        self.__parameters['legend_font_family'] = ''
+        self.__parameters['legend_font_size'] = None
+        self.__parameters['legend_font_color'] = ''
+        self.__parameters['legend_orientation'] = 'v'
+        self.__parameters['legend_itemsizing'] = 'trace'
+        self.__parameters['legend_itemclick'] = 'toggle'
+        self.__parameters['legend_x'] = 1.02
+        self.__parameters['legend_y'] = 1
+        self.__parameters['legend_xanchor'] = 'left'
+        self.__parameters['legend_yanchor'] = 'auto'
+        self.__parameters['legend_valign'] = 'middle'
 
     def reset(self):
-        self.__legend_show = self.DEFAULTS['show']
-        self.__legend_bgcolor = self.DEFAULTS['bgcolor']
-        self.__legend_bordercolor = self.DEFAULTS['bordercolor']
-        self.__legend_borderwidth = self.DEFAULTS['borderwidth']
-        self.__legend_font_family = self.DEFAULTS['font_family']
-        self.__legend_font_size = self.DEFAULTS['font_size']
-        self.__legend_font_color = self.DEFAULTS['font_color']
-        self.__legend_orientation = self.DEFAULTS['orientation']
-        self.__legend_itemsizing = self.DEFAULTS['itemsizing']
-        self.__legend_itemclick = self.DEFAULTS['itemclick']
-        self.__legend_x = self.DEFAULTS['x']
-        self.__legend_y = self.DEFAULTS['y']
-        self.__legend_xanchor = self.DEFAULTS['xanchor']
-        self.__legend_yanchor = self.DEFAULTS['yanchor']
-        self.__legend_valign = self.DEFAULTS['valign']
+        self.__parameters = {}
+        self.__parameters['legend_show'] = self.DEFAULTS['show']
+        self.__parameters['legend_bgcolor'] = self.DEFAULTS['bgcolor']
+        self.__parameters['legend_bordercolor'] = self.DEFAULTS['bordercolor']
+        self.__parameters['legend_borderwidth'] = self.DEFAULTS['borderwidth']
+        self.__parameters['legend_font_family'] = self.DEFAULTS['font_family']
+        self.__parameters['legend_font_size'] = self.DEFAULTS['font_size']
+        self.__parameters['legend_font_color'] = self.DEFAULTS['font_color']
+        self.__parameters['legend_orientation'] = self.DEFAULTS['orientation']
+        self.__parameters['legend_itemsizing'] = self.DEFAULTS['itemsizing']
+        self.__parameters['legend_itemclick'] = self.DEFAULTS['itemclick']
+        self.__parameters['legend_x'] = self.DEFAULTS['x']
+        self.__parameters['legend_y'] = self.DEFAULTS['y']
+        self.__parameters['legend_xanchor'] = self.DEFAULTS['xanchor']
+        self.__parameters['legend_yanchor'] = self.DEFAULTS['yanchor']
+        self.__parameters['legend_valign'] = self.DEFAULTS['valign']
 
     # ----------------------------------------------------------------------- #
     #                       LEGEND SHOW PROPERTIES                            #
@@ -759,12 +645,12 @@ class CanvasLegend(CanvasComponent):
     @property
     def legend_show(self):
         """Returns the legend_show attribute."""
-        return self.__legend_show
+        return self.__parameters['legend_show']
 
     @legend_show.setter
     def legend_show(self, value):
         """Sets the legend_show attribute."""
-        self.__legend_show = value        
+        self.__parameters['legend_show'] = value        
 
     # ----------------------------------------------------------------------- #
     #                     LEGEND BGCOLOR PROPERTIES                           #
@@ -772,12 +658,12 @@ class CanvasLegend(CanvasComponent):
     @property
     def legend_bgcolor(self):
         """Returns the legend_bgcolor attribute."""
-        return self.__legend_bgcolor
+        return self.__parameters['legend_bgcolor']
 
     @legend_bgcolor.setter
     def legend_bgcolor(self, value):
         """Sets the legend_bgcolor attribute."""
-        self.__legend_bgcolor = value           
+        self.__parameters['legend_bgcolor'] = value           
 
     # ----------------------------------------------------------------------- #
     #                     LEGEND BORDER COLOR PROPERTIES                      #
@@ -785,12 +671,12 @@ class CanvasLegend(CanvasComponent):
     @property
     def legend_bordercolor(self):
         """Returns the legend_bordercolor attribute."""
-        return self.__legend_bordercolor
+        return self.__parameters['legend_bordercolor']
 
     @legend_bordercolor.setter
     def legend_bordercolor(self, value):
         """Sets the legend_bordercolor attribute."""
-        self.__legend_bordercolor = value              
+        self.__parameters['legend_bordercolor'] = value              
 
     # ----------------------------------------------------------------------- #
     #                     LEGEND BORDER WIDTH PROPERTIES                      #
@@ -798,12 +684,12 @@ class CanvasLegend(CanvasComponent):
     @property
     def legend_borderwidth(self):
         """Returns the legend_borderwidth attribute."""
-        return self.__legend_borderwidth
+        return self.__parameters['legend_borderwidth']
 
     @legend_borderwidth.setter
     def legend_borderwidth(self, value):
         """Sets the legend_borderwidth attribute."""
-        self.__legend_borderwidth = value            
+        self.__parameters['legend_borderwidth'] = value            
 
     # ----------------------------------------------------------------------- #
     #                     LEGEND FONT FAMILY PROPERTIES                       #
@@ -811,12 +697,12 @@ class CanvasLegend(CanvasComponent):
     @property
     def legend_font_family(self):
         """Returns the legend_font_family attribute."""
-        return self.__legend_font_family
+        return self.__parameters['legend_font_family']
 
     @legend_font_family.setter
     def legend_font_family(self, value):
         """Sets the legend_font_family attribute."""
-        self.__legend_font_family = value
+        self.__parameters['legend_font_family'] = value
 
     # ----------------------------------------------------------------------- #
     #                        LEGEND FONT SIZE PROPERTIES                      #
@@ -824,13 +710,13 @@ class CanvasLegend(CanvasComponent):
     @property
     def legend_font_size(self):
         """Returns the legend_font_size attribute."""
-        return self.__legend_font_size
+        return self.__parameters['legend_font_size']
 
     @legend_font_size.setter
     def legend_font_size(self, value):
         """Sets the legend_font_size attribute."""
         if value >= 1:            
-            self.__legend_font_size = value
+            self.__parameters['legend_font_size'] = value
         else:
             raise ValueError("Font size must be greater or equal to 1.")
 
@@ -840,12 +726,12 @@ class CanvasLegend(CanvasComponent):
     @property
     def legend_font_color(self):
         """Returns the legend_font_color attribute."""
-        return self.__legend_font_color
+        return self.__parameters['legend_font_color']
 
     @legend_font_color.setter
     def legend_font_color(self, value):
         """Sets the legend_font_color attribute."""
-        self.__legend_font_color = value           
+        self.__parameters['legend_font_color'] = value           
 
     # ----------------------------------------------------------------------- #
     #                        LEGEND ORIENTATION PROPERTIES                    #
@@ -853,12 +739,12 @@ class CanvasLegend(CanvasComponent):
     @property
     def legend_orientation(self):
         """Returns the legend_orientation attribute."""
-        return self.__legend_orientation
+        return self.__parameters['legend_orientation']
 
     @legend_orientation.setter
     def legend_orientation(self, value):
         """Sets the legend_orientation attribute."""
-        self.__legend_orientation = value             
+        self.__parameters['legend_orientation'] = value             
 
     # ----------------------------------------------------------------------- #
     #                        LEGEND ITEMSIZING PROPERTIES                     #
@@ -866,14 +752,14 @@ class CanvasLegend(CanvasComponent):
     @property
     def legend_itemsizing(self):
         """Returns the legend_itemsizing attribute."""
-        return self.__legend_itemsizing
+        return self.__parameters['legend_itemsizing']
 
     @legend_itemsizing.setter
     def legend_itemsizing(self, value):
         """Sets the legend_itemsizing attribute."""
         valid_values = ['trace', 'constant']
         if value in valid_values:
-            self.__legend_itemsizing = value               
+            self.__parameters['legend_itemsizing'] = value               
         else:
             raise ValueError("legend_itemsizing must be 'trace' or 'constant'")
 
@@ -883,14 +769,14 @@ class CanvasLegend(CanvasComponent):
     @property
     def legend_itemclick(self):
         """Returns the legend_itemclick attribute."""
-        return self.__legend_itemclick
+        return self.__parameters['legend_itemclick']
 
     @legend_itemclick.setter
     def legend_itemclick(self, value):
         """Sets the legend_itemclick attribute."""
         valid_values = ['toggle', 'toggleothers', False]
         if value in valid_values:
-            self.__legend_itemclick = value                       
+            self.__parameters['legend_itemclick'] = value                       
         else:
             raise ValueError("legend_itemclick must be 'toggle', \
                 'toggleothers' or False")
@@ -905,7 +791,7 @@ class CanvasLegend(CanvasComponent):
         Specifies the x position with respect to 'xref' in normalized 
         coordinates from '0' (left) to '1' (right)
         """
-        return self.__legend_x
+        return self.__parameters['legend_x']
 
     @legend_x.setter
     def legend_x(self, value):
@@ -919,7 +805,7 @@ class CanvasLegend(CanvasComponent):
             "0" for horizontal legends.
         """        
         if value >= -2 and value <= 3:
-            self.__legend_x = value                
+            self.__parameters['legend_x'] = value                
         else:
             raise ValueError("x must be between -2 and 3 inclusive.")               
 
@@ -935,7 +821,7 @@ class CanvasLegend(CanvasComponent):
 
         """
 
-        return self.__legend_y
+        return self.__parameters['legend_y']
 
     @legend_y.setter
     def legend_y(self, value):
@@ -953,7 +839,7 @@ class CanvasLegend(CanvasComponent):
         """ 
 
         if value >= -2 and value <= 3:
-            self.__legend_y = value                
+            self.__parameters['legend_y'] = value                
         else:
             raise ValueError("x must be between -2 and 3 inclusive.")                       
 
@@ -973,7 +859,7 @@ class CanvasLegend(CanvasComponent):
 
         """
 
-        return self.__legend_xanchor
+        return self.__parameters['legend_xanchor']
 
     @legend_xanchor.setter
     def legend_xanchor(self, value):
@@ -992,7 +878,7 @@ class CanvasLegend(CanvasComponent):
 
         valid_values = ['auto', 'left', 'center', 'right']        
         if value in valid_values:
-            self.__legend_xanchor = value                
+            self.__parameters['legend_xanchor'] = value                
         else:
             raise ValueError("xanchor must be 'auto', 'left', 'center',\
                              or 'right'.")             
@@ -1012,7 +898,7 @@ class CanvasLegend(CanvasComponent):
 
         """
 
-        return self.__legend_yanchor
+        return self.__parameters['legend_yanchor']
 
     @legend_yanchor.setter
     def legend_yanchor(self, value):
@@ -1032,7 +918,7 @@ class CanvasLegend(CanvasComponent):
 
         valid_values = ['auto', 'top', 'middle', 'bottom']        
         if value in valid_values:
-            self.__legend_yanchor = value                
+            self.__parameters['legend_yanchor'] = value                
         else:
             raise ValueError("yanchor must be 'auto', 'top', 'middle',\
                              or 'bottom'.")               
@@ -1049,7 +935,7 @@ class CanvasLegend(CanvasComponent):
 
         """
 
-        return self.__legend_valign
+        return self.__parameters['legend_valign']
 
     @legend_valign.setter
     def legend_valign(self, value):
@@ -1065,7 +951,7 @@ class CanvasLegend(CanvasComponent):
 
         valid_values = ['top', 'middle', 'bottom']        
         if value in valid_values:
-            self.__legend_valign = value                
+            self.__parameters['legend_valign'] = value                
         else:
             raise ValueError("valign must be 'top', 'middle',\
                              or 'bottom'.")                                     
@@ -1084,16 +970,18 @@ class CanvasMargins(CanvasComponent):
     }
 
     def __init__(self):
-        self.__margins_left = 80
-        self.__margins_top = 100   
-        self.__margins_bottom = 80
-        self.__margins_pad = 0
+        self.__parameters = {}
+        self.__parameters['margins_left'] = 80
+        self.__parameters['margins_top'] = 100   
+        self.__parameters['margins_bottom'] = 80
+        self.__parameters['margins_pad'] = 0
 
     def reset(self):
-        self.__margins_left = self.DEFAULTS['left']
-        self.__margins_top = self.DEFAULTS['top']   
-        self.__margins_bottom = self.DEFAULTS['bottom']
-        self.__margins_pad = self.DEFAULTS['pad']
+        self.__parameters = {}
+        self.__parameters['margins_left'] = self.DEFAULTS['left']
+        self.__parameters['margins_top'] = self.DEFAULTS['top']   
+        self.__parameters['margins_bottom'] = self.DEFAULTS['bottom']
+        self.__parameters['margins_pad'] = self.DEFAULTS['pad']
         
 
     # ----------------------------------------------------------------------- #
@@ -1102,12 +990,12 @@ class CanvasMargins(CanvasComponent):
     @property
     def margins_left(self):
         """Returns the margins_left attribute."""
-        return self.__margins_left
+        return self.__parameters['margins_left']
 
     @margins_left.setter
     def margins_left(self, value):
         """Sets the margins_left attribute."""
-        self.__margins_left = value        
+        self.__parameters['margins_left'] = value        
 
     # ----------------------------------------------------------------------- #
     #                       MARGINS_TOP PROPERTIES                            #
@@ -1115,12 +1003,12 @@ class CanvasMargins(CanvasComponent):
     @property
     def margins_top(self):
         """Returns the margins_top attribute."""
-        return self.__margins_top
+        return self.__parameters['margins_top']
 
     @margins_top.setter
     def margins_top(self, value):
         """Sets the margins_top attribute."""
-        self.__margins_top = value        
+        self.__parameters['margins_top'] = value        
 
     # ----------------------------------------------------------------------- #
     #                       MARGINS_BOTTOM PROPERTIES                         #
@@ -1128,12 +1016,12 @@ class CanvasMargins(CanvasComponent):
     @property
     def margins_bottom(self):
         """Returns the margins_bottom attribute."""
-        return self.__margins_bottom
+        return self.__parameters['margins_bottom']
 
     @margins_bottom.setter
     def margins_bottom(self, value):
         """Sets the margins_bottom attribute."""
-        self.__margins_bottom = value             
+        self.__parameters['margins_bottom'] = value             
 
     # ----------------------------------------------------------------------- #
     #                       MARGINS_PAD PROPERTIES                            #
@@ -1141,15 +1029,15 @@ class CanvasMargins(CanvasComponent):
     @property
     def margins_pad(self):
         """Returns the margins_pad attribute."""
-        return self.__margins_pad
+        return self.__parameters['margins_pad']
 
     @margins_pad.setter
     def margins_pad(self, value):
         """Sets the margins_pad attribute."""
-        self.__margins_pad = value             
+        self.__parameters['margins_pad'] = value             
 
 # --------------------------------------------------------------------------- #
-#                              CanvasSize                                  #
+#                              CanvasSize                                     #
 # --------------------------------------------------------------------------- #    
 class CanvasSize(CanvasComponent):
     """Configuration options for plot size."""
@@ -1161,14 +1049,16 @@ class CanvasSize(CanvasComponent):
     }
 
     def __init__(self):
-        self.__size_autosize = True
-        self.__size_width = 700   
-        self.__size_height = 450
+        self.__parameters = {}
+        self.__parameters['size_autosize'] = True
+        self.__parameters['size_width'] = 700   
+        self.__parameters['size_height'] = 450
 
     def reset(self):
-        self.__size_autosize= self.DEFAULTS['autosize']
-        self.__size_width = self.DEFAULTS['width']   
-        self.__size_height = self.DEFAULTS['height']
+        self.__parameters = {}
+        self.__parameters['size_autosize'] = self.DEFAULTS['autosize']
+        self.__parameters['size_width'] = self.DEFAULTS['width']   
+        self.__parameters['size_height'] = self.DEFAULTS['height']
         
 
     # ----------------------------------------------------------------------- #
@@ -1183,7 +1073,7 @@ class CanvasSize(CanvasComponent):
 
         """
 
-        return self.__size_autosize
+        return self.__parameters['size_autosize']
 
     @size_autosize.setter
     def size_autosize(self, value):
@@ -1197,7 +1087,7 @@ class CanvasSize(CanvasComponent):
 
         """
 
-        self.__size_autosize = value        
+        self.__parameters['size_autosize'] = value        
 
     # ----------------------------------------------------------------------- #
     #                         WIDTH PROPERTIES                                #
@@ -1206,13 +1096,13 @@ class CanvasSize(CanvasComponent):
     def size_width(self):
         """Returns the size_width attribute."""
 
-        return self.__size_width
+        return self.__parameters['size_width']
 
     @size_width.setter
     def size_width(self, value):
         """Sets the size_width attribute."""
         if value >= 10:
-            self.__size_width = value        
+            self.__parameters['size_width'] = value        
         else:
             raise ValueError("Width must be a number greater or equal to 10.")
 
@@ -1223,13 +1113,13 @@ class CanvasSize(CanvasComponent):
     def size_height(self):
         """Returns the size_height attribute."""
 
-        return self.__size_height
+        return self.__parameters['size_height']
 
     @size_height.setter
     def size_height(self, value):
         """Sets the size_height attribute."""
         if value >= 10:
-            self.__size_height = value        
+            self.__parameters['size_height'] = value        
         else:
             raise ValueError("height must be a number greater or equal to 10.")        
 
@@ -1247,16 +1137,18 @@ class CanvasFont(CanvasComponent):
     }
 
     def __init__(self):
-        self.__font_family = ''
-        self.__font_size = 12   
-        self.__font_color = '#444'
-        self.__font_separators = '.,'
+        self.__parameters = {}
+        self.__parameters['font_family'] = ''
+        self.__parameters['font_size'] = 12   
+        self.__parameters['font_color'] = '#444'
+        self.__parameters['font_separators'] = '.,'
 
     def reset(self):
-        self.__font_family= self.DEFAULTS['family']
-        self.__font_size = self.DEFAULTS['size']   
-        self.__font_color = self.DEFAULTS['color']
-        self.__font_separators = self.DEFAULTS['separators']
+        self.__parameters = {}
+        self.__parameters['font_family'] = self.DEFAULTS['family']
+        self.__parameters['font_size'] = self.DEFAULTS['size']   
+        self.__parameters['font_color'] = self.DEFAULTS['color']
+        self.__parameters['font_separators'] = self.DEFAULTS['separators']
         
 
     # ----------------------------------------------------------------------- #
@@ -1265,12 +1157,12 @@ class CanvasFont(CanvasComponent):
     @property
     def font_family(self):
         """Returns the font_family attribute."""
-        return self.__font_family
+        return self.__parameters['font_family']
 
     @font_family.setter
     def font_family(self, value):
         """Sets the font_family attribute."""
-        self.__font_family = value              
+        self.__parameters['font_family'] = value              
 
     # ----------------------------------------------------------------------- #
     #                         FONT SIZE PROPERTIES                            #
@@ -1278,12 +1170,12 @@ class CanvasFont(CanvasComponent):
     @property
     def font_size(self):
         """Returns the font_size attribute."""
-        return self.__font_size
+        return self.__parameters['font_size']
 
     @font_size.setter
     def font_size(self, value):
         """Sets the font_size attribute."""
-        self.__font_size = value              
+        self.__parameters['font_size'] = value              
 
     # ----------------------------------------------------------------------- #
     #                         FONT COLOR PROPERTIES                           #
@@ -1291,12 +1183,12 @@ class CanvasFont(CanvasComponent):
     @property
     def font_color(self):
         """Returns the font_color attribute."""
-        return self.__font_color
+        return self.__parameters['font_color']
 
     @font_color.setter
     def font_color(self, value):
         """Sets the font_color attribute."""
-        self.__font_color = value                  
+        self.__parameters['font_color'] = value                  
 
     # ----------------------------------------------------------------------- #
     #                          SEPARATORS PROPERTIES                          #
@@ -1310,7 +1202,7 @@ class CanvasFont(CanvasComponent):
         separators. For example, ".," puts a '.' before decimals and a ',' 
         between thousands.
         """
-        return self.__font_separators
+        return self.__parameters['font_separators']
 
     @font_separators.setter
     def font_separators(self, value):
@@ -1326,225 +1218,28 @@ class CanvasFont(CanvasComponent):
 
         """
 
-        self.__font_separators = value            
+        self.__parameters['font_separators'] = value            
 
 # --------------------------------------------------------------------------- #
-#                              CanvasColors                                   #
-# --------------------------------------------------------------------------- #    
-class CanvasColors(CanvasComponent):
-    """Configuration options for plot colors."""
-
+#                          CanvasColorsBackground                             #
+# --------------------------------------------------------------------------- #       
+class CanvasColorsBackground(CanvasComponent):
+    """Configures background colors for paper and plot."""
     DEFAULTS = {
         'paper_bgcolor' : '#fff',
-        'plot_bgcolor' : '#fff',   
-        'colorscale_sequential' : [[0, rgb(220,220,220)], [0.2, rgb(245,195,157)], 
-                                  [0.4, rgb(245,160,105)], [1, rgb(178,10,28)], ],
-        'colorscale_sequentialminus' : [[0, rgb(5,10,172)], 
-                                        [0.35, rgb(40,60,190)], 
-                                        [0.5, rgb(70,100,245)], 
-                                        [0.6, rgb(90,120,245)], 
-                                        [0.7, rgb(106,137,247)], 
-                                        [1, rgb(220,220,220)], ],
-        'colorscale_diverging' : [[0, rgb(5,10,172)], [0.35, rgb(106,137,247)], 
-                                [0.5, rgb(190,190,190)], [0.6, rgb(220,170,132)], 
-                                [0.7, rgb(230,145,90)], [1, rgb(178,10,28)], ],
-        'colorway' : ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
-                      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'],
-
-        'coloraxis_cauto' : True,
-        'coloraxis_cmin' : None,
-        'coloraxis_cmax' : None,
-        'coloraxis_cmid' : None,
-        'coloraxis_colorscale' : [[0, 'rgb(0,0,255)'], [1, 'rgb(255,0,0)']],
-        'coloraxis_autocolorscale' : True,
-        'coloraxis_reversescale' : True,
-        'coloraxis_showscale' : True,
-        'coloraxis_colorbar_thicknessmode' : 'pixels',
-        'coloraxis_colorbar_thickness' : 30,
-        'coloraxis_colorbar_lenmode' : 'fraction',
-        'coloraxis_colorbar_len' : 1,
-        'coloraxis_colorbar_x' : 1.02,
-        'coloraxis_colorbar_y' : 0.5,
-        'coloraxis_colorbar_xanchor' : 'left',
-        'coloraxis_colorbar_yanchor' : 'middle',
-        'coloraxis_colorbar_xpad' : 10,
-        'coloraxis_colorbar_ypad' : 10,        
-        'coloraxis_colorbar_outlinecolor' : '#444',        
-        'coloraxis_colorbar_outlinewidth' : 1,        
-        'coloraxis_colorbar_bordercolor' : '#444',        
-        'coloraxis_colorbar_borderwidth' : 0,        
-        'coloraxis_colorbar_bgcolor' : "rgba(0,0,0,0)",
-        'coloraxis_colorbar_tickmode' : "array",
-        'coloraxis_colorbar_nticks' : 0,
-        'coloraxis_colorbar_tick0' : None,
-        'coloraxis_colorbar_dtick' : None,
-        'coloraxis_colorbar_tickvals' : None,
-        'coloraxis_colorbar_ticktext' : None,
-        'coloraxis_colorbar_ticks' : "",
-        'coloraxis_colorbar_ticklen' : 5,
-        'coloraxis_colorbar_tickwidth' : 1,
-        'coloraxis_colorbar_tickcolor' : '#444',
-        'coloraxis_colorbar_showticklabels' : True,
-        'coloraxis_colorbar_tickfont_family' : None,
-        'coloraxis_colorbar_tickfont_size' : 1,
-        'coloraxis_colorbar_tickfont_color' : None,
-        'coloraxis_colorbar_tickangle' : 'auto',
-        'coloraxis_colorbar_tickformatstops_enabled' : True,
-        'coloraxis_colorbar_tickformatstops_dtickrange' : None,
-        'coloraxis_colorbar_tickformatstops_value' : '',
-        'coloraxis_colorbar_tickformatstops_name' : None,
-        'coloraxis_colorbar_tickformatstops_templateitemname' : None,
-        'coloraxis_colorbar_tickprefix' : '',
-        'coloraxis_colorbar_showtickprefix' : 'all',
-        'coloraxis_colorbar_ticksuffix' : '',
-        'coloraxis_colorbar_showticksuffix' : 'all',
-        'coloraxis_colorbar_separatethousands' : True,
-        'coloraxis_colorbar_exponentialformat' : 'B',
-        'coloraxis_colorbar_showexponent' : 'all',
-        'coloraxis_colorbar_title_text' : "",
-        'coloraxis_colorbar_title_font_family' : None,
-        'coloraxis_colorbar_title_font_size' : 1,
-        'coloraxis_colorbar_title_font_color' : None,
-        'coloraxis_colorbar_title_side' : 'top'
-    }
+        'plot_bgcolor' : '#fff'
+    }      
 
     def __init__(self):
-        self.__paper_bgcolor = '#fff'
-        self.__plot_bgcolor = '#fff'   
-        self.__colorscale_sequential = [[0, 'rgb(220,220,220)'], [0.2, 'rgb(245,195,157)'], 
-                                  [0.4, 'rgb(245,160,105)'], [1, 'rgb(178,10,28)'], ]
-        self.__colorscale_sequentialminus = [[0, 'rgb(5,10,172)'], 
-                                        [0.35, 'rgb(40,60,190)'], 
-                                        [0.5, 'rgb(70,100,245)'], 
-                                        [0.6, 'rgb(90,120,245)'], 
-                                        [0.7, 'rgb(106,137,247)'], 
-                                        [1, 'rgb(220,220,220)'], ]
-        self.__colorscale_diverging = [[0, 'rgb(5,10,172)'], [0.35, 'rgb(106,137,247)'], 
-                                [0.5, 'rgb(190,190,190)'], [0.6, 'rgb(220,170,132)'], 
-                                [0.7, 'rgb(230,145,90)'], [1, 'rgb(178,10,28)'], ]
-        self.__colorway = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
-                      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
-
-        self.__coloraxis_cauto = True
-        self.__coloraxis_cmin = None
-        self.__coloraxis_cmax = None
-        self.__coloraxis_cmid = None
-        self.__coloraxis_colorscale = [[0, 'rgb(0,0,255)'], [1, 'rgb(255,0,0)']]
-        self.__coloraxis_autoscale = True
-        self.__coloraxis_reversescale = True
-        self.__coloraxis_showscale = True
-        self.__coloraxis_colorbar_thicknessmode = 'pixels'
-        self.__coloraxis_colorbar_thickness = 30
-        self.__coloraxis_colorbar_lenmode = 'fraction'
-        self.__coloraxis_colorbar_len = 1
-        self.__coloraxis_colorbar_x = 1.02
-        self.__coloraxis_colorbar_y = 0.5
-        self.__coloraxis_colorbar_xanchor = 'left'
-        self.__coloraxis_colorbar_yanchor = 'middle'
-        self.__coloraxis_colorbar_xpad = 10
-        self.__coloraxis_colorbar_ypad = 10        
-        self.__coloraxis_colorbar_outlinecolor = '#444'        
-        self.__coloraxis_colorbar_outlinewidth = 1        
-        self.__coloraxis_colorbar_bordercolor = '#444'        
-        self.__coloraxis_colorbar_borderwidth = 0        
-        self.__coloraxis_colorbar_bgcolor = "rgba(0000)"
-        self.__coloraxis_colorbar_tickmode = "array"
-        self.__coloraxis_colorbar_nticks = 0
-        self.__coloraxis_colorbar_tick0 = None
-        self.__coloraxis_colorbar_dtick = None
-        self.__coloraxis_colorbar_tickvals = None
-        self.__coloraxis_colorbar_ticktext = None
-        self.__coloraxis_colorbar_ticks = ""
-        self.__coloraxis_colorbar_ticklen = 5
-        self.__coloraxis_colorbar_tickwidth = 1
-        self.__coloraxis_colorbar_tickcolor = '#444'
-        self.__coloraxis_colorbar_showticklabels = True
-        self.__coloraxis_colorbar_tickfont_family = None
-        self.__coloraxis_colorbar_tickfont_size = 1
-        self.__coloraxis_colorbar_tickfont_color = None
-        self.__coloraxis_colorbar_tickangle = 'auto'
-        self.__coloraxis_colorbar_tickformatstops_enabled = True
-        self.__coloraxis_colorbar_tickformatstops_dtickrange = None
-        self.__coloraxis_colorbar_tickformatstops_value = None
-        self.__coloraxis_colorbar_tickformatstops_name = None
-        self.__coloraxis_colorbar_tickformatstops_templateitemname = None
-        self.__coloraxis_colorbar_tickprefix = ''
-        self.__coloraxis_colorbar_showtickprefix = 'all'
-        self.__coloraxis_colorbar_ticksuffix = ''
-        self.__coloraxis_colorbar_showticksuffix = 'all'
-        self.__coloraxis_colorbar_separatethousands = True
-        self.__coloraxis_colorbar_exponentialformat = 'B'
-        self.__coloraxis_colorbar_showexponent = 'all'
-        self.__coloraxis_colorbar_title_text = ""
-        self.__coloraxis_colorbar_title_font_family = None
-        self.__coloraxis_colorbar_title_font_size = 1
-        self.__coloraxis_colorbar_title_font_color = None
-        self.__coloraxis_colorbar_title_side = 'top'
-
+        self.__parameters = {}
+        self.__parameters['paper_bgcolor'] = '#fff'
+        self.__parameters['plot_bgcolor'] = '#fff'   
 
     def reset(self):
         """Sets parameters back to their defaults."""
-        self.__paper_bgcolor = self.DEFAULTS["paper_bgcolor"]
-        self.__plot_bgcolor = self.DEFAULTS["plot_bgcolor"]
-        self.__colorscale_sequential = self.DEFAULTS["colorscale_sequential"]
-        self.__colorscale_sequentialminus = self.DEFAULTS["colorscale_sequentialminus"]
-        self.__colorscale_diverging = self.DEFAULTS["colorscale_diverging"]
-        self.__colorway = self.DEFAULTS["colorway"]
-        self.__coloraxis_cauto = self.DEFAULTS["coloraxis_cauto"]
-        self.__coloraxis_cmin = self.DEFAULTS["coloraxis_cmin"]
-        self.__coloraxis_cmax = self.DEFAULTS["coloraxis_cmax"]
-        self.__coloraxis_cmid = self.DEFAULTS["coloraxis_cmid"]
-        self.__coloraxis_colorscale = self.DEFAULTS["coloraxis_colorscale"]
-        self.__coloraxis_autocolorscale = self.DEFAULTS["coloraxis_autocolorscale"]
-        self.__coloraxis_reversescale = self.DEFAULTS["coloraxis_reversescale"]
-        self.__coloraxis_showscale = self.DEFAULTS["coloraxis_showscale"]
-        self.__coloraxis_colorbar_thicknessmode = self.DEFAULTS["coloraxis_colorbar_thicknessmode"]
-        self.__coloraxis_colorbar_thickness = self.DEFAULTS["coloraxis_colorbar_thickness"]
-        self.__coloraxis_colorbar_lenmode = self.DEFAULTS["coloraxis_colorbar_lenmode"]
-        self.__coloraxis_colorbar_len = self.DEFAULTS["coloraxis_colorbar_len"]
-        self.__coloraxis_colorbar_x = self.DEFAULTS["coloraxis_colorbar_x"]
-        self.__coloraxis_colorbar_y = self.DEFAULTS["coloraxis_colorbar_y"]
-        self.__coloraxis_colorbar_xanchor = self.DEFAULTS["coloraxis_colorbar_xanchor"]
-        self.__coloraxis_colorbar_yanchor = self.DEFAULTS["coloraxis_colorbar_yanchor"]
-        self.__coloraxis_colorbar_xpad = self.DEFAULTS["coloraxis_colorbar_xpad"]
-        self.__coloraxis_colorbar_ypad = self.DEFAULTS["coloraxis_colorbar_ypad"]
-        self.__coloraxis_colorbar_outlinecolor = self.DEFAULTS["coloraxis_colorbar_outlinecolor"]
-        self.__coloraxis_colorbar_outlinewidth = self.DEFAULTS["coloraxis_colorbar_outlinewidth"]
-        self.__coloraxis_colorbar_bordercolor = self.DEFAULTS["coloraxis_colorbar_bordercolor"]
-        self.__coloraxis_colorbar_borderwidth = self.DEFAULTS["coloraxis_colorbar_borderwidth"]
-        self.__coloraxis_colorbar_bgcolor = self.DEFAULTS["coloraxis_colorbar_bgcolor"]
-        self.__coloraxis_colorbar_tickmode = self.DEFAULTS["coloraxis_colorbar_tickmode"]
-        self.__coloraxis_colorbar_nticks = self.DEFAULTS["coloraxis_colorbar_nticks"]
-        self.__coloraxis_colorbar_tick0 = self.DEFAULTS["coloraxis_colorbar_tick0"]
-        self.__coloraxis_colorbar_dtick = self.DEFAULTS["coloraxis_colorbar_dtick"]
-        self.__coloraxis_colorbar_tickvals = self.DEFAULTS["coloraxis_colorbar_tickvals"]
-        self.__coloraxis_colorbar_ticktext = self.DEFAULTS["coloraxis_colorbar_ticktext"]
-        self.__coloraxis_colorbar_ticks = self.DEFAULTS["coloraxis_colorbar_ticks"]
-        self.__coloraxis_colorbar_ticklen = self.DEFAULTS["coloraxis_colorbar_ticklen"]
-        self.__coloraxis_colorbar_tickwidth = self.DEFAULTS["coloraxis_colorbar_tickwidth"]
-        self.__coloraxis_colorbar_tickcolor = self.DEFAULTS["coloraxis_colorbar_tickcolor"]
-        self.__coloraxis_colorbar_showticklabels = self.DEFAULTS["coloraxis_colorbar_showticklabels"]
-        self.__coloraxis_colorbar_tickfont_family = self.DEFAULTS["coloraxis_colorbar_tickfont_family"]
-        self.__coloraxis_colorbar_tickfont_size = self.DEFAULTS["coloraxis_colorbar_tickfont_size"]
-        self.__coloraxis_colorbar_tickfont_color = self.DEFAULTS["coloraxis_colorbar_tickfont_color"]
-        self.__coloraxis_colorbar_tickangle = self.DEFAULTS["coloraxis_colorbar_tickangle"]
-        self.__coloraxis_colorbar_tickformatstops_enabled = self.DEFAULTS["coloraxis_colorbar_tickformatstops_enabled"]
-        self.__coloraxis_colorbar_tickformatstops_dtickrange = self.DEFAULTS["coloraxis_colorbar_tickformatstops_dtickrange"]
-        self.__coloraxis_colorbar_tickformatstops_value = self.DEFAULTS["coloraxis_colorbar_tickformatstops_value"]
-        self.__coloraxis_colorbar_tickformatstops_name = self.DEFAULTS["coloraxis_colorbar_tickformatstops_name"]
-        self.__coloraxis_colorbar_tickformatstops_templateitemname = self.DEFAULTS["coloraxis_colorbar_tickformatstops_templateitemname"]
-        self.__coloraxis_colorbar_tickprefix = self.DEFAULTS["coloraxis_colorbar_tickprefix"]
-        self.__coloraxis_colorbar_showtickprefix = self.DEFAULTS["coloraxis_colorbar_showtickprefix"]
-        self.__coloraxis_colorbar_ticksuffix = self.DEFAULTS["coloraxis_colorbar_ticksuffix"]
-        self.__coloraxis_colorbar_showticksuffix = self.DEFAULTS["coloraxis_colorbar_showticksuffix"]
-        self.__coloraxis_colorbar_separatethousands = self.DEFAULTS["coloraxis_colorbar_separatethousands"]
-        self.__coloraxis_colorbar_exponentialformat = self.DEFAULTS["coloraxis_colorbar_exponentialformat"]
-        self.__coloraxis_colorbar_showexponent = self.DEFAULTS["coloraxis_colorbar_showexponent"]
-        self.__coloraxis_colorbar_title_text = self.DEFAULTS["coloraxis_colorbar_title_text"]
-        self.__coloraxis_colorbar_title_font_family = self.DEFAULTS["coloraxis_colorbar_title_font_family"]
-        self.__coloraxis_colorbar_title_font_size = self.DEFAULTS["coloraxis_colorbar_title_font_size"]
-        self.__coloraxis_colorbar_title_font_color = self.DEFAULTS["coloraxis_colorbar_title_font_color"]
-        self.__coloraxis_colorbar_title_side = self.DEFAULTS["coloraxis_colorbar_title_side"]        
+        self.__parameters = {}
+        self.__parameters['paper_bgcolor'] = self.DEFAULTS["paper_bgcolor"]
+        self.__parameters['plot_bgcolor'] = self.DEFAULTS["plot_bgcolor"]      
 
     # ----------------------------------------------------------------------- #
     #                         PAPER BGCOLOR PROPERTIES                        #
@@ -1557,7 +1252,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__paper_bgcolor
+        return self.__parameters['paper_bgcolor']
 
     @paper_bgcolor.setter
     def paper_bgcolor(self, value):
@@ -1568,7 +1263,7 @@ class CanvasColors(CanvasComponent):
         value : str, Default = '#fff'
             Sets the color of paper where the graph is drawn.
         """
-        self.__paper_bgcolor = value                      
+        self.__parameters['paper_bgcolor'] = value                      
 
     # ----------------------------------------------------------------------- #
     #                         PLOT BGCOLOR PROPERTIES                         #
@@ -1581,7 +1276,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__plot_bgcolor
+        return self.__parameters['plot_bgcolor']
 
     @plot_bgcolor.setter
     def plot_bgcolor(self, value):
@@ -1592,9 +1287,60 @@ class CanvasColors(CanvasComponent):
         value : str, Default = '#fff'
             Sets the color of plot where the graph is drawn.
         """
-        self.__plot_bgcolor = value                 
+        self.__parameters['plot_bgcolor'] = value              
 
-    # ----------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
+#                              CanvasColorScale                               #
+# --------------------------------------------------------------------------- #    
+class CanvasColorScale(CanvasComponent):
+    """Configuration options for plot colors."""
+
+    DEFAULTS = {
+        'colorscale_sequential' : [[0, 'rgb(220,220,220)'], 
+                                   [0.2, 'rgb(245,195,157)'], 
+                                   [0.4, 'rgb(245,160,105)'], 
+                                   [1, 'rgb(178,10,28)'], ],
+        'colorscale_sequentialminus' : [[0, 'rgb(5,10,172)'], 
+                                        [0.35, 'rgb(40,60,190)'], 
+                                        [0.5, 'rgb(70,100,245)'], 
+                                        [0.6, 'rgb(90,120,245)'], 
+                                        [0.7, 'rgb(106,137,247)'], 
+                                        [1, 'rgb(220,220,220)'], ],
+        'colorscale_diverging' : [[0, 'rgb(5,10,172)'], 
+                                  [0.35, 'rgb(106,137,247)'], 
+                                  [0.5, 'rgb(190,190,190)'], 
+                                  [0.6, 'rgb(220,170,132)'], 
+                                  [0.7, 'rgb(230,145,90)'], 
+                                  [1, 'rgb(178,10,28)'], ],
+        'colorway' : ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
+                      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+    }
+
+    def __init__(self):
+        self.__parameters = {}
+        self.__parameters['colorscale_sequential'] = [[0, 'rgb(220,220,220)'], [0.2, 'rgb(245,195,157)'], 
+                                  [0.4, 'rgb(245,160,105)'], [1, 'rgb(178,10,28)'], ]
+        self.__parameters['colorscale_sequentialminus'] = [[0, 'rgb(5,10,172)'], 
+                                        [0.35, 'rgb(40,60,190)'], 
+                                        [0.5, 'rgb(70,100,245)'], 
+                                        [0.6, 'rgb(90,120,245)'], 
+                                        [0.7, 'rgb(106,137,247)'], 
+                                        [1, 'rgb(220,220,220)'], ]
+        self.__parameters['colorscale_diverging'] = [[0, 'rgb(5,10,172)'], [0.35, 'rgb(106,137,247)'], 
+                                [0.5, 'rgb(190,190,190)'], [0.6, 'rgb(220,170,132)'], 
+                                [0.7, 'rgb(230,145,90)'], [1, 'rgb(178,10,28)'], ]
+        self.__parameters['colorway'] = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
+                      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['colorscale_sequential'] = self.DEFAULTS["colorscale_sequential"]
+        self.__parameters['colorscale_sequentialminus'] = self.DEFAULTS["colorscale_sequentialminus"]
+        self.__parameters['colorscale_diverging'] = self.DEFAULTS["colorscale_diverging"]
+        self.__parameters['colorway'] = self.DEFAULTS["colorway"]
+
+# ----------------------------------------------------------------------- #
     #                   COLORSCALE SEQUENTIAL PROPERTIES                      #
     # ----------------------------------------------------------------------- #
     @property
@@ -1605,7 +1351,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__colorscale_sequential
+        return self.__parameters['colorscale_sequential']
 
     @colorscale_sequential.setter
     def colorscale_sequential(self, value):
@@ -1617,7 +1363,7 @@ class CanvasColors(CanvasComponent):
                                   [0.4, rgb(245,160,105)], [1, rgb(178,10,28)], ]
             Sets the default sequential colorscale for positive values. 
         """
-        self.__colorscale_sequential = value                   
+        self.__parameters['colorscale_sequential'] = value                   
 
     # ----------------------------------------------------------------------- #
     #                   COLORSCALE SEQUENTIALMINUS PROPERTIES                 #
@@ -1630,7 +1376,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__colorscale_sequentialminus
+        return self.__parameters['colorscale_sequentialminus']
 
     @colorscale_sequentialminus.setter
     def colorscale_sequentialminus(self, value):
@@ -1646,7 +1392,7 @@ class CanvasColors(CanvasComponent):
                                         [1, rgb(220,220,220)], ]
             Sets the default sequential colorscale for negative values. 
         """
-        self.__colorscale_sequentialminus = value                           
+        self.__parameters['colorscale_sequentialminus'] = value                           
 
     # ----------------------------------------------------------------------- #
     #                   COLORSCALE DIVERGING PROPERTIES                       #
@@ -1659,7 +1405,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__colorscale_diverging
+        return self.__parameters['colorscale_diverging']
 
     @colorscale_diverging.setter
     def colorscale_diverging(self, value):
@@ -1672,7 +1418,7 @@ class CanvasColors(CanvasComponent):
                                 [0.7, rgb(230,145,90)], [1, rgb(178,10,28)], ]
             Sets the default diverging colorscale.
         """
-        self.__colorscale_diverging = value                           
+        self.__parameters['colorscale_diverging'] = value                           
         
     # ----------------------------------------------------------------------- #
     #                         COLORWAY PROPERTIES                             #
@@ -1685,7 +1431,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__colorway
+        return self.__parameters['colorway']
 
     @colorway.setter
     def colorway(self, value):
@@ -1698,7 +1444,36 @@ class CanvasColors(CanvasComponent):
                                  '#bcbd22', '#17becf']
             Sets the default trace colors.
         """
-        self.__colorway = value                             
+        self.__parameters['colorway'] = value     
+
+# --------------------------------------------------------------------------- #
+#                            CanvasColorDomain                                #
+# --------------------------------------------------------------------------- #    
+class CanvasColorAxisDomain(CanvasComponent):
+    """Configuration options for plot colors."""
+
+    DEFAULTS = {
+        'coloraxis_cauto' : True,
+        'coloraxis_cmin' : None,
+        'coloraxis_cmax' : None,
+        'coloraxis_cmid' : None
+    }
+
+    def __init__(self):
+        self.__parameters = {}
+        self.__parameters['coloraxis_cauto'] = True
+        self.__parameters['coloraxis_cmin'] = None
+        self.__parameters['coloraxis_cmax'] = None
+        self.__parameters['coloraxis_cmid'] = None
+
+
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['coloraxis_cauto'] = self.DEFAULTS["coloraxis_cauto"]
+        self.__parameters['coloraxis_cmin'] = self.DEFAULTS["coloraxis_cmin"]
+        self.__parameters['coloraxis_cmax'] = self.DEFAULTS["coloraxis_cmax"]
+        self.__parameters['coloraxis_cmid'] = self.DEFAULTS["coloraxis_cmid"]
 
     # ----------------------------------------------------------------------- #
     #                     COLORAXIS CAUTO PROPERTIES                          #
@@ -1714,7 +1489,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_cauto
+        return self.__parameters['coloraxis_cauto']
 
     @coloraxis_cauto.setter
     def coloraxis_cauto(self, value):
@@ -1730,7 +1505,7 @@ class CanvasColors(CanvasComponent):
 
         """
 
-        self.__coloraxis_cauto = value         
+        self.__parameters['coloraxis_cauto'] = value         
 
     # ----------------------------------------------------------------------- #
     #                     COLORAXIS CMIN PROPERTIES                           #
@@ -1745,7 +1520,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_cmin
+        return self.__parameters['coloraxis_cmin']
 
     @coloraxis_cmin.setter
     def coloraxis_cmin(self, value):
@@ -1760,7 +1535,7 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_cmin = value                 
+        self.__parameters['coloraxis_cmin'] = value                 
 
     # ----------------------------------------------------------------------- #
     #                     COLORAXIS CMAX PROPERTIES                           #
@@ -1775,7 +1550,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_cmax
+        return self.__parameters['coloraxis_cmax']
 
     @coloraxis_cmax.setter
     def coloraxis_cmax(self, value):
@@ -1790,7 +1565,7 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_cmax = value            
+        self.__parameters['coloraxis_cmax'] = value            
         
     # ----------------------------------------------------------------------- #
     #                     COLORAXIS CMID PROPERTIES                           #
@@ -1806,7 +1581,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_cmid
+        return self.__parameters['coloraxis_cmid']
 
     @coloraxis_cmid.setter
     def coloraxis_cmid(self, value):
@@ -1822,8 +1597,36 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_cmid = value            
+        self.__parameters['coloraxis_cmid'] = value            
         
+# --------------------------------------------------------------------------- #
+#                         CanvasColorAxisScales                               #
+# --------------------------------------------------------------------------- #    
+class CanvasColorAxisScales(CanvasComponent):
+    """Configuration options for plot colors."""
+
+    DEFAULTS = {
+        'coloraxis_colorscale' : [[0, 'rgb(0,0,255)'], [1, 'rgb(255,0,0)']],
+        'coloraxis_autocolorscale' : True,
+        'coloraxis_reversescale' : True,
+        'coloraxis_showscale' : True
+    }
+
+    def __init__(self):
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorscale'] = [[0, 'rgb(0,0,255)'], [1, 'rgb(255,0,0)']]
+        self.__parameters['coloraxis_autoscale'] = True
+        self.__parameters['coloraxis_reversescale'] = True
+        self.__parameters['coloraxis_showscale'] = True
+
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorscale'] = self.DEFAULTS["coloraxis_colorscale"]
+        self.__parameters['coloraxis_autocolorscale'] = self.DEFAULTS["coloraxis_autocolorscale"]
+        self.__parameters['coloraxis_reversescale'] = self.DEFAULTS["coloraxis_reversescale"]
+        self.__parameters['coloraxis_showscale'] = self.DEFAULTS["coloraxis_showscale"]
+
     # ----------------------------------------------------------------------- #
     #                   COLORAXIS COLORSCALE PROPERTIES                       #
     # ----------------------------------------------------------------------- #
@@ -1836,7 +1639,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorscale
+        return self.__parameters['coloraxis_colorscale']
 
     @coloraxis_colorscale.setter
     def coloraxis_colorscale(self, value):
@@ -1850,7 +1653,7 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_colorscale = value                
+        self.__parameters['coloraxis_colorscale'] = value                
               
 
     # ----------------------------------------------------------------------- #
@@ -1868,7 +1671,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_autoscale
+        return self.__parameters['coloraxis_autoscale']
 
     @coloraxis_autoscale.setter
     def coloraxis_autoscale(self, value):
@@ -1885,7 +1688,7 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_autoscale = value                  
+        self.__parameters['coloraxis_autoscale'] = value                  
 
     # ----------------------------------------------------------------------- #
     #                   COLORAXIS REVERSESCALE PROPERTIES                     #
@@ -1900,7 +1703,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_reversescale
+        return self.__parameters['coloraxis_reversescale']
 
     @coloraxis_reversescale.setter
     def coloraxis_reversescale(self, value):
@@ -1915,7 +1718,7 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_reversescale = value              
+        self.__parameters['coloraxis_reversescale'] = value              
 
     # ----------------------------------------------------------------------- #
     #                   COLORAXIS SHOWSCALE PROPERTIES                        #
@@ -1928,7 +1731,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_showscale
+        return self.__parameters['coloraxis_showscale']
 
     @coloraxis_showscale.setter
     def coloraxis_showscale(self, value):
@@ -1941,7 +1744,39 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_showscale = value          
+        self.__parameters['coloraxis_showscale'] = value          
+
+
+# --------------------------------------------------------------------------- #
+#                              CanvasColors                                   #
+# --------------------------------------------------------------------------- #    
+class CanvasColorAxisBarStyle(CanvasComponent):
+    """Configuration options for plot colors."""
+
+    DEFAULTS = {
+        'coloraxis_colorbar_thicknessmode' : 'pixels',
+        'coloraxis_colorbar_thickness' : 30,
+        'coloraxis_colorbar_lenmode' : 'fraction',
+        'coloraxis_colorbar_len' : 1
+    }
+
+    def __init__(self):
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_thicknessmode'] = 'pixels'
+        self.__parameters['coloraxis_colorbar_thickness'] = 30
+        self.__parameters['coloraxis_colorbar_lenmode'] = 'fraction'
+        self.__parameters['coloraxis_colorbar_len'] = 1
+        self.__parameters['coloraxis_colorbar_bgcolor'] = "rgba(0000)"
+
+
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_thicknessmode'] = self.DEFAULTS["coloraxis_colorbar_thicknessmode"]
+        self.__parameters['coloraxis_colorbar_thickness'] = self.DEFAULTS["coloraxis_colorbar_thickness"]
+        self.__parameters['coloraxis_colorbar_lenmode'] = self.DEFAULTS["coloraxis_colorbar_lenmode"]
+        self.__parameters['coloraxis_colorbar_len'] = self.DEFAULTS["coloraxis_colorbar_len"]
+        self.__parameters['coloraxis_colorbar_bgcolor'] = self.DEFAULTS["coloraxis_colorbar_bgcolor"]
 
     # ----------------------------------------------------------------------- #
     #              COLORAXIS COLORBAR THICKNESSMODE PROPERTIES                #
@@ -1956,7 +1791,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_thicknessmode
+        return self.__parameters['coloraxis_colorbar_thicknessmode']
 
     @coloraxis_colorbar_thicknessmode.setter
     def coloraxis_colorbar_thicknessmode(self, value):
@@ -1972,7 +1807,7 @@ class CanvasColors(CanvasComponent):
         """
         valid_values = ['fraction', 'pixels']
         if value in valid_values:
-            self.__coloraxis_colorbar_thicknessmode = value              
+            self.__parameters['coloraxis_colorbar_thicknessmode'] = value              
         else:
             raise ValueError("colorbar_thicknessmode must be either 'fraction'\
                  or 'pixels'.")
@@ -1989,7 +1824,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_thickness
+        return self.__parameters['coloraxis_colorbar_thickness']
 
     @coloraxis_colorbar_thickness.setter
     def coloraxis_colorbar_thickness(self, value):
@@ -2004,7 +1839,7 @@ class CanvasColors(CanvasComponent):
         """
         
         if value > 0:
-            self.__coloraxis_colorbar_thickness = value              
+            self.__parameters['coloraxis_colorbar_thickness'] = value              
         else:
             raise ValueError("colorbar_thickness must be an integer >= 0.")
 
@@ -2021,7 +1856,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_lenmode
+        return self.__parameters['coloraxis_colorbar_lenmode']
 
     @coloraxis_colorbar_lenmode.setter
     def coloraxis_colorbar_lenmode(self, value):
@@ -2037,7 +1872,7 @@ class CanvasColors(CanvasComponent):
         """
         valid_values = ['fraction', 'pixels']
         if value in valid_values:
-            self.__coloraxis_colorbar_lenmode = value         
+            self.__parameters['coloraxis_colorbar_lenmode'] = value         
         else:
             raise ValueError("colorbar_lenmode must be either 'fraction', \
                 or 'pixels'.")
@@ -2055,7 +1890,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_len
+        return self.__parameters['coloraxis_colorbar_len']
 
     @coloraxis_colorbar_len.setter
     def coloraxis_colorbar_len(self, value):
@@ -2071,9 +1906,69 @@ class CanvasColors(CanvasComponent):
         """
         
         if value > 0:
-            self.__coloraxis_colorbar_len = value                        
+            self.__parameters['coloraxis_colorbar_len'] = value                        
         else:
             raise ValueError("colorbar_len must be an integer >= 0.")
+
+    # ----------------------------------------------------------------------- #
+    #                COLORAXIS COLORBAR BGCOLOR PROPERTIES                    #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_bgcolor(self):
+        """Returns the coloraxis_colorbar_bgcolor attribute.
+        
+        Sets the color of padded area.
+        
+        """
+        
+        return self.__parameters['coloraxis_colorbar_bgcolor']
+
+    @coloraxis_colorbar_bgcolor.setter
+    def coloraxis_colorbar_bgcolor(self, value):
+        """Sets the coloraxis_colorbar_bgcolor attribute.
+        
+        Parameters
+        ----------
+        value : color. Default = "rgba(0,0,0,0)"
+            Sets the color of padded area.
+
+        """
+        
+        self.__parameters['coloraxis_colorbar_bgcolor'] = value               
+
+# --------------------------------------------------------------------------- #
+#                        CanvasColorAxisBarPosition                           #
+# --------------------------------------------------------------------------- #    
+class CanvasColorAxisBarPosition(CanvasComponent):
+    """Configuration options for plot colors."""
+
+    DEFAULTS = {
+        'coloraxis_colorbar_x' : 1.02,
+        'coloraxis_colorbar_y' : 0.5,
+        'coloraxis_colorbar_xanchor' : 'left',
+        'coloraxis_colorbar_yanchor' : 'middle',
+        'coloraxis_colorbar_xpad' : 10,
+        'coloraxis_colorbar_ypad' : 10
+    }
+
+    def __init__(self):
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_x'] = 1.02
+        self.__parameters['coloraxis_colorbar_y'] = 0.5
+        self.__parameters['coloraxis_colorbar_xanchor'] = 'left'
+        self.__parameters['coloraxis_colorbar_yanchor'] = 'middle'
+        self.__parameters['coloraxis_colorbar_xpad'] = 10
+        self.__parameters['coloraxis_colorbar_ypad'] = 10        
+
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_x'] = self.DEFAULTS["coloraxis_colorbar_x"]
+        self.__parameters['coloraxis_colorbar_y'] = self.DEFAULTS["coloraxis_colorbar_y"]
+        self.__parameters['coloraxis_colorbar_xanchor'] = self.DEFAULTS["coloraxis_colorbar_xanchor"]
+        self.__parameters['coloraxis_colorbar_yanchor'] = self.DEFAULTS["coloraxis_colorbar_yanchor"]
+        self.__parameters['coloraxis_colorbar_xpad'] = self.DEFAULTS["coloraxis_colorbar_xpad"]
+        self.__parameters['coloraxis_colorbar_ypad'] = self.DEFAULTS["coloraxis_colorbar_ypad"]
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR X PROPERTIES                          #
@@ -2086,7 +1981,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_x
+        return self.__parameters['coloraxis_colorbar_x']
 
     @coloraxis_colorbar_x.setter
     def coloraxis_colorbar_x(self, value):
@@ -2100,7 +1995,7 @@ class CanvasColors(CanvasComponent):
         """
         
         if value >= -2 and value <= 3:
-            self.__coloraxis_colorbar_x = value                 
+            self.__parameters['coloraxis_colorbar_x'] = value                 
         else:
             raise ValueError("colorbar_x must be an integer between \
                 -2 and 3 inclusive.")
@@ -2116,7 +2011,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_y
+        return self.__parameters['coloraxis_colorbar_y']
 
     @coloraxis_colorbar_y.setter
     def coloraxis_colorbar_y(self, value):
@@ -2129,7 +2024,7 @@ class CanvasColors(CanvasComponent):
 
         """
         if value >= -2 and value <= 3:
-            self.__coloraxis_colorbar_y = value                 
+            self.__parameters['coloraxis_colorbar_y'] = value                 
         else:
             raise ValueError("colorbar_y must be an integer between \
                 -2 and 3 inclusive.")
@@ -2147,7 +2042,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_xanchor
+        return self.__parameters['coloraxis_colorbar_xanchor']
 
     @coloraxis_colorbar_xanchor.setter
     def coloraxis_colorbar_xanchor(self, value):
@@ -2163,7 +2058,7 @@ class CanvasColors(CanvasComponent):
         """
         valid_values = ['left', 'center', 'right']
         if value in valid_values:            
-            self.__coloraxis_colorbar_xanchor = value          
+            self.__parameters['coloraxis_colorbar_xanchor'] = value          
         else:
             raise ValueError("colorbar_xanchor must be either 'left', \
                 'center', or 'right'.")
@@ -2180,7 +2075,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_yanchor
+        return self.__parameters['coloraxis_colorbar_yanchor']
 
     @coloraxis_colorbar_yanchor.setter
     def coloraxis_colorbar_yanchor(self, value):
@@ -2196,7 +2091,7 @@ class CanvasColors(CanvasComponent):
         """
         valid_values = ['middle', 'bottom', 'top']
         if value in valid_values:            
-            self.__coloraxis_colorbar_yanchor = value               
+            self.__parameters['coloraxis_colorbar_yanchor'] = value               
         else:
             raise ValueError("colorbar_yanchor must be either 'middle', \
                             'bottom', or 'top'.")
@@ -2212,7 +2107,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_xpad
+        return self.__parameters['coloraxis_colorbar_xpad']
 
     @coloraxis_colorbar_xpad.setter
     def coloraxis_colorbar_xpad(self, value):
@@ -2226,7 +2121,7 @@ class CanvasColors(CanvasComponent):
         """
         
         if value >= 0:
-            self.__coloraxis_colorbar_xpad = value                    
+            self.__parameters['coloraxis_colorbar_xpad'] = value                    
         else:
             raise ValueError("colorbar_xpad must be an integer >= 0.")    
 
@@ -2241,7 +2136,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_ypad
+        return self.__parameters['coloraxis_colorbar_ypad']
 
     @coloraxis_colorbar_ypad.setter
     def coloraxis_colorbar_ypad(self, value):
@@ -2254,10 +2149,39 @@ class CanvasColors(CanvasComponent):
 
         """
         if value >= 0:
-            self.__coloraxis_colorbar_ypad = value                    
+            self.__parameters['coloraxis_colorbar_ypad'] = value                    
         else:
             raise ValueError("colorbar_ypad must be an integer >= 0.")        
-        self.__coloraxis_colorbar_ypad = value                    
+        self.__parameters['coloraxis_colorbar_ypad'] = value                    
+
+
+# --------------------------------------------------------------------------- #
+#                              CanvasColors                                   #
+# --------------------------------------------------------------------------- #    
+class CanvasColorAxisBarBoundary(CanvasComponent):
+    """Configuration options for plot colors."""
+
+    DEFAULTS = {
+        'coloraxis_colorbar_outlinecolor' : '#444',        
+        'coloraxis_colorbar_outlinewidth' : 1,        
+        'coloraxis_colorbar_bordercolor' : '#444',        
+        'coloraxis_colorbar_borderwidth' : 0
+    }
+
+    def __init__(self):
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_outlinecolor'] = '#444'        
+        self.__parameters['coloraxis_colorbar_outlinewidth'] = 1        
+        self.__parameters['coloraxis_colorbar_bordercolor'] = '#444'        
+        self.__parameters['coloraxis_colorbar_borderwidth'] = 0        
+
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_outlinecolor'] = self.DEFAULTS["coloraxis_colorbar_outlinecolor"]
+        self.__parameters['coloraxis_colorbar_outlinewidth'] = self.DEFAULTS["coloraxis_colorbar_outlinewidth"]
+        self.__parameters['coloraxis_colorbar_bordercolor'] = self.DEFAULTS["coloraxis_colorbar_bordercolor"]
+        self.__parameters['coloraxis_colorbar_borderwidth'] = self.DEFAULTS["coloraxis_colorbar_borderwidth"]
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR OUTLINECOLOR PROPERTIES               #
@@ -2270,7 +2194,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_outlinecolor
+        return self.__parameters['coloraxis_colorbar_outlinecolor']
 
     @coloraxis_colorbar_outlinecolor.setter
     def coloraxis_colorbar_outlinecolor(self, value):
@@ -2283,7 +2207,7 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_colorbar_outlinecolor = value       
+        self.__parameters['coloraxis_colorbar_outlinecolor'] = value       
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR OUTLINEWIDTH PROPERTIES               #
@@ -2296,7 +2220,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_outlinewidth
+        return self.__parameters['coloraxis_colorbar_outlinewidth']
 
     @coloraxis_colorbar_outlinewidth.setter
     def coloraxis_colorbar_outlinewidth(self, value):
@@ -2310,7 +2234,7 @@ class CanvasColors(CanvasComponent):
         """
         
         if value >= 0:
-            self.__coloraxis_colorbar_outlinewidth = value                    
+            self.__parameters['coloraxis_colorbar_outlinewidth'] = value                    
         else:
             raise ValueError("colorbar_outlinewidth must be an integer >= 0.")            
 
@@ -2325,7 +2249,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_bordercolor
+        return self.__parameters['coloraxis_colorbar_bordercolor']
 
     @coloraxis_colorbar_bordercolor.setter
     def coloraxis_colorbar_bordercolor(self, value):
@@ -2338,7 +2262,7 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_colorbar_bordercolor = value            
+        self.__parameters['coloraxis_colorbar_bordercolor'] = value            
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR BORDERWIDTH PROPERTIES                #
@@ -2351,7 +2275,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_borderwidth
+        return self.__parameters['coloraxis_colorbar_borderwidth']
 
     @coloraxis_colorbar_borderwidth.setter
     def coloraxis_colorbar_borderwidth(self, value):
@@ -2365,35 +2289,48 @@ class CanvasColors(CanvasComponent):
         """
 
         if value >= 0:
-            self.__coloraxis_colorbar_borderwidth = value                    
+            self.__parameters['coloraxis_colorbar_borderwidth'] = value                    
         else:
             raise ValueError("colorbar_borderwidth must be an integer >= 0.")
 
-    # ----------------------------------------------------------------------- #
-    #                COLORAXIS COLORBAR BGCOLOR PROPERTIES                    #
-    # ----------------------------------------------------------------------- #
-    @property
-    def coloraxis_colorbar_bgcolor(self):
-        """Returns the coloraxis_colorbar_bgcolor attribute.
-        
-        Sets the color of padded area.
-        
-        """
-        
-        return self.__coloraxis_colorbar_bgcolor
+# --------------------------------------------------------------------------- #
+#                        CanvasColorAxisBarTicks                              #
+# --------------------------------------------------------------------------- #    
 
-    @coloraxis_colorbar_bgcolor.setter
-    def coloraxis_colorbar_bgcolor(self, value):
-        """Sets the coloraxis_colorbar_bgcolor attribute.
-        
-        Parameters
-        ----------
-        value : color. Default = "rgba(0,0,0,0)"
-            Sets the color of padded area.
+class CanvasColorAxisBarTicks(CanvasComponent):
+    """Configuration options for plot colors."""
 
-        """
-        
-        self.__coloraxis_colorbar_bgcolor = value                            
+    DEFAULTS = {
+        'coloraxis_colorbar_tickmode' : "array",
+        'coloraxis_colorbar_nticks' : 0,
+        'coloraxis_colorbar_tick0' : None,
+        'coloraxis_colorbar_dtick' : None,
+        'coloraxis_colorbar_tickvals' : None,
+        'coloraxis_colorbar_ticktext' : None,
+        'coloraxis_colorbar_ticks' : ""
+        }
+
+    def __init__(self):
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_tickmode'] = "array"
+        self.__parameters['coloraxis_colorbar_nticks'] = 0
+        self.__parameters['coloraxis_colorbar_tick0'] = None
+        self.__parameters['coloraxis_colorbar_dtick'] = None
+        self.__parameters['coloraxis_colorbar_tickvals'] = None
+        self.__parameters['coloraxis_colorbar_ticktext'] = None
+        self.__parameters['coloraxis_colorbar_ticks'] = ""
+
+
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_tickmode'] = self.DEFAULTS["coloraxis_colorbar_tickmode"]
+        self.__parameters['coloraxis_colorbar_nticks'] = self.DEFAULTS["coloraxis_colorbar_nticks"]
+        self.__parameters['coloraxis_colorbar_tick0'] = self.DEFAULTS["coloraxis_colorbar_tick0"]
+        self.__parameters['coloraxis_colorbar_dtick'] = self.DEFAULTS["coloraxis_colorbar_dtick"]
+        self.__parameters['coloraxis_colorbar_tickvals'] = self.DEFAULTS["coloraxis_colorbar_tickvals"]
+        self.__parameters['coloraxis_colorbar_ticktext'] = self.DEFAULTS["coloraxis_colorbar_ticktext"]
+        self.__parameters['coloraxis_colorbar_ticks'] = self.DEFAULTS["coloraxis_colorbar_ticks"]
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR TICKMODE PROPERTIES                   #
@@ -2412,7 +2349,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_tickmode
+        return self.__parameters['coloraxis_colorbar_tickmode']
 
     @coloraxis_colorbar_tickmode.setter
     def coloraxis_colorbar_tickmode(self, value):
@@ -2432,7 +2369,7 @@ class CanvasColors(CanvasComponent):
         """
         valid_values = ['auto', 'linear', 'array']
         if value in valid_values:
-            self.__coloraxis_colorbar_tickmode = value        
+            self.__parameters['coloraxis_colorbar_tickmode'] = value        
         else:
             raise ValueError("'colorbar_tickmode' must be either \
                 'auto', 'linear', oir 'array'.")
@@ -2451,7 +2388,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_nticks
+        return self.__parameters['coloraxis_colorbar_nticks']
 
     @coloraxis_colorbar_nticks.setter
     def coloraxis_colorbar_nticks(self, value):
@@ -2468,7 +2405,7 @@ class CanvasColors(CanvasComponent):
         """
         
         if value >= 0:
-            self.__coloraxis_colorbar_nticks = value                      
+            self.__parameters['coloraxis_colorbar_nticks'] = value                      
         else:
             raise ValueError("colorbar_nticks must be a number >= 0.")
 
@@ -2490,7 +2427,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_tick0
+        return self.__parameters['coloraxis_colorbar_tick0']
 
     @coloraxis_colorbar_tick0.setter
     def coloraxis_colorbar_tick0(self, value):
@@ -2510,7 +2447,7 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_colorbar_tick0 = value           
+        self.__parameters['coloraxis_colorbar_tick0'] = value           
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR DTICK PROPERTIES                      #
@@ -2528,7 +2465,7 @@ class CanvasColors(CanvasComponent):
         1, 5, 25, 125, 625, 3125, ... set dtick to log_10(5), or 0.69897000433.
         "log" has several special values; "L<f>", where `f` is a positive 
         number, gives ticks linearly spaced in value (but not position). 
-        For example `tick0` = 0.1, `dtick` = "L0.5" will put ticks at 0.1, 
+        For example `tick0`'] = 0.1, `dtick`'] = "L0.5" will put ticks at 0.1, 
         0.6, 1.1, 1.6 etc. To show powers of 10 plus small digits between, 
         use "D1" (all digits) or "D2" (only 2 and 5). `tick0` is ignored for 
         "D1" and "D2". If the axis `type` is "date", then you must convert 
@@ -2541,7 +2478,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_dtick
+        return self.__parameters['coloraxis_colorbar_dtick']
 
     @coloraxis_colorbar_dtick.setter
     def coloraxis_colorbar_dtick(self, value):
@@ -2559,7 +2496,7 @@ class CanvasColors(CanvasComponent):
             1, 5, 25, 125, 625, 3125, ... set dtick to log_10(5), or 0.69897000433.
             "log" has several special values; "L<f>", where `f` is a positive 
             number, gives ticks linearly spaced in value (but not position). 
-            For example `tick0` = 0.1, `dtick` = "L0.5" will put ticks at 0.1, 
+            For example `tick0`'] = 0.1, `dtick`'] = "L0.5" will put ticks at 0.1, 
             0.6, 1.1, 1.6 etc. To show powers of 10 plus small digits between, 
             use "D1" (all digits) or "D2" (only 2 and 5). `tick0` is ignored for 
             "D1" and "D2". If the axis `type` is "date", then you must convert 
@@ -2572,7 +2509,7 @@ class CanvasColors(CanvasComponent):
 
         """
         
-        self.__coloraxis_colorbar_dtick = value                             
+        self.__parameters['coloraxis_colorbar_dtick'] = value                             
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR TICKVALS PROPERTIES                   #
@@ -2586,7 +2523,7 @@ class CanvasColors(CanvasComponent):
         
         """
         
-        return self.__coloraxis_colorbar_tickvals
+        return self.__parameters['coloraxis_colorbar_tickvals']
 
     @coloraxis_colorbar_tickvals.setter
     def coloraxis_colorbar_tickvals(self, value):
@@ -2600,7 +2537,7 @@ class CanvasColors(CanvasComponent):
 
         """
 
-        self.__coloraxis_colorbar_tickvals = value         
+        self.__parameters['coloraxis_colorbar_tickvals'] = value         
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR TICKTEXT PROPERTIES                   #
@@ -2615,7 +2552,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_ticktext
+        return self.__parameters['coloraxis_colorbar_ticktext']
 
     @coloraxis_colorbar_ticktext.setter
     def coloraxis_colorbar_ticktext(self, value):
@@ -2630,7 +2567,7 @@ class CanvasColors(CanvasComponent):
 
         """                
 
-        self.__coloraxis_colorbar_ticktext = value         
+        self.__parameters['coloraxis_colorbar_ticktext'] = value         
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR TICKS PROPERTIES                      #
@@ -2645,7 +2582,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_ticks
+        return self.__parameters['coloraxis_colorbar_ticks']
 
     @coloraxis_colorbar_ticks.setter
     def coloraxis_colorbar_ticks(self, value):
@@ -2662,10 +2599,58 @@ class CanvasColors(CanvasComponent):
 
         valid_values = ['outside', 'inside', ""]
         if value in valid_values:
-            self.__coloraxis_colorbar_ticks = value                 
+            self.__parameters['coloraxis_colorbar_ticks'] = value                 
         else:
             raise ValueError("colorbar_ticks must be either 'outside', \
                 'inside', or ''.")
+
+
+# --------------------------------------------------------------------------- #
+#                     CanvasColorAxisBarTickStyle                             #
+# --------------------------------------------------------------------------- #    
+class CanvasColorAxisBarTickStyle(CanvasComponent):
+    """Configuration options for plot colors."""
+
+    DEFAULTS = {
+        'coloraxis_colorbar_ticklen' : 5,
+        'coloraxis_colorbar_tickwidth' : 1,
+        'coloraxis_colorbar_tickcolor' : '#444',
+        'coloraxis_colorbar_showticklabels' : True,
+        'coloraxis_colorbar_tickangle' : 'auto',
+        'coloraxis_colorbar_tickprefix' : '',
+        'coloraxis_colorbar_showtickprefix' : 'all',
+        'coloraxis_colorbar_ticksuffix' : '',
+        'coloraxis_colorbar_showticksuffix' : 'all'
+
+    }
+
+    def __init__(self):
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_ticklen'] = 5
+        self.__parameters['coloraxis_colorbar_tickwidth'] = 1
+        self.__parameters['coloraxis_colorbar_tickcolor'] = '#444'
+        self.__parameters['coloraxis_colorbar_showticklabels'] = True
+        self.__parameters['coloraxis_colorbar_tickangle'] = 'auto'
+        self.__parameters['coloraxis_colorbar_tickprefix'] = ''
+        self.__parameters['coloraxis_colorbar_showtickprefix'] = 'all'
+        self.__parameters['coloraxis_colorbar_ticksuffix'] = ''
+        self.__parameters['coloraxis_colorbar_showticksuffix'] = 'all'
+
+
+
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_ticklen'] = self.DEFAULTS["coloraxis_colorbar_ticklen"]
+        self.__parameters['coloraxis_colorbar_tickwidth'] = self.DEFAULTS["coloraxis_colorbar_tickwidth"]
+        self.__parameters['coloraxis_colorbar_tickcolor'] = self.DEFAULTS["coloraxis_colorbar_tickcolor"]
+        self.__parameters['coloraxis_colorbar_showticklabels'] = self.DEFAULTS["coloraxis_colorbar_showticklabels"]
+        self.__parameters['coloraxis_colorbar_tickangle'] = self.DEFAULTS["coloraxis_colorbar_tickangle"]
+        self.__parameters['coloraxis_colorbar_tickprefix'] = self.DEFAULTS["coloraxis_colorbar_tickprefix"]
+        self.__parameters['coloraxis_colorbar_showtickprefix'] = self.DEFAULTS["coloraxis_colorbar_showtickprefix"]
+        self.__parameters['coloraxis_colorbar_ticksuffix'] = self.DEFAULTS["coloraxis_colorbar_ticksuffix"]
+        self.__parameters['coloraxis_colorbar_showticksuffix'] = self.DEFAULTS["coloraxis_colorbar_showticksuffix"]
+
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR TICKLEN PROPERTIES                    #
@@ -2678,7 +2663,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_ticklen
+        return self.__parameters['coloraxis_colorbar_ticklen']
 
     @coloraxis_colorbar_ticklen.setter
     def coloraxis_colorbar_ticklen(self, value):
@@ -2692,7 +2677,7 @@ class CanvasColors(CanvasComponent):
         """                
         
         if value >= 0:
-            self.__coloraxis_colorbar_ticklen = value                 
+            self.__parameters['coloraxis_colorbar_ticklen'] = value                 
         else:
             raise ValueError("colorbar_ticklen must be an integer >= 0.")                
 
@@ -2707,7 +2692,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_tickwidth
+        return self.__parameters['coloraxis_colorbar_tickwidth']
 
     @coloraxis_colorbar_tickwidth.setter
     def coloraxis_colorbar_tickwidth(self, value):
@@ -2721,7 +2706,7 @@ class CanvasColors(CanvasComponent):
         """                
         
         if value >= 0:
-            self.__coloraxis_colorbar_tickwidth = value                 
+            self.__parameters['coloraxis_colorbar_tickwidth'] = value                 
         else:
             raise ValueError("colorbar_tickwidth must be an integer >= 0.")                      
 
@@ -2736,7 +2721,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_tickcolor
+        return self.__parameters['coloraxis_colorbar_tickcolor']
 
     @coloraxis_colorbar_tickcolor.setter
     def coloraxis_colorbar_tickcolor(self, value):
@@ -2749,7 +2734,7 @@ class CanvasColors(CanvasComponent):
 
         """                
         
-        self.__coloraxis_colorbar_tickcolor = value                 
+        self.__parameters['coloraxis_colorbar_tickcolor'] = value                 
         
 
     # ----------------------------------------------------------------------- #
@@ -2763,7 +2748,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_showticklabels
+        return self.__parameters['coloraxis_colorbar_showticklabels']
 
     @coloraxis_colorbar_showticklabels.setter
     def coloraxis_colorbar_showticklabels(self, value):
@@ -2776,85 +2761,7 @@ class CanvasColors(CanvasComponent):
 
         """                
         
-        self.__coloraxis_colorbar_showticklabels = value                    
-
-    # ----------------------------------------------------------------------- #
-    #              COLORAXIS COLORBAR TICKFONT_FAMILY PROPERTIES              #
-    # ----------------------------------------------------------------------- #
-    @property
-    def coloraxis_colorbar_tickfont_family(self):
-        """Returns the coloraxis_colorbar_tickfont_family attribute.
-        
-        Sets tick font family.
-        
-        """
-
-        return self.__coloraxis_colorbar_tickfont_family
-
-    @coloraxis_colorbar_tickfont_family.setter
-    def coloraxis_colorbar_tickfont_family(self, value):
-        """Sets the coloraxis_colorbar_tickfont_family attribute.
-        
-        Parameters
-        ----------
-        value : str
-            Sets tick font family.
-
-        """                
-        
-        self.__coloraxis_colorbar_tickfont_family = value                    
-
-    # ----------------------------------------------------------------------- #
-    #              COLORAXIS COLORBAR TICKFONT_SIZE PROPERTIES                #
-    # ----------------------------------------------------------------------- #
-    @property
-    def coloraxis_colorbar_tickfont_size(self):
-        """Returns the coloraxis_colorbar_tickfont_size attribute.
-        
-        Sets tick font size.
-        
-        """
-
-        return self.__coloraxis_colorbar_tickfont_size
-
-    @coloraxis_colorbar_tickfont_size.setter
-    def coloraxis_colorbar_tickfont_size(self, value):
-        """Sets the coloraxis_colorbar_tickfont_size attribute.
-        
-        Parameters
-        ----------
-        value : str
-            Sets tick font size.
-
-        """                
-        
-        self.__coloraxis_colorbar_tickfont_size = value     
-        
-    # ----------------------------------------------------------------------- #
-    #              COLORAXIS COLORBAR TICKFONT_COLOR PROPERTIES               #
-    # ----------------------------------------------------------------------- #
-    @property
-    def coloraxis_colorbar_tickfont_color(self):
-        """Returns the coloraxis_colorbar_tickfont_color attribute.
-        
-        Sets tick font color.
-        
-        """
-
-        return self.__coloraxis_colorbar_tickfont_color
-
-    @coloraxis_colorbar_tickfont_color.setter
-    def coloraxis_colorbar_tickfont_color(self, value):
-        """Sets the coloraxis_colorbar_tickfont_color attribute.
-        
-        Parameters
-        ----------
-        value : str
-            Sets tick font color.
-
-        """                
-        
-        self.__coloraxis_colorbar_tickfont_color = value     
+        self.__parameters['coloraxis_colorbar_showticklabels'] = value                 
 
     # ----------------------------------------------------------------------- #
     #              COLORAXIS COLORBAR TICKANGLE PROPERTIES                    #
@@ -2867,7 +2774,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_tickangle
+        return self.__parameters['coloraxis_colorbar_tickangle']
 
     @coloraxis_colorbar_tickangle.setter
     def coloraxis_colorbar_tickangle(self, value):
@@ -2880,149 +2787,7 @@ class CanvasColors(CanvasComponent):
 
         """                
         
-        self.__coloraxis_colorbar_tickangle = value            
-                
-
-    # ----------------------------------------------------------------------- #
-    #        COLORAXIS COLORBAR TICKFORMATSTOPS_ENABLED PROPERTIES            #
-    # ----------------------------------------------------------------------- #
-    @property
-    def coloraxis_colorbar_tickformatstops_enabled(self):
-        """Returns the coloraxis_colorbar_tickformatstops_enabled attribute.
-        
-        Determines whether or not this stop is used. If `False`, this stop 
-        is ignored even within its `dtickrange`.
-        
-        """
-
-        return self.__coloraxis_colorbar_tickformatstops_enabled
-
-    @coloraxis_colorbar_tickformatstops_enabled.setter
-    def coloraxis_colorbar_tickformatstops_enabled(self, value):
-        """Sets the coloraxis_colorbar_tickformatstops_enabled attribute.
-        
-        Parameters
-        ----------
-        value : bool
-            Determines whether or not this stop is used. If `False`, this stop 
-            is ignored even within its `dtickrange`.
-
-        """                
-        
-        self.__coloraxis_colorbar_tickformatstops_enabled = value                            
-
-    # ----------------------------------------------------------------------- #
-    #        COLORAXIS COLORBAR TICKFORMATSTOPS_DTICKRANGE PROPERTIES         #
-    # ----------------------------------------------------------------------- #
-    @property
-    def coloraxis_colorbar_tickformatstops_dtickrange(self):
-        """Returns the coloraxis_colorbar_tickformatstops_dtickrange attribute.
-        
-        range ["min", "max"], where "min", "max" - dtick values 
-        which describe some zoom level, it is possible to omit 
-        "min" or "max" value by passing "null"
-
-        
-        """
-
-        return self.__coloraxis_colorbar_tickformatstops_dtickrange
-
-    @coloraxis_colorbar_tickformatstops_dtickrange.setter
-    def coloraxis_colorbar_tickformatstops_dtickrange(self, value):
-        """Sets the coloraxis_colorbar_tickformatstops_dtickrange attribute.
-        
-        Parameters
-        ----------
-        value : list
-            range ["min", "max"], where "min", "max" - dtick values 
-            which describe some zoom level, it is possible to omit 
-            "min" or "max" value by passing "null"
-
-        """                
-        
-        self.__coloraxis_colorbar_tickformatstops_dtickrange = value           
-
-    # ----------------------------------------------------------------------- #
-    #        COLORAXIS COLORBAR TICKFORMATSTOPS_VALUE PROPERTIES              #
-    # ----------------------------------------------------------------------- #
-    @property
-    def coloraxis_colorbar_tickformatstops_value(self):
-        """Returns the coloraxis_colorbar_tickformatstops_value attribute.
-        
-         dtickformat for described zoom level, the same as "tickformat"
-        
-        """
-
-        return self.__coloraxis_colorbar_tickformatstops_value
-
-    @coloraxis_colorbar_tickformatstops_value.setter
-    def coloraxis_colorbar_tickformatstops_value(self, value):
-        """Sets the coloraxis_colorbar_tickformatstops_value attribute.
-        
-        Parameters
-        ----------
-        value : str
-             dtickformat for described zoom level, the same as "tickformat"
-
-        """                
-        
-        self.__coloraxis_colorbar_tickformatstops_value = value                   
-
-    # ----------------------------------------------------------------------- #
-    #        COLORAXIS COLORBAR TICKFORMATSTOPS_NAME PROPERTIES               #
-    # ----------------------------------------------------------------------- #
-    @property
-    def coloraxis_colorbar_tickformatstops_name(self):
-        """Returns the coloraxis_colorbar_tickformatstops_name attribute.
-        
-        When used in a template, named items are created in the 
-        output figure in addition to any items the figure already 
-        has in this array. 
-        
-        """
-
-        return self.__coloraxis_colorbar_tickformatstops_name
-
-    @coloraxis_colorbar_tickformatstops_name.setter
-    def coloraxis_colorbar_tickformatstops_name(self, value):
-        """Sets the coloraxis_colorbar_tickformatstops_name attribute.
-        
-        Parameters
-        ----------
-        value : str
-             When used in a template, named items are created in the 
-             output figure in addition to any items the figure already 
-             has in this array. 
-
-        """                
-        
-        self.__coloraxis_colorbar_tickformatstops_name = value                  
-
-    # ----------------------------------------------------------------------- #
-    #    COLORAXIS COLORBAR TICKFORMATSTOPS_TEMPLATEITEMNAME PROPERTIES       #
-    # ----------------------------------------------------------------------- #
-    @property
-    def coloraxis_colorbar_tickformatstops_templateitemname(self):
-        """Returns the coloraxis_colorbar_tickformatstops_templateitemname attribute.
-        
-        Used to refer to a named item in this array in the template. 
-        
-        """
-
-        return self.__coloraxis_colorbar_tickformatstops_templateitemname
-
-    @coloraxis_colorbar_tickformatstops_templateitemname.setter
-    def coloraxis_colorbar_tickformatstops_templateitemname(self, value):
-        """Sets the coloraxis_colorbar_tickformatstops_templateitemname attribute.
-        
-        Parameters
-        ----------
-        value : str
-             Used to refer to a named item in this array in the template. 
-
-        """                
-        
-        self.__coloraxis_colorbar_tickformatstops_templateitemname = value          
+        self.__parameters['coloraxis_colorbar_tickangle'] = value             
 
     # ----------------------------------------------------------------------- #
     #               COLORAXIS COLORBAR TICKPREFIX PROPERTIES                  #
@@ -3035,7 +2800,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_tickprefix
+        return self.__parameters['coloraxis_colorbar_tickprefix']
 
     @coloraxis_colorbar_tickprefix.setter
     def coloraxis_colorbar_tickprefix(self, value):
@@ -3048,7 +2813,7 @@ class CanvasColors(CanvasComponent):
 
         """                
         
-        self.__coloraxis_colorbar_tickprefix = value            
+        self.__parameters['coloraxis_colorbar_tickprefix'] = value            
 
     # ----------------------------------------------------------------------- #
     #               COLORAXIS COLORBAR SHOWTICKPREFIX PROPERTIES              #
@@ -3064,7 +2829,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_showtickprefix
+        return self.__parameters['coloraxis_colorbar_showtickprefix']
 
     @coloraxis_colorbar_showtickprefix.setter
     def coloraxis_colorbar_showtickprefix(self, value):
@@ -3081,7 +2846,7 @@ class CanvasColors(CanvasComponent):
         """                
         valid_values = ['all', 'first', 'last', 'none']
         if value in valid_values:
-            self.__coloraxis_colorbar_showtickprefix = value
+            self.__parameters['coloraxis_colorbar_showtickprefix'] = value
         else:
             raise ValueError("showtickprefix must be 'all', 'first', 'last'\
                 , or 'none'.")
@@ -3097,7 +2862,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_ticksuffix
+        return self.__parameters['coloraxis_colorbar_ticksuffix']
 
     @coloraxis_colorbar_ticksuffix.setter
     def coloraxis_colorbar_ticksuffix(self, value):
@@ -3110,7 +2875,7 @@ class CanvasColors(CanvasComponent):
 
         """                
         
-        self.__coloraxis_colorbar_ticksuffix = value                   
+        self.__parameters['coloraxis_colorbar_ticksuffix'] = value                   
 
     # ----------------------------------------------------------------------- #
     #               COLORAXIS COLORBAR SHOWTICKSUFFIX PROPERTIES              #
@@ -3126,7 +2891,7 @@ class CanvasColors(CanvasComponent):
         
         """
 
-        return self.__coloraxis_colorbar_showticksuffix
+        return self.__parameters['coloraxis_colorbar_showticksuffix']
 
     @coloraxis_colorbar_showticksuffix.setter
     def coloraxis_colorbar_showticksuffix(self, value):
@@ -3143,10 +2908,140 @@ class CanvasColors(CanvasComponent):
         """                
         valid_values = ['all', 'first', 'last', 'none']
         if value in valid_values:
-            self.__coloraxis_colorbar_showticksuffix = value
+            self.__parameters['coloraxis_colorbar_showticksuffix'] = value
         else:
             raise ValueError("showticksuffix must be 'all', 'first', 'last'\
                 , or 'none'.")
+
+
+# --------------------------------------------------------------------------- #
+#                      CanvasColorAxisBarTickFont                             #
+# --------------------------------------------------------------------------- #    
+class CanvasColorAxisBarTickFont(CanvasComponent):
+    """Configuration options for plot colors."""
+
+    DEFAULTS = {
+        'coloraxis_colorbar_tickfont_family' : None,
+        'coloraxis_colorbar_tickfont_size' : 1,
+        'coloraxis_colorbar_tickfont_color' : None
+        }
+
+    def __init__(self):
+        self.__parameters['coloraxis_colorbar_tickfont_family'] = None
+        self.__parameters['coloraxis_colorbar_tickfont_size'] = 1
+        self.__parameters['coloraxis_colorbar_tickfont_color'] = None
+        
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_tickfont_family'] = self.DEFAULTS["coloraxis_colorbar_tickfont_family"]
+        self.__parameters['coloraxis_colorbar_tickfont_size'] = self.DEFAULTS["coloraxis_colorbar_tickfont_size"]
+        self.__parameters['coloraxis_colorbar_tickfont_color'] = self.DEFAULTS["coloraxis_colorbar_tickfont_color"]
+
+    # ----------------------------------------------------------------------- #
+    #              COLORAXIS COLORBAR TICKFONT_FAMILY PROPERTIES              #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_tickfont_family(self):
+        """Returns the coloraxis_colorbar_tickfont_family attribute.
+        
+        Sets tick font family.
+        
+        """
+
+        return self.__parameters['coloraxis_colorbar_tickfont_family']
+
+    @coloraxis_colorbar_tickfont_family.setter
+    def coloraxis_colorbar_tickfont_family(self, value):
+        """Sets the coloraxis_colorbar_tickfont_family attribute.
+        
+        Parameters
+        ----------
+        value : str
+            Sets tick font family.
+
+        """                
+        
+        self.__parameters['coloraxis_colorbar_tickfont_family'] = value                    
+
+    # ----------------------------------------------------------------------- #
+    #              COLORAXIS COLORBAR TICKFONT_SIZE PROPERTIES                #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_tickfont_size(self):
+        """Returns the coloraxis_colorbar_tickfont_size attribute.
+        
+        Sets tick font size.
+        
+        """
+
+        return self.__parameters['coloraxis_colorbar_tickfont_size']
+
+    @coloraxis_colorbar_tickfont_size.setter
+    def coloraxis_colorbar_tickfont_size(self, value):
+        """Sets the coloraxis_colorbar_tickfont_size attribute.
+        
+        Parameters
+        ----------
+        value : str
+            Sets tick font size.
+
+        """                
+        
+        self.__parameters['coloraxis_colorbar_tickfont_size'] = value     
+        
+    # ----------------------------------------------------------------------- #
+    #              COLORAXIS COLORBAR TICKFONT_COLOR PROPERTIES               #
+    # ----------------------------------------------------------------------- #
+    @property
+    def coloraxis_colorbar_tickfont_color(self):
+        """Returns the coloraxis_colorbar_tickfont_color attribute.
+        
+        Sets tick font color.
+        
+        """
+
+        return self.__parameters['coloraxis_colorbar_tickfont_color']
+
+    @coloraxis_colorbar_tickfont_color.setter
+    def coloraxis_colorbar_tickfont_color(self, value):
+        """Sets the coloraxis_colorbar_tickfont_color attribute.
+        
+        Parameters
+        ----------
+        value : str
+            Sets tick font color.
+
+        """                
+        
+        self.__parameters['coloraxis_colorbar_tickfont_color'] = value     
+
+
+
+# --------------------------------------------------------------------------- #
+#                          CanvasColorAxisBarNumbers                          #
+# --------------------------------------------------------------------------- #    
+class CanvasColorAxisBarNumbers(CanvasComponent):
+    """Configuration options for plot colors."""
+
+    DEFAULTS = {
+        'coloraxis_colorbar_separatethousands' : True,
+        'coloraxis_colorbar_exponentformat' : 'B',
+        'coloraxis_colorbar_showexponent' : 'all'
+    }
+
+    def __init__(self):
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_separatethousands'] = True
+        self.__parameters['coloraxis_colorbar_exponentformat'] = 'B'
+        self.__parameters['coloraxis_colorbar_showexponent'] = 'all'
+
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_separatethousands'] = self.DEFAULTS["coloraxis_colorbar_separatethousands"]
+        self.__parameters['coloraxis_colorbar_exponentformat'] = self.DEFAULTS["coloraxis_colorbar_exponentformat"]
+        self.__parameters['coloraxis_colorbar_showexponent'] = self.DEFAULTS["coloraxis_colorbar_showexponent"]
 
     # ----------------------------------------------------------------------- #
     #            COLORAXIS COLORBAR SEPARATETHOUSANDS PROPERTIES              #
@@ -3159,7 +3054,7 @@ class CanvasColors(CanvasComponent):
 
         """
 
-        return self.__coloraxis_colorbar_separatethousands
+        return self.__parameters['coloraxis_colorbar_separatethousands']
 
     @coloraxis_colorbar_separatethousands.setter
     def coloraxis_colorbar_separatethousands(self, value):
@@ -3172,7 +3067,7 @@ class CanvasColors(CanvasComponent):
 
         """                
 
-        self.__coloraxis_colorbar_separatethousands = value
+        self.__parameters['coloraxis_colorbar_separatethousands'] = value
 
     # ----------------------------------------------------------------------- #
     #            COLORAXIS COLORBAR EXPONENTIALFORMAT PROPERTIES              #
@@ -3185,7 +3080,7 @@ class CanvasColors(CanvasComponent):
 
         """
 
-        return self.__coloraxis_colorbar_exponentialformat
+        return self.__parameters['coloraxis_colorbar_exponentialformat']
 
     @coloraxis_colorbar_exponentialformat.setter
     def coloraxis_colorbar_exponentialformat(self, value):
@@ -3200,7 +3095,7 @@ class CanvasColors(CanvasComponent):
 
         valid_values = ["none", "e", "E", "power", "SI", "B"]
         if value in valid_values:            
-            self.__coloraxis_colorbar_exponentialformat = value        
+            self.__parameters['coloraxis_colorbar_exponentialformat'] = value        
         else:
             raise ValueError("exponentialformat must be 'none', 'e'\
                 , 'E', 'power', 'SI', or 'B'.")
@@ -3219,7 +3114,7 @@ class CanvasColors(CanvasComponent):
 
         """
 
-        return self.__coloraxis_colorbar_showexponent
+        return self.__parameters['coloraxis_colorbar_showexponent']
 
     @coloraxis_colorbar_showexponent.setter
     def coloraxis_colorbar_showexponent(self, value):
@@ -3237,11 +3132,43 @@ class CanvasColors(CanvasComponent):
 
         valid_values = ['all', 'first', 'last', 'none']
         if value in valid_values:            
-            self.__coloraxis_colorbar_showexponent = value        
+            self.__parameters['coloraxis_colorbar_showexponent'] = value        
         else:
             raise ValueError("showexponent must be 'all', 'first', 'last'\
                 , 'none'.")                
-          
+
+# --------------------------------------------------------------------------- #
+#                         CanvasColorAxisBarTitle                             #
+# --------------------------------------------------------------------------- #    
+class CanvasColorAxisBarTitle(CanvasComponent):
+    """Configuration options for plot colors."""
+
+    DEFAULTS = {
+        'coloraxis_colorbar_title_text' : "",
+        'coloraxis_colorbar_title_font_family' : None,
+        'coloraxis_colorbar_title_font_size' : 1,
+        'coloraxis_colorbar_title_font_color' : None,
+        'coloraxis_colorbar_title_side' : 'top'
+    }
+
+    def __init__(self):
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_title_text'] = ""
+        self.__parameters['coloraxis_colorbar_title_font_family'] = None
+        self.__parameters['coloraxis_colorbar_title_font_size'] = 1
+        self.__parameters['coloraxis_colorbar_title_font_color'] = None
+        self.__parameters['coloraxis_colorbar_title_side'] = 'top'
+
+
+    def reset(self):
+        """Sets parameters back to their defaults."""
+        self.__parameters = {}
+        self.__parameters['coloraxis_colorbar_title_text'] = self.DEFAULTS["coloraxis_colorbar_title_text"]
+        self.__parameters['coloraxis_colorbar_title_font_family'] = self.DEFAULTS["coloraxis_colorbar_title_font_family"]
+        self.__parameters['coloraxis_colorbar_title_font_size'] = self.DEFAULTS["coloraxis_colorbar_title_font_size"]
+        self.__parameters['coloraxis_colorbar_title_font_color'] = self.DEFAULTS["coloraxis_colorbar_title_font_color"]
+        self.__parameters['coloraxis_colorbar_title_side'] = self.DEFAULTS["coloraxis_colorbar_title_side"]        
+
     # ----------------------------------------------------------------------- #
     #            COLORAXIS COLORBAR TITLE_TEXT PROPERTIES                     #
     # ----------------------------------------------------------------------- #
@@ -3253,7 +3180,7 @@ class CanvasColors(CanvasComponent):
 
         """
 
-        return self.__coloraxis_colorbar_title_text
+        return self.__parameters['coloraxis_colorbar_title_text']
 
     @coloraxis_colorbar_title_text.setter
     def coloraxis_colorbar_title_text(self, value):
@@ -3266,7 +3193,7 @@ class CanvasColors(CanvasComponent):
 
         """                
 
-        self.__coloraxis_colorbar_title_text = value        
+        self.__parameters['coloraxis_colorbar_title_text'] = value        
           
     # ----------------------------------------------------------------------- #
     #            COLORAXIS COLORBAR TITLE_FONT_FAMILY PROPERTIES              #
@@ -3279,7 +3206,7 @@ class CanvasColors(CanvasComponent):
 
         """
 
-        return self.__coloraxis_colorbar_title_font_family
+        return self.__parameters['coloraxis_colorbar_title_font_family']
 
     @coloraxis_colorbar_title_font_family.setter
     def coloraxis_colorbar_title_font_family(self, value):
@@ -3292,7 +3219,7 @@ class CanvasColors(CanvasComponent):
 
         """                
 
-        self.__coloraxis_colorbar_title_font_family = value                  
+        self.__parameters['coloraxis_colorbar_title_font_family'] = value                  
 
     # ----------------------------------------------------------------------- #
     #            COLORAXIS COLORBAR TITLE_FONT_SIZE PROPERTIES                #
@@ -3305,7 +3232,7 @@ class CanvasColors(CanvasComponent):
 
         """
 
-        return self.__coloraxis_colorbar_title_font_size
+        return self.__parameters['coloraxis_colorbar_title_font_size']
 
     @coloraxis_colorbar_title_font_size.setter
     def coloraxis_colorbar_title_font_size(self, value):
@@ -3318,7 +3245,7 @@ class CanvasColors(CanvasComponent):
 
         """                
 
-        self.__coloraxis_colorbar_title_font_size = value          
+        self.__parameters['coloraxis_colorbar_title_font_size'] = value          
 
     # ----------------------------------------------------------------------- #
     #            COLORAXIS COLORBAR TITLE_FONT_COLOR PROPERTIES               #
@@ -3331,7 +3258,7 @@ class CanvasColors(CanvasComponent):
 
         """
 
-        return self.__coloraxis_colorbar_title_font_color
+        return self.__parameters['coloraxis_colorbar_title_font_color']
 
     @coloraxis_colorbar_title_font_color.setter
     def coloraxis_colorbar_title_font_color(self, value):
@@ -3344,7 +3271,7 @@ class CanvasColors(CanvasComponent):
 
         """                
 
-        self.__coloraxis_colorbar_title_font_color = value              
+        self.__parameters['coloraxis_colorbar_title_font_color'] = value              
 
     # ----------------------------------------------------------------------- #
     #            COLORAXIS COLORBAR TITLE_SIDE PROPERTIES                     #
@@ -3358,7 +3285,7 @@ class CanvasColors(CanvasComponent):
 
         """
 
-        return self.__coloraxis_colorbar_title_side
+        return self.__parameters['coloraxis_colorbar_title_side']
 
     @coloraxis_colorbar_title_side.setter
     def coloraxis_colorbar_title_side(self, value):
@@ -3368,13 +3295,13 @@ class CanvasColors(CanvasComponent):
         ----------
         value : str. One of 'right', 'top', 'bottom'. Default = 'top'
             Determines the location of color bar's title with respect to the 
-            color bar. 
+            color bar. 0
 
         """                
 
         valid_values = ['right', 'top', 'bottom']
         if value in valid_values:
-            self.__coloraxis_colorbar_title_side = value              
+            self.__parameters['coloraxis_colorbar_title_side'] = value              
         else:
             raise ValueError("colorbar_title_side must be 'right', 'top', \
                 or 'bottom'.")

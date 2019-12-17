@@ -68,6 +68,10 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
     def __init__(self, canvas=None, *args, **kwargs):  
         self.canvas = canvas
 
+    def _init_layout(self):
+        """Initializes the plotly layout object with canvas settings."""
+        
+
     @abstractmethod
     def fit(self, dataframe=None, x=None, y=None, z=None):
         """ Fits the visualator to the data.
