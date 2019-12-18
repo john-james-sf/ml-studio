@@ -36,6 +36,42 @@ from ml_studio.supervised_learning.training.early_stop import EarlyStopProgress
 
 from ml_studio.utils.file_manager import save_numpy
 
+from ml_studio.visualate.layout import LayoutTitle
+from ml_studio.visualate.layout import LayoutLegend
+from ml_studio.visualate.layout import LayoutMargins
+from ml_studio.visualate.layout import LayoutSize
+from ml_studio.visualate.layout import LayoutFont
+from ml_studio.visualate.layout import LayoutColorBackground
+from ml_studio.visualate.layout import LayoutColorScale
+from ml_studio.visualate.layout import LayoutColorAxisDomain
+from ml_studio.visualate.layout import LayoutColorAxisScales
+from ml_studio.visualate.layout import LayoutColorAxisBarStyle
+from ml_studio.visualate.layout import LayoutColorAxisBarPosition
+from ml_studio.visualate.layout import LayoutColorAxisBarBoundary
+from ml_studio.visualate.layout import LayoutColorAxisBarTicks
+from ml_studio.visualate.layout import LayoutColorAxisBarTickStyle
+from ml_studio.visualate.layout import LayoutColorAxisBarTickFont
+from ml_studio.visualate.layout import LayoutColorAxisBarNumbers
+from ml_studio.visualate.layout import LayoutColorAxisBarTitle
+
+from ml_studio.visualate.canvas import CanvasTitle
+from ml_studio.visualate.canvas import CanvasLegend
+from ml_studio.visualate.canvas import CanvasMargins
+from ml_studio.visualate.canvas import CanvasSize
+from ml_studio.visualate.canvas import CanvasFont
+from ml_studio.visualate.canvas import CanvasColorBackground
+from ml_studio.visualate.canvas import CanvasColorScale
+from ml_studio.visualate.canvas import CanvasColorAxisDomain
+from ml_studio.visualate.canvas import CanvasColorAxisScales
+from ml_studio.visualate.canvas import CanvasColorAxisBarStyle
+from ml_studio.visualate.canvas import CanvasColorAxisBarPosition
+from ml_studio.visualate.canvas import CanvasColorAxisBarBoundary
+from ml_studio.visualate.canvas import CanvasColorAxisBarTicks
+from ml_studio.visualate.canvas import CanvasColorAxisBarTickStyle
+from ml_studio.visualate.canvas import CanvasColorAxisBarTickFont
+from ml_studio.visualate.canvas import CanvasColorAxisBarNumbers
+from ml_studio.visualate.canvas import CanvasColorAxisBarTitle
+
 import warnings
 warnings.filterwarnings('ignore')
 warnings.filterwarnings("ignore", category=PendingDeprecationWarning)
@@ -453,6 +489,26 @@ def get_history():
     return History()
 
 
+@fixture(scope='session', params=[[CanvasTitle(),LayoutTitle()],
+                                  [CanvasLegend(),LayoutLegend()],
+                                  [CanvasMargins(),LayoutMargins()],
+                                  [CanvasSize(),LayoutSize()],
+                                  [CanvasFont(),LayoutFont()],
+                                  [CanvasColorBackground(),LayoutColorBackground()],
+                                  [CanvasColorScale(),LayoutColorScale()],
+                                  [CanvasColorAxisDomain(),LayoutColorAxisDomain()],
+                                  [CanvasColorAxisScales(),LayoutColorAxisScales()],
+                                  [CanvasColorAxisBarStyle(),LayoutColorAxisBarStyle()],
+                                  [CanvasColorAxisBarPosition(),LayoutColorAxisBarPosition()],
+                                  [CanvasColorAxisBarBoundary(),LayoutColorAxisBarBoundary()],
+                                  [CanvasColorAxisBarTicks(),LayoutColorAxisBarTicks()],
+                                  [CanvasColorAxisBarTickStyle(),LayoutColorAxisBarTickStyle()],
+                                  [CanvasColorAxisBarTickFont(),LayoutColorAxisBarTickFont()],                            
+                                  [CanvasColorAxisBarNumbers(),LayoutColorAxisBarNumbers()],
+                                  [CanvasColorAxisBarTitle(),LayoutColorAxisBarTitle()]])
+
+def canvas_layouts(request):
+    return request.param
 
 
 #%%

@@ -47,7 +47,7 @@ class CanvasColorAxisBarTicksTests:
             "canvas.coloraxis_colorbar_dtick not initialized"            
         assert canvas.coloraxis_colorbar_tickvals == None, \
             "canvas.coloraxis_colorbar_tickvals not initialized"                        
-        assert canvas.coloraxis_colorbar_ticktext == "", \
+        assert canvas.coloraxis_colorbar_ticktext == [""], \
             "canvas.coloraxis_colorbar_ticktext not initialized"                                    
         assert canvas.coloraxis_colorbar_ticks == None, \
             "canvas.coloraxis_colorbar_tickts not initialized"                                                
@@ -74,7 +74,7 @@ class CanvasColorAxisBarTicksTests:
         canvas.coloraxis_colorbar_tick0 = 2        
         canvas.coloraxis_colorbar_dtick = 2
         canvas.coloraxis_colorbar_tickvals = 2
-        canvas.coloraxis_colorbar_ticktext = 2
+        canvas.coloraxis_colorbar_ticktext = [2]
         canvas.coloraxis_colorbar_ticks = 'inside'
 
         assert canvas.coloraxis_colorbar_tickmode == 'linear', "canvas.coloraxis_colorbar_tickmode not updated."

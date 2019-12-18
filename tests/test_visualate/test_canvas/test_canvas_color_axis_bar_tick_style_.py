@@ -46,7 +46,7 @@ class CanvasColorAxisBarTickStyleTests:
             "canvas.coloraxis_colorbar_tickcolor not initialized"            
         assert canvas.coloraxis_colorbar_showticklabels == True, \
             "canvas.coloraxis_colorbar_showticklabels not initialized"            
-        assert canvas.coloraxis_colorbar_tickangle == 'auto', \
+        assert canvas.coloraxis_colorbar_tickangle == "", \
             "canvas.coloraxis_colorbar_tickangle not initialized"                        
         assert canvas.coloraxis_colorbar_tickprefix == "", \
             "canvas.coloraxis_colorbar_tickprefix not initialized"                                    

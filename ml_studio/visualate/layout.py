@@ -87,17 +87,17 @@ class LayoutTitle(LayoutBase):
         """ 
 
         fig.update_layout(
-            title=dict(text=component['title_text'],
-                       font=dict(family=component['title_font_family'],
-                                 size=component['title_font_size'],
-                                 color=component['title_font_color']),
-                       xref=component['title_xref'],
-                       yref=component['title_yref'],
-                       x=component['title_x'],
-                       y=component['title_y'],
-                       xanchor=component['title_xanchor'],
-                       yanchor=component['title_yanchor'],
-                       pd=component['title_pad']))
+            title=dict(text=component.title_text,
+                       font=dict(family=component.title_font_family,
+                                 size=component.title_font_size,
+                                 color=component.title_font_color),
+                       xref=component.title_xref,
+                       yref=component.title_yref,
+                       x=component.title_x,
+                       y=component.title_y,
+                       xanchor=component.title_xanchor,
+                       yanchor=component.title_yanchor,
+                       pd=component.title_pad))
 
         return fig
 
@@ -124,21 +124,21 @@ class LayoutLegend(LayoutBase):
         """ 
 
         fig.update_layout(
-            showlegend=component['legend_show'],
-            legend=dict(bgcolor=component['legend_bgcolor'],
-                        bordercolor=component['legend_bordercolor'],
-                        borderwidth=component['legend_borderwidth'],
-                        font=dict(family=component['legend_font_family'],
-                                  size=component['legend_font_size'],
-                                  color=component['legend_font_color']),
-                        orientation=component['legend_orientation'],
-                        itemsizing=component['legend_itemsizing'],
-                        itemclick=component['legend_itemclick'],
-                        x=component['legend_x'],
-                        y=component['legend_y'],
-                        xanchor=component['legend_xanchor'],
-                        yanchor=component['legend_yanchor'],
-                        valign=component['legend_valign']))
+            showlegend=component.legend_show,
+            legend=dict(bgcolor=component.legend_bgcolor,
+                        bordercolor=component.legend_bordercolor,
+                        borderwidth=component.legend_borderwidth,
+                        font=dict(family=component.legend_font_family,
+                                  size=component.legend_font_size,
+                                  color=component.legend_font_color),
+                        orientation=component.legend_orientation,
+                        itemsizing=component.legend_itemsizing,
+                        itemclick=component.legend_itemclick,
+                        x=component.legend_x,
+                        y=component.legend_y,
+                        xanchor=component.legend_xanchor,
+                        yanchor=component.legend_yanchor,
+                        valign=component.legend_valign))
 
         return fig
 
@@ -165,10 +165,10 @@ class LayoutMargins(LayoutBase):
         """ 
 
         fig.update_layout(
-            margin=dict(l=component['margins_left'],
-                        t=component['margins_top'],
-                        b=component['margins_bottom'],
-                        pad=component['margins_pad'])
+            margin=dict(l=component.margins_left,
+                        t=component.margins_top,
+                        b=component.margins_bottom,
+                        pad=component.margins_pad)
         )
 
         return fig        
@@ -196,9 +196,9 @@ class LayoutSize(LayoutBase):
         """ 
 
         fig.update_layout(
-            size=component['size_autosize'],
-            width=component['size_width'],
-            height=component['size_height']
+            size=component.size_autosize,
+            width=component.size_width,
+            height=component.size_height
         )
 
         return fig                
@@ -227,10 +227,10 @@ class LayoutFont(LayoutBase):
 
         fig.update_layout(
             font=dict(
-                family=component['font_family'],
-                size=component['font_size'],
-                color=component['font_color']),
-            separators=component['font_separators']
+                family=component.font_family,
+                size=component.font_size,
+                color=component.font_color),
+            separators=component.font_separators
         )
 
         return fig              
@@ -258,8 +258,8 @@ class LayoutColorBackground(LayoutBase):
         """ 
 
         fig.update_layout(
-            paper_bgcolor=component['paper_bgcolor'],
-            plot_bgcolor=component['plot_bgcolor']
+            paper_bgcolor=component.paper_bgcolor,
+            plot_bgcolor=component.plot_bgcolor
         )
         
         return fig             
@@ -288,10 +288,10 @@ class LayoutColorScale(LayoutBase):
 
         fig.update_layout(
             colorscale=dict(
-                sequential=component['colorscale_sequential'],
-                sequentialminus=component['colorscale_sequentialminus'],
-                diverging=component['colorscale_diverging']),
-            colorway=component['colorway']
+                sequential=component.colorscale_sequential,
+                sequentialminus=component.colorscale_sequentialminus,
+                diverging=component.colorscale_diverging),
+            colorway=component.colorway
         )
 
         return fig
@@ -320,10 +320,10 @@ class LayoutColorAxisDomain(LayoutBase):
 
         fig.update_layout(
             coloraxis=dict(
-                cauto=component['coloraxis_cauto'],
-                cmin=component['coloraxis_cmin'],
-                cmax=component['coloraxis_cmax'],
-                cmid=component['coloraxis_cmid'])
+                cauto=component.coloraxis_cauto,
+                cmin=component.coloraxis_cmin,
+                cmax=component.coloraxis_cmax,
+                cmid=component.coloraxis_cmid)
         )
 
         return fig       
@@ -352,10 +352,10 @@ class LayoutColorAxisScales(LayoutBase):
 
         fig.update_layout(
             coloraxis=dict(
-                colorscale=component['coloraxis_colorscale'],
-                autocolorscale=component['coloraxis_autoscale'],
-                reversescale=component['coloraxis_reversescale'],
-                showscale=component['coloraxis_showscale'])
+                colorscale=component.coloraxis_colorscale,
+                autocolorscale=component.coloraxis_autoscale,
+                reversescale=component.coloraxis_reversescale,
+                showscale=component.coloraxis_showscale)
         )
 
         return fig                                
@@ -385,11 +385,11 @@ class LayoutColorAxisBarStyle(LayoutBase):
         fig.update_layout(
             coloraxis=dict(
                 colorbar=dict(
-                    thicknessmode=component['coloraxis_colorbar_thicknessmode'],
-                    thickness=component['coloraxis_colorbar_thickness'],
-                    lenmode=component['coloraxis_colorbar_lenmode'],
-                    len=component['coloraxis_colorbar_len'],
-                    bgcolor=component['coloraxis_colorbar_bgcolor']
+                    thicknessmode=component.coloraxis_colorbar_thicknessmode,
+                    thickness=component.coloraxis_colorbar_thickness,
+                    lenmode=component.coloraxis_colorbar_lenmode,
+                    len=component.coloraxis_colorbar_len,
+                    bgcolor=component.coloraxis_colorbar_bgcolor
                 )
             )
         )
@@ -421,12 +421,12 @@ class LayoutColorAxisBarPosition(LayoutBase):
         fig.update_layout(
             coloraxis=dict(
                 colorbar=dict(
-                    x=component['coloraxis_colorbar_x'],
-                    y=component['coloraxis_colorbar_y'],
-                    xanchor=component['coloraxis_colorbar_xanchor'],
-                    yanchor=component['coloraxis_colorbar_yanchor'],
-                    xpad=component['coloraxis_colorbar_xpad'],
-                    ypad=component['coloraxis_colorbar_ypad'],
+                    x=component.coloraxis_colorbar_x,
+                    y=component.coloraxis_colorbar_y,
+                    xanchor=component.coloraxis_colorbar_xanchor,
+                    yanchor=component.coloraxis_colorbar_yanchor,
+                    xpad=component.coloraxis_colorbar_xpad,
+                    ypad=component.coloraxis_colorbar_ypad,
                 )
             )
         )
@@ -458,10 +458,10 @@ class LayoutColorAxisBarBoundary(LayoutBase):
         fig.update_layout(
             coloraxis=dict(
                 colorbar=dict(
-                    outlinecolor=component['coloraxis_colorbar_outlinecolor'],
-                    outlinewidth=component['coloraxis_colorbar_outlinewidth'],
-                    bordercolor=component['coloraxis_colorbar_bordercolor'],
-                    borderwidth=component['coloraxis_colorbar_borderwidth']
+                    outlinecolor=component.coloraxis_colorbar_outlinecolor,
+                    outlinewidth=component.coloraxis_colorbar_outlinewidth,
+                    bordercolor=component.coloraxis_colorbar_bordercolor,
+                    borderwidth=component.coloraxis_colorbar_borderwidth
                 )
             )
         )
@@ -493,13 +493,13 @@ class LayoutColorAxisBarTicks(LayoutBase):
         fig.update_layout(
             coloraxis=dict(
                 colorbar=dict(
-                    tickmode=component['coloraxis_colorbar_tickmode'],
-                    nticks=component['coloraxis_colorbar_nticks'],
-                    tick0=component['coloraxis_colorbar_tick0'],
-                    dtick=component['coloraxis_colorbar_dtick'],
-                    tickvals=component['coloraxis_colorbar_tickvals'],
-                    ticktext=component['coloraxis_colorbar_ticktext'],
-                    ticks=component['coloraxis_colorbar_ticks']
+                    tickmode=component.coloraxis_colorbar_tickmode,
+                    nticks=component.coloraxis_colorbar_nticks,
+                    tick0=component.coloraxis_colorbar_tick0,
+                    dtick=component.coloraxis_colorbar_dtick,
+                    tickvals=component.coloraxis_colorbar_tickvals,
+                    ticktext=component.coloraxis_colorbar_ticktext,
+                    ticks=component.coloraxis_colorbar_ticks
                 )
             )
         )
@@ -531,15 +531,15 @@ class LayoutColorAxisBarTickStyle(LayoutBase):
         fig.update_layout(
             coloraxis=dict(
                 colorbar=dict(
-                    ticklen=component['coloraxis_colorbar_ticklen'],
-                    tickwidth=component['coloraxis_colorbar_tickwidth'],
-                    tickcolor=component['coloraxis_colorbar_tickcolor'],
-                    showticklabels=component['coloraxis_colorbar_showticklabels'],
-                    tickangle=component['coloraxis_colorbar_tickangle'],
-                    tickprefix=component['coloraxis_colorbar_tickprefix'],
-                    showtickprefix=component['coloraxis_colorbar_showtickprefix'],
-                    ticksuffix=component['coloraxis_colorbar_ticksuffix'],
-                    showticksuffix=component['coloraxis_colorbar_showticksuffix']                    
+                    ticklen=component.coloraxis_colorbar_ticklen,
+                    tickwidth=component.coloraxis_colorbar_tickwidth,
+                    tickcolor=component.coloraxis_colorbar_tickcolor,
+                    showticklabels=component.coloraxis_colorbar_showticklabels,
+                    tickangle=component.coloraxis_colorbar_tickangle,
+                    tickprefix=component.coloraxis_colorbar_tickprefix,
+                    showtickprefix=component.coloraxis_colorbar_showtickprefix,
+                    ticksuffix=component.coloraxis_colorbar_ticksuffix,
+                    showticksuffix=component.coloraxis_colorbar_showticksuffix                    
                 )
             )
         )
@@ -572,9 +572,9 @@ class LayoutColorAxisBarTickFont(LayoutBase):
             coloraxis=dict(
                 colorbar=dict(
                     tickfont=dict(
-                        family= component['coloraxis_colorbar_tickfont_family'],
-                        size=component['coloraxis_colorbar_tickfont_size'],
-                        color=component['coloraxis_colorbar_tickfont_color']
+                        family= component.coloraxis_colorbar_tickfont_family,
+                        size=component.coloraxis_colorbar_tickfont_size,
+                        color=component.coloraxis_colorbar_tickfont_color
                     )
                 )
             )
@@ -607,9 +607,9 @@ class LayoutColorAxisBarNumbers(LayoutBase):
         fig.update_layout(
             coloraxis=dict(
                 colorbar=dict(
-                    separatethousands=component['coloraxis_colorbar_separatethousands'],
-                    exponentformat=component['coloraxis_colorbar_exponentformat'],
-                    showexponent=component['coloraxis_colorbar_showexponent']
+                    separatethousands=component.coloraxis_colorbar_separatethousands,
+                    exponentformat=component.coloraxis_colorbar_exponentformat,
+                    showexponent=component.coloraxis_colorbar_showexponent
                     )
                 )
             )        
@@ -642,11 +642,11 @@ class LayoutColorAxisBarTitle(LayoutBase):
             coloraxis=dict(
                 colorbar=dict(
                     title=dict(
-                        text=component['coloraxis_colorbar_title_text'],
+                        text=component.coloraxis_colorbar_title_text,
                         font=dict(
-                            family=component['coloraxis_colorbar_title_font_family'],
-                            size=component['coloraxis_colorbar_title_font_size'],
-                            color=component['coloraxis_colorbar_title_font_color']
+                            family=component.coloraxis_colorbar_title_font_family,
+                            size=component.coloraxis_colorbar_title_font_size,
+                            color=component.coloraxis_colorbar_title_font_color
                         )
                     )
                 )

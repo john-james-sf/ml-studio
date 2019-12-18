@@ -1,53 +1,40 @@
 #!/usr/bin/env python3
 # =========================================================================== #
-#                       TEST CANVAS BACKGROUND COLOR                         #
+#                             TEST LAYOUT                                     #  
 # =========================================================================== #
 # =========================================================================== #
 # Project: ML Studio                                                          #
 # Version: 0.1.14                                                             #
-# File: \test_canvas_color_background.py                                     #
+# File: \test_layout.py                                                       #
 # Python Version: 3.7.3                                                       #
 # ---------------                                                             #
 # Author: John James                                                          #
 # Company: Decision Scients                                                   #
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
-# Create Date: Tuesday December 17th 2019, 7:58:54 pm                         #
-# Last Modified: Tuesday December 17th 2019, 7:59:01 pm                       #
+# Create Date: Wednesday December 18th 2019, 12:02:54 am                      #
+# Last Modified: Wednesday December 18th 2019, 12:03:17 am                    #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
 # Copyright (c) 2019 Decision Scients                                         #
 # =========================================================================== #
-
-"""Test CanvasColorBackground"""
+"""Test LayoutColorAxisBarBoundary"""
+import numpy as np
+import plotly.graph_objs as go
+import plotly.offline as po
 import pytest
 from pytest import mark
-import numpy as np
-
-from ml_studio.visualate.canvas import CanvasColorBackground
 
 # --------------------------------------------------------------------------- #
-#                               CanvasColorBackground                        #
+#                               LayoutTests                                   #
 # --------------------------------------------------------------------------- #
-class CanvasColorBackgroundTests:
+class LayoutTests:
 
-    @mark.canvas
-    @mark.canvas_color_background
-    @mark.canvas_color_background_defaults
-    def test_canvas_color_background_defaults(self):
-        canvas = CanvasColorBackground()
-        assert canvas.paper_bgcolor == '#fff',"canvas.font_family not initialized."
-        assert canvas.plot_bgcolor == '#fff',"canvas.font_size not initialized."
-
-    @mark.canvas
-    @mark.canvas_color_background
-    @mark.canvas_color_background_update
-    def test_canvas_color_background_update(self):
-        canvas = CanvasColorBackground()
-        canvas.paper_bgcolor = 'green'
-        canvas.plot_bgcolor = 'green'
-
-        assert canvas.paper_bgcolor == "green", "canvas.paper_bgcolor not updated."
-        assert canvas.plot_bgcolor == "green", "canvas.plot_bgcolor not updated."
-
+    @mark.layout
+    @mark.layout_title
+    def test_layout_title(self, canvas_layouts):
+        canvas, layout = canvas_layouts
+        fig = go.Figure()
+        updated_fig = layout.update_layout(canvas, fig)
+        assert updated_fig, "Figure layout not updated"

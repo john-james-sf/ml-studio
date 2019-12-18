@@ -63,6 +63,8 @@ import os
 import time
 
 import autopep8
+import numpy as np
+import pandas as pd
 from abc import ABC, abstractmethod, ABCMeta
 # --------------------------------------------------------------------------- #
 #                                Canvas                                       #
@@ -1271,9 +1273,9 @@ class CanvasFont(CanvasComponent):
         self.__parameters['font_separators'] = value            
 
 # --------------------------------------------------------------------------- #
-#                          CanvasColorsBackground                             #
+#                          CanvasColorBackground                             #
 # --------------------------------------------------------------------------- #       
-class CanvasColorsBackground(CanvasComponent):
+class CanvasColorBackground(CanvasComponent):
     """Configures background colors for paper and plot."""
     DEFAULTS = {
         'paper_bgcolor' : '#fff',
@@ -1828,7 +1830,7 @@ class CanvasColorAxisBarStyle(CanvasComponent):
         'coloraxis_colorbar_thickness' : 30,
         'coloraxis_colorbar_lenmode' : 'fraction',
         'coloraxis_colorbar_len' : 1,
-        'coloraxis_colorbar_bgcolor' : "rgba(0000)"
+        'coloraxis_colorbar_bgcolor' : "rgba(0,0,0,0)"
     }
 
     def __init__(self):
@@ -1837,7 +1839,7 @@ class CanvasColorAxisBarStyle(CanvasComponent):
         self.__parameters['coloraxis_colorbar_thickness'] = 30
         self.__parameters['coloraxis_colorbar_lenmode'] = 'fraction'
         self.__parameters['coloraxis_colorbar_len'] = 1
-        self.__parameters['coloraxis_colorbar_bgcolor'] = "rgba(0000)"
+        self.__parameters['coloraxis_colorbar_bgcolor'] = "rgba(0,0,0,0)"
 
 
     def reset(self):
@@ -2384,7 +2386,7 @@ class CanvasColorAxisBarTicks(CanvasComponent):
         'coloraxis_colorbar_tick0' : None,
         'coloraxis_colorbar_dtick' : None,
         'coloraxis_colorbar_tickvals' : None,
-        'coloraxis_colorbar_ticktext' : "",
+        'coloraxis_colorbar_ticktext' : [""],
         'coloraxis_colorbar_ticks' : None
         }
 
@@ -2395,7 +2397,7 @@ class CanvasColorAxisBarTicks(CanvasComponent):
         self.__parameters['coloraxis_colorbar_tick0'] = None
         self.__parameters['coloraxis_colorbar_dtick'] = None
         self.__parameters['coloraxis_colorbar_tickvals'] = None
-        self.__parameters['coloraxis_colorbar_ticktext'] = ""
+        self.__parameters['coloraxis_colorbar_ticktext'] = [""]
         self.__parameters['coloraxis_colorbar_ticks'] = None
 
 
@@ -2644,8 +2646,11 @@ class CanvasColorAxisBarTicks(CanvasComponent):
             Used with `tickvals`.
 
         """                
-
-        self.__parameters['coloraxis_colorbar_ticktext'] = value         
+        if isinstance(value, (pd.Series, np.array, np.generic, list, tuple)):
+            self.__parameters['coloraxis_colorbar_ticktext'] = value         
+        else:
+            raise TypeError("value must be an array, tuple, list, numpy array \
+                or pandas Series.")
 
     # ----------------------------------------------------------------------- #
     #                COLORAXIS COLORBAR TICKS PROPERTIES                      #
@@ -2694,7 +2699,7 @@ class CanvasColorAxisBarTickStyle(CanvasComponent):
         'coloraxis_colorbar_tickwidth' : 1,
         'coloraxis_colorbar_tickcolor' : '#444',
         'coloraxis_colorbar_showticklabels' : True,
-        'coloraxis_colorbar_tickangle' : 'auto',
+        'coloraxis_colorbar_tickangle' : "",
         'coloraxis_colorbar_tickprefix' : '',
         'coloraxis_colorbar_showtickprefix' : 'all',
         'coloraxis_colorbar_ticksuffix' : '',
@@ -2708,7 +2713,7 @@ class CanvasColorAxisBarTickStyle(CanvasComponent):
         self.__parameters['coloraxis_colorbar_tickwidth'] = 1
         self.__parameters['coloraxis_colorbar_tickcolor'] = '#444'
         self.__parameters['coloraxis_colorbar_showticklabels'] = True
-        self.__parameters['coloraxis_colorbar_tickangle'] = 'auto'
+        self.__parameters['coloraxis_colorbar_tickangle'] = ""
         self.__parameters['coloraxis_colorbar_tickprefix'] = ''
         self.__parameters['coloraxis_colorbar_showtickprefix'] = 'all'
         self.__parameters['coloraxis_colorbar_ticksuffix'] = ''
@@ -2862,13 +2867,11 @@ class CanvasColorAxisBarTickStyle(CanvasComponent):
         
         Parameters
         ----------
-        value : str or int
+        value : int, float
             Sets tick angle.
 
         """                
-        if isinstance(value, str) and value == 'auto':
-            self.__parameters['coloraxis_colorbar_tickangle'] = value             
-        elif isinstance(value, int):
+        if isinstance(value, (float, int)):
             self.__parameters['coloraxis_colorbar_tickangle'] = value             
         else:
             raise TypeError("value must be 'auto' or a number.")
