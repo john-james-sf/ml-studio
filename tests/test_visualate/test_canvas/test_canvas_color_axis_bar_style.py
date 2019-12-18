@@ -61,8 +61,8 @@ class CanvasColorAxisBarStyleTests:
             canvas.coloraxis_colorbar_lenmode = 'x'
         with pytest.raises(ValueError):
             canvas.coloraxis_colorbar_len = -2
-        with pytest.raises(ValueError):
-            canvas.coloraxis_colorbar_bgcolor = 'red'            
+        with pytest.raises(TypeError):
+            canvas.coloraxis_colorbar_bgcolor = 23            
 
     @mark.canvas
     @mark.canvas_color_axis_bar_style

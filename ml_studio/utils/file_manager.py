@@ -3,6 +3,7 @@
 #                                FILE MANAGER                                 #
 # =========================================================================== #
 import os
+import time
 
 from matplotlib import animation, rc
 from matplotlib.animation import FuncAnimation
@@ -10,6 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.offline as py
+
+from  ml_studio.utils.misc import snake
 
 def save_fig(fig, directory, filename):
     if os.path.exists(directory):
@@ -52,4 +55,22 @@ def save_plotly(a, directory, filename):
     else:
         os.makedirs(directory)                
         py.plot(a, filename=path, auto_open=False, include_mathjax='cdn')
+
+def get_filename(instance, fileext, element=None):
+        """Creates a standard format filename for saving plots."""    
+
+        # Obtain user id, class name and date time 
+        project = "ml_studio_"        
+        userhome = os.path.expanduser('~')          
+        username = os.path.split(userhome)[-1] + "_"
+        clsname = instance.__class__.__name__ + "_"
+        if element:
+            element = element + "_"
+        else:
+            element = ""
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        # Snake case format filename
+        filename = project + username + clsname + element + timestr + fileext
+        filename = snake(filename)        
+        return filename
 

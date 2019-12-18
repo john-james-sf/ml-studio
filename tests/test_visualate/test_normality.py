@@ -31,18 +31,27 @@ import numpy as np
 from ml_studio.visualate.data_analysis.normality import Histogram, histogram
 from ml_studio.visualate.data_analysis.normality import DensityPlot, density_plot
 from ml_studio.visualate.data_analysis.normality import NormalProbability
-from ml_studio.utils.file_manager import cleanup
 # --------------------------------------------------------------------------- #
 #%%
 
 class VisualateTests:
+
+    def cleanup(self, dirpath, ext):
+        if os.path.exists(dirpath):
+            for filename in os.listdir(dirpath):
+                filepath = os.path.join(dirpath, filename)
+                try:
+                    shutil.rmtree(filepath)
+                except NotADirectoryError:
+                    if filename.endswith(ext):
+                        os.remove(os.path.join(dirpath, filename))       
 
     @mark.normality
     @mark.histogram
     @mark.histogram0
     def test_histogram(self, get_regression_hastie):
         directory = "./tests/test_visualate/test_figures/histogram/test_0/"        
-        cleanup(directory, ext=".html")
+        self.cleanup(directory, ext=".html")
         x, y, z, df = get_regression_hastie
         v = Histogram(name='Histogram')
         v.fit(x=x, y=y, z=z, dataset=df)
@@ -55,7 +64,7 @@ class VisualateTests:
     @mark.histogram1
     def test_histogram_cumulative(self, get_regression_hastie):
         directory = "./tests/test_visualate/test_figures/histogram/test_1/"        
-        cleanup(directory, ext=".html")
+        self.cleanup(directory, ext=".html")
         x, y, z, df = get_regression_hastie
         v = Histogram(name='Histogram', cumulative=True)
         v.fit(x=x, y=y, z=z, dataset=df)
@@ -68,7 +77,7 @@ class VisualateTests:
     @mark.histogram2
     def test_histogram_orientation(self, get_regression_hastie):
         directory = "./tests/test_visualate/test_figures/histogram/test_2/"        
-        cleanup(directory, ext=".html")
+        self.cleanup(directory, ext=".html")
         x, y, z, df = get_regression_hastie
         v = Histogram(name='Histogram', cumulative=True, orientation='h')
         v.fit(x=x, y=y, z=z, dataset=df)
@@ -81,7 +90,7 @@ class VisualateTests:
     @mark.histogram3
     def test_histogram_marginal(self, get_regression_hastie):
         directory = "./tests/test_visualate/test_figures/histogram/test_3/"        
-        cleanup(directory, ext=".html")
+        self.cleanup(directory, ext=".html")
         x, y, z, df = get_regression_hastie
         v = Histogram(name='Histogram', cumulative=True, marginal='box')
         v.fit(x=x, y=y, z=z, dataset=df)
@@ -94,7 +103,7 @@ class VisualateTests:
     @mark.histogram4
     def test_histogram_function(self, get_regression_hastie):
         directory = "./tests/test_visualate/test_figures/histogram/test_4/"        
-        cleanup(directory, ext=".html")
+        self.cleanup(directory, ext=".html")
         x, y, z, df = get_regression_hastie
         histogram(x=x, y=y, z=z, dataset=df, orientation=None, directory=directory,
               marginal='box', cumulative=False, nbins=100,
@@ -109,7 +118,7 @@ class DensityPlotTests:
     @mark.density0
     def test_density_plot_1_group(self, get_regression_hastie):
         directory = "./tests/test_visualate/test_figures/density_plots/test_0/"        
-        cleanup(directory, ext=".html")
+        self.cleanup(directory, ext=".html")
         x, _, _, df = get_regression_hastie
         v = DensityPlot(name='Density Plot')
         v.fit(x=x,dataset=df)
@@ -122,7 +131,7 @@ class DensityPlotTests:
     @mark.density1
     def test_density_plot_3_groups(self, get_regression_hastie):
         directory = "./tests/test_visualate/test_figures/density_plots/test_1/"        
-        cleanup(directory, ext=".html")
+        self.cleanup(directory, ext=".html")
         x, _, _, df = get_regression_hastie
         v = DensityPlot(name='Density Plot', bin_size=0.1)
         # Randomly select three columns 
@@ -138,7 +147,7 @@ class DensityPlotTests:
     @mark.density2
     def test_density_plot_4_groups(self, get_regression_hastie):
         directory = "./tests/test_visualate/test_figures/density_plots/test_2/"              
-        cleanup(directory, ext=".html")
+        self.cleanup(directory, ext=".html")
         x, _, _, df = get_regression_hastie
         v = DensityPlot(name='Density Plot')
         features = df.columns[:-1]
@@ -155,7 +164,7 @@ class NormalProbabilityPlotTests:
     @mark.normal_probability0
     def test_density_plot_1_group(self, get_regression_hastie):
         directory = "./tests/test_visualate/test_figures/normal_probability_plots/test_0/"        
-        cleanup(directory, ext=".html")
+        self.cleanup(directory, ext=".html")
         x, _, _, df = get_regression_hastie
         v = NormalProbability()
         v.fit(x=x,dataset=df)

@@ -36,6 +36,7 @@ from ml_studio.services.validation import ValidationContexts
 
 class ClassesTests:
 
+    @mark.skip("May not implement")
     @mark.classes
     @mark.classes_init
     def test_classes_init(self):
@@ -43,6 +44,7 @@ class ClassesTests:
         b = Classes()
         assert a == b, "Singleton didn't work"
 
+    @mark.skip("May not implement")
     @mark.classes
     @mark.classes_get_classnames
     def test_classes_get_classnames(self):
@@ -56,7 +58,7 @@ class ClassesTests:
         assert len(classnames) == 4, "Get classnames didn;t return list of correct length."
         assert all(item in clsnames for item in classnames), "Get classnames didn't return correct result."
     
-
+    @mark.skip("May not implement")
     @mark.classes
     @mark.classes_add_class
     def test_classes_add_class(self):
@@ -66,7 +68,8 @@ class ClassesTests:
         c = Classes()
         c.add_class(instance)
         assert c.classes[classname] == instance, "Adding single class didn't work."
-        
+
+    @mark.skip("May not implement")  
     @mark.classes
     @mark.classes_remove_class
     def test_classes_remove_class(self):
@@ -79,6 +82,7 @@ class ClassesTests:
         with pytest.raises(KeyError): 
             c.classes[classname] 
 
+    @mark.skip("May not implement")
     @mark.classes
     @mark.classes_instance_attributes
     def test_classes_instance_attributes(self):
@@ -90,6 +94,7 @@ class ClassesTests:
         assert isinstance(attrs, list), "Instance attributes not a list"
         assert len(attrs) > 0, "There are no instance attributes."
 
+    @mark.skip("May not implement")
     @mark.classes
     @mark.classes_class_attributes
     def test_classes_class_attributes(self):        

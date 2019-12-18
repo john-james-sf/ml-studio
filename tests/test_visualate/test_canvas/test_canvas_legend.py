@@ -72,7 +72,7 @@ class CanvasLegendTests:
         with pytest.raises(ValueError):
             canvas.legend_itemsizing = 0            
         with pytest.raises(ValueError):
-            canvas.legend_itemclick = 0         
+            canvas.legend_itemclick = 'x'         
         with pytest.raises(TypeError):
             canvas.legend_x = 'str'                           
         with pytest.raises(ValueError):
@@ -81,9 +81,9 @@ class CanvasLegendTests:
             canvas.legend_y = 'str'                           
         with pytest.raises(ValueError):
             canvas.legend_y = 55
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             canvas.legend_xanchor = 'str'                           
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             canvas.legend_yanchor = 'str'                           
         with pytest.raises(ValueError):
             canvas.legend_yanchor = 'str'                 

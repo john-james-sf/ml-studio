@@ -178,22 +178,6 @@ class BaseVisualator(ABC, BaseEstimator, metaclass=ABCMeta):
         """
         pass
 
-    def _get_filename(self, object_name=None, element_name=None):
-        """Creates a standard format filename for saving plots."""    
-
-        # Obtain user id, class name and date time        
-        userhome = os.path.expanduser('~')          
-        username = os.path.split(userhome)[-1] 
-        object_name = object_name or ""       
-        clsname = self.__class__.__name__
-        element_name = element_name or ""
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        # Snake case format filename
-        filename = username + '_' + object_name + '_' + clsname + '_' + \
-        element_name + '_' + timestr + self.filetype
-        filename = snake(filename)        
-        return filename
-
 
     def save(self, fig, directory, filename):
         """Saves a plot to file.

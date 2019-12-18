@@ -50,7 +50,7 @@ class CanvasColorAxisBarTickFontTests:
     @mark.canvas_color_axis_bar_tick_font_validation
     def test_canvas_color_axis_bar_tick_font_validation(self):
         canvas = CanvasColorAxisBarTickFont()
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             canvas.coloraxis_colorbar_tickfont_family = 2
         with pytest.raises(ValueError):
             canvas.coloraxis_colorbar_tickfont_size = 'x'

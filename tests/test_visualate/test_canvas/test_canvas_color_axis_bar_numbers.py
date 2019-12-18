@@ -39,8 +39,8 @@ class CanvasColorAxisBarNumbersTests:
         canvas = CanvasColorAxisBarNumbers()        
         assert canvas.coloraxis_colorbar_separatethousands == True, \
             "canvas.coloraxis_colorbar_separatethousands not initialized"
-        assert canvas.coloraxis_colorbar_exponentialformat == 'B', \
-            "canvas.coloraxis_colorbar_exponentialformat not initialized"
+        assert canvas.coloraxis_colorbar_exponentformat == 'B', \
+            "canvas.coloraxis_colorbar_exponentformat not initialized"
         assert canvas.coloraxis_colorbar_showexponent == 'all', \
             "canvas.coloraxis_colorbar_showexponent not initialized"            
 
@@ -52,7 +52,7 @@ class CanvasColorAxisBarNumbersTests:
         with pytest.raises(TypeError):
             canvas.coloraxis_colorbar_separatethousands = 2
         with pytest.raises(ValueError):
-            canvas.coloraxis_colorbar_exponentialformat = 'x'
+            canvas.coloraxis_colorbar_exponentformat = 'x'
         with pytest.raises(ValueError):
             canvas.coloraxis_colorbar_showexponent = 22                                 
 
@@ -62,11 +62,11 @@ class CanvasColorAxisBarNumbersTests:
     def test_canvas_color_axis_bar_numbers_font_update(self):        
         canvas = CanvasColorAxisBarNumbers()
         canvas.coloraxis_colorbar_separatethousands = False
-        canvas.coloraxis_colorbar_exponentialformat = 'SI'
+        canvas.coloraxis_colorbar_exponentformat = 'SI'
         canvas.coloraxis_colorbar_showexponent = "first"
 
         assert canvas.coloraxis_colorbar_separatethousands == False, "canvas.coloraxis_colorbar_separatethousands not updated."
-        assert canvas.coloraxis_colorbar_exponentialformat == "SI", "canvas.coloraxis_colorbar_exponentialformat not updated."
+        assert canvas.coloraxis_colorbar_exponentformat == "SI", "canvas.coloraxis_colorbar_exponentformat not updated."
         assert canvas.coloraxis_colorbar_showexponent == "first", "canvas.coloraxis_colorbar_showexponent not updated."
 
 

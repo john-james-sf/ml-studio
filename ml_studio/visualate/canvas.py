@@ -455,7 +455,7 @@ class CanvasTitle(CanvasComponent):
                 self.__parameters['title_y'] = value
             else:
                 raise ValueError("title_y must be 'auto' or int between 0 and 1 inclusive.")
-        elif isinstance(value, type(float, int)):
+        elif isinstance(value, (float, int)):
             if value >= 0 and value <= 1:
                 self.__parameters['title_y'] = value                
             else:
@@ -2004,8 +2004,10 @@ class CanvasColorAxisBarStyle(CanvasComponent):
             Sets the color of padded area.
 
         """
-        
-        self.__parameters['coloraxis_colorbar_bgcolor'] = value               
+        if isinstance(value, str):
+            self.__parameters['coloraxis_colorbar_bgcolor'] = value               
+        else:
+            raise TypeError("value must be a string")
 
 # --------------------------------------------------------------------------- #
 #                        CanvasColorAxisBarPosition                           #
@@ -2394,7 +2396,7 @@ class CanvasColorAxisBarTicks(CanvasComponent):
         self.__parameters['coloraxis_colorbar_dtick'] = None
         self.__parameters['coloraxis_colorbar_tickvals'] = None
         self.__parameters['coloraxis_colorbar_ticktext'] = ""
-        self.__parameters['coloraxis_colorbar_ticks'] = ""
+        self.__parameters['coloraxis_colorbar_ticks'] = None
 
 
     def reset(self):
@@ -3009,6 +3011,7 @@ class CanvasColorAxisBarTickFont(CanvasComponent):
         }
 
     def __init__(self):
+        self.__parameters = {}
         self.__parameters['coloraxis_colorbar_tickfont_family'] = None
         self.__parameters['coloraxis_colorbar_tickfont_size'] = 1
         self.__parameters['coloraxis_colorbar_tickfont_color'] = None
@@ -3100,8 +3103,10 @@ class CanvasColorAxisBarTickFont(CanvasComponent):
             Sets tick font color.
 
         """                
-        
-        self.__parameters['coloraxis_colorbar_tickfont_color'] = value     
+        if isinstance(value, str):
+            self.__parameters['coloraxis_colorbar_tickfont_color'] = value     
+        else:
+            raise TypeError("value must be a string.")
 
 
 
@@ -3160,21 +3165,21 @@ class CanvasColorAxisBarNumbers(CanvasComponent):
             raise TypeError("value must be a boolean, True or False.")
 
     # ----------------------------------------------------------------------- #
-    #            COLORAXIS COLORBAR EXPONENTIALFORMAT PROPERTIES              #
+    #            COLORAXIS COLORBAR EXPONENTFORMAT PROPERTIES              #
     # ----------------------------------------------------------------------- #
     @property
-    def coloraxis_colorbar_exponentialformat(self):
-        """Returns the coloraxis_colorbar_exponentialformat attribute.
+    def coloraxis_colorbar_exponentformat(self):
+        """Returns the coloraxis_colorbar_exponentformat attribute.
         
         Determines a formatting rule for the tick exponents.
 
         """
 
-        return self.__parameters['coloraxis_colorbar_exponentialformat']
+        return self.__parameters['coloraxis_colorbar_exponentformat']
 
-    @coloraxis_colorbar_exponentialformat.setter
-    def coloraxis_colorbar_exponentialformat(self, value):
-        """Sets the coloraxis_colorbar_exponentialformat attribute.
+    @coloraxis_colorbar_exponentformat.setter
+    def coloraxis_colorbar_exponentformat(self, value):
+        """Sets the coloraxis_colorbar_exponentformat attribute.
         
         Parameters
         ----------
@@ -3185,9 +3190,9 @@ class CanvasColorAxisBarNumbers(CanvasComponent):
 
         valid_values = ["none", "e", "E", "power", "SI", "B"]
         if value in valid_values:            
-            self.__parameters['coloraxis_colorbar_exponentialformat'] = value        
+            self.__parameters['coloraxis_colorbar_exponentformat'] = value        
         else:
-            raise ValueError("exponentialformat must be 'none', 'e'\
+            raise ValueError("exponentformat must be 'none', 'e'\
                 , 'E', 'power', 'SI', or 'B'.")
 
     # ----------------------------------------------------------------------- #

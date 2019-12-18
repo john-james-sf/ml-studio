@@ -69,7 +69,7 @@ class CanvasColorAxisBarTicksTests:
     @mark.canvas_color_axis_bar_ticks_update
     def test_canvas_color_axis_bar_ticks_update(self):        
         canvas = CanvasColorAxisBarTicks()
-        canvas.coloraxis_colorbar_tickmode = 'list'
+        canvas.coloraxis_colorbar_tickmode = 'linear'
         canvas.coloraxis_colorbar_nticks = 2
         canvas.coloraxis_colorbar_tick0 = 2        
         canvas.coloraxis_colorbar_dtick = 2
@@ -77,7 +77,7 @@ class CanvasColorAxisBarTicksTests:
         canvas.coloraxis_colorbar_ticktext = 2
         canvas.coloraxis_colorbar_ticks = 'inside'
 
-        assert canvas.coloraxis_colorbar_tickmode == 'list', "canvas.coloraxis_colorbar_tickmode not updated."
+        assert canvas.coloraxis_colorbar_tickmode == 'linear', "canvas.coloraxis_colorbar_tickmode not updated."
         assert canvas.coloraxis_colorbar_nticks == 2, "canvas.coloraxis_colorbar_nticks not updated."
         assert canvas.coloraxis_colorbar_tick0 == 2, "canvas.coloraxis_colorbar_tick0 not updated."
         assert canvas.coloraxis_colorbar_dtick == 2, "canvas.coloraxis_colorbar_dtick not updated."
