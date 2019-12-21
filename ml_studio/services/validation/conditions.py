@@ -93,8 +93,11 @@ def isEmpty(a, b=None):
         return True
     elif a == "":
         return True
-    elif a.isspace():
-        return True
+    elif isString(a):
+        if a.isspace():
+            return True
+        else:
+            return False
     else:
         return False
 

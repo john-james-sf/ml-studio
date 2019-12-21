@@ -517,6 +517,7 @@ def get_validation_rule_test_object():
             self.b = True
             self.n = None
             self.i = 5
+            self.d = '12/21/2001'
             self.f = 2.0
             self.e = ""
             self.s = "shoes"
@@ -535,6 +536,7 @@ def get_validation_rule_reference_object():
             self.b = False
             self.n = None
             self.i = 2
+            self.d = "5/6/2017"
             self.f = 9.3
             self.e = ""
             self.s = "hats"
@@ -554,4 +556,3 @@ def get_validation_rule_reference_object():
 collect_ignore = ["setup.py"]
 collect_ignore.append("tests/test_visualize/*.py")
 
-#%%

@@ -161,16 +161,11 @@ class Rule(ABC):
         attribute indicated by the attribute name is not a valid attribute
         for the instance.         
         """
-        # Unpack kwargs
+        # Unpack kwargs and get available a parameters
         a_dict = kwargs.get('a_dict')
         a_instance = a_dict.get('instance')
         a_attribute_name = a_dict.get('attribute_name')
         a_value = a_dict.get('value')
-
-        b_dict = kwargs.get('b_dict')
-        b_instance = b_dict.get('instance')
-        b_attribute_name = b_dict.get('attribute_name')
-        b_value = b_dict.get('value')
 
         # If instance and attribute are provided, confirm valid match
         if a_instance is not None and a_attribute_name is not None:
@@ -180,51 +175,63 @@ class Rule(ABC):
                 print("Class {classname} has no attribute {attrname}.".format(
                     classname=a_instance.__class__.__name__,
                     attrname=a_attribute_name
-                    ))
-        if b_instance is not None and b_attribute_name is not None:            
-            try:
-                getattr(b_instance, b_attribute_name)
-            except AttributeError:
-                print("Class {classname} has no attribute {attrname}.".format(
-                    classname=b_instance.__class__.__name__,
-                    attrname=b_attribute_name
-                ))            
+                    ))        
 
-        # Format the condition 
+        # Good to go, format condition function and a parameters.
         c = {}
         c['condition_func'] = condition_func
         c['a_instance'] = a_instance
         c['a_attribute_name'] = a_attribute_name
         c['a_value'] = a_value
-        c['b_instance'] = b_instance
-        c['b_attribute_name'] = b_attribute_name
-        c['b_value'] = b_value  
+
+        # Now, let's see whazzup with the b parameters
+        b_dict = kwargs.get('b_dict')        
+        if b_dict is not None:
+            b_instance = b_dict.get('instance')
+            b_attribute_name = b_dict.get('attribute_name')
+            b_value = b_dict.get('value')
+
+            # While we're checking, confirm instance attribute match
+            if b_instance is not None and b_attribute_name is not None:            
+                try:
+                    getattr(b_instance, b_attribute_name)
+                except AttributeError:
+                    print("Class {classname} has no attribute {attrname}.".format(
+                        classname=b_instance.__class__.__name__,
+                        attrname=b_attribute_name
+                    ))
+            # Add b parameters to the condition dictionary            
+            c['b_instance'] = b_instance
+            c['b_attribute_name'] = b_attribute_name
+            c['b_value'] = b_value  
+
         return c
 
     def when(self, condition_func, **kwargs):
         """Updates list of pre-conditions for a rule."""
         condition = self._condition(condition_func, **kwargs)
         self._when.append(condition)
+        return self
 
     def except_when(self, condition_func, **kwargs):
         """Updates a list of except pre-conditions for a rule."""
         condition = self._condition(condition_func, **kwargs)
         self._except_when.append(condition)
+        return self
 
-    def evaluate_when(self):
-        """Evaluates conditions and returns true if all conditions were met."""
-        if self._when:
+    def _evaluate_conditions(self, conditions):
+        if conditions:
             when_valid = []
             # Iterate through 'when' conditions
-            for when in self._when:
+            for condition in conditions:
                 # GET A_VALUE
                 # Attempt to get the a_value direct from the dictionary 
-                if when['a_value'] is not None:
-                    a_value = when['a_value']
+                if condition['a_value'] is not None:
+                    a_value = condition['a_value']
                 # Otherwise, extract from the instance and attribute provided
-                elif when['a_instance'] is not None:
-                    instance = when['a_instance']
-                    attribute_name = when['a_attribute_name']
+                elif condition['a_instance'] is not None:
+                    instance = condition['a_instance']
+                    attribute_name = condition['a_attribute_name']
                     try:
                         a_value = getattr(instance, attribute_name)
                     except AttributeError:
@@ -234,25 +241,27 @@ class Rule(ABC):
                         ))
                 # Lastly, if the a_instance is None, assume the attribute is 
                 # for the evaluated instance.
-                else:
+                elif condition.get('a_attribute_name') is not None:
                     instance = self._evaluated_instance
-                    attribute_name = when['a_attribute_name']
+                    attribute_name = condition['a_attribute_name']
                     try:
                         a_value = getattr(instance, attribute_name)
                     except AttributeError:
                         print("Class {classname} has no attribute {attrname}.".format(
                             classname = instance.__class__.__name__,
                             attrname = attribute_name
-                        ))                    
+                        ))
+                else:
+                    a_value = None                    
 
-                # GET B_VALUE
-                # Attemp to get the b_value directly from the dictionary
-                if when['b_value'] is not None:
-                    b_value = when['b_value']
+                # GET B_VALUE...if available
+                # Attempt to get the b_value directly from the dictionary
+                if condition.get('b_value') is not None:                
+                    b_value = condition['b_value']
                 # Otherwise, extract from the instance and attribute provided
-                elif when['b_instance'] is not None:
-                    instance = when['b_instance']
-                    attribute_name = when['b_attribute_name']
+                elif condition.get('b_instance') is not None:
+                    instance = condition['b_instance']
+                    attribute_name = condition['b_attribute_name']
                     try:
                         b_value = getattr(instance, attribute_name)
                     except AttributeError:
@@ -260,107 +269,51 @@ class Rule(ABC):
                             classname = instance.__class__.__name__,
                             attrname = attribute_name
                         ))
-                # Lastly, if the b_instance is None, assume the attribute is 
-                # for the evaluated instance.
-                else:
+                # Lastly, if the b_instance is None and attribute_name is not, 
+                # assume the attribute is for the evaluated instance.
+                elif condition.get('b_attribute_name') is not None:
                     instance = self._evaluated_instance
-                    attribute_name = when['b_attribute_name']
+                    attribute_name = condition['b_attribute_name']
                     try:
                         b_value = getattr(instance, attribute_name)
                     except AttributeError:
                         print("Class {classname} has no attribute {attrname}.".format(
                             classname = instance.__class__.__name__,
                             attrname = attribute_name
-                        ))     
+                        ))
+                else:
+                    b_value = None                     
 
-                # Execute the condition and append the result to the 'when_valid' list
-                condition = when['condition_func']
-                when_valid.append(condition(a_value, b_value))
-            
-            # If all valid, then True, otherwise False indicates the condition is not met.
-            if all(when_valid):
-                return True
+                # Execute the condition and append the result to the 'condition_valid' list
+                condition_func = condition['condition_func']
+                when_valid.append(condition_func(a_value, b_value))
+
+            return when_valid
+        else:
+            return True
+
+
+    def evaluate_when(self):
+        """Evaluates when conditions and returns true if all conditions were met."""
+        if self._when:
+            results = self._evaluate_conditions(self._when)
+            if isArray(results):
+                return all(results)
             else:
-                return False
-        # If there is no when condition, a True value just means we proceed with validation.
+                return results
         else:
             return True
 
     def evaluate_except_when(self):
-        """Evaluates conditions and returns true if all conditions were NOT met."""
         if self._except_when:
-            except_when_valid = []
-            # Iterate through 'when' conditions
-            for except_when in self._except_when:
-                # GET A_VALUE
-                # Attempt to get the a_value direct from the dictionary 
-                if except_when['a_value'] is not None:
-                    a_value = except_when['a_value']
-                # Otherwise, extract from the instance and attribute provided
-                elif except_when['a_instance'] is not None:
-                    instance = except_when['a_instance']
-                    attribute_name = except_when['a_attribute_name']
-                    try:
-                        a_value = getattr(instance, attribute_name)
-                    except AttributeError:
-                        print("Class {classname} has no attribute {attrname}.".format(
-                            classname = instance.__class__.__name__,
-                            attrname = attribute_name
-                        ))
-                # Lastly, if the a_instance is None, assume the attribute is 
-                # for the evaluated instance.
-                else:
-                    instance = self._evaluated_instance
-                    attribute_name = except_when['a_attribute_name']
-                    try:
-                        a_value = getattr(instance, attribute_name)
-                    except AttributeError:
-                        print("Class {classname} has no attribute {attrname}.".format(
-                            classname = instance.__class__.__name__,
-                            attrname = attribute_name
-                        ))                    
-
-                # GET B_VALUE
-                # Attemp to get the b_value directly from the dictionary
-                if except_when['b_value'] is not None:
-                    b_value = except_when['b_value']
-                # Otherwise, extract from the instance and attribute provided
-                elif except_when['b_instance'] is not None:
-                    instance = except_when['b_instance']
-                    attribute_name = except_when['b_attribute_name']
-                    try:
-                        b_value = getattr(instance, attribute_name)
-                    except AttributeError:
-                        print("Class {classname} has no attribute {attrname}.".format(
-                            classname = instance.__class__.__name__,
-                            attrname = attribute_name
-                        ))
-                # Lastly, if the b_instance is None, assume the attribute is 
-                # for the evaluated instance.
-                else:
-                    instance = self._evaluated_instance
-                    attribute_name = except_when['b_attribute_name']
-                    try:
-                        b_value = getattr(instance, attribute_name)
-                    except AttributeError:
-                        print("Class {classname} has no attribute {attrname}.".format(
-                            classname = instance.__class__.__name__,
-                            attrname = attribute_name
-                        ))     
-
-                # Execute the condition and append the result to the 'except_when_valid' list
-                condition = except_when['condition_func']
-                except_when_valid.append(condition(a_value, b_value))
-            
-            # If all valid, then True, otherwise False indicates the condition is not met.
-            if any(except_when_valid):
-                return False
+            results = self._evaluate_conditions(self._except_when)
+            if isArray(results):
+                return not any(results)
             else:
-                return True
-        # If there is no except_when condition, a True value just means we proceed with validation.
+                return not results
         else:
-            return True      
-
+            return True    
+                    
     @abstractmethod
     def validate(self, instance, attribute_name, attribute_value):
         self._evaluated_instance = instance
