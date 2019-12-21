@@ -113,10 +113,10 @@ from ml_studio.services.validation.conditions import isArray
 class Rule(ABC):
     """Base class for all rules."""
 
-    def __init__(self, val=None, *args, **kwargs):
+    def __init__(self, value=None, *args, **kwargs):
 
         # The value to which the rule applies if any
-        self._val = val
+        self._value = value
 
         # The evaluated property
         self._evaluated_instance = None
@@ -136,7 +136,7 @@ class Rule(ABC):
         self.invalid_value = None              
         self.invalid_message = None
 
-    def _condition(self, condition_func, **kwargs):
+    def _condition(self, condition_func, a, b=None):
         """Formats a condition function and parameters for runtime execution.
         
         Parameters
@@ -144,16 +144,21 @@ class Rule(ABC):
         condition_func : function
             Condition function.            
 
-        **kwargs : dict
-            Parameters for the condition function in the form of two dictionaries:
-                a_dict : the first parameter for the condition function
-                b_dict : the second parameter for the condition function, if required.
+        a : dict, int, float, str, array-like. 
+            The first parameter for the condition function.
 
-                a_dict, and optionally b_dict contain either:
-                    instance : an instance of a class containing a property to evaluate
-                    attribute_name : the name of the attribute to evaluate
-                    or
-                    value : the value of the parameter
+        b : dict, int, float, str, array-like. Optional.
+            The second parameter for the condition function. Optional if the
+            condition function takes only one value.
+        
+        Note
+        ----
+        a and b may be an int, float, str or array-like containing the value
+        being evaluated. Alternatively, a and b may be a dict object with two
+        members:
+            * instance : ML Studio object
+            * attribute_name : str
+        These members identify an object and the attribute being evaluated.
 
         Raises
         ------
@@ -161,61 +166,67 @@ class Rule(ABC):
         attribute indicated by the attribute name is not a valid attribute
         for the instance.         
         """
-        # Unpack kwargs and get available a parameters
-        a_dict = kwargs.get('a_dict')
-        a_instance = a_dict.get('instance')
-        a_attribute_name = a_dict.get('attribute_name')
-        a_value = a_dict.get('value')
+        # Obtain a from a dictionary
+        if isinstance(a, dict):
+            a_instance = a.get('instance')
+            a_attribute_name = a.get('attribute_name')
 
-        # If instance and attribute are provided, confirm valid match
-        if a_instance is not None and a_attribute_name is not None:
-            try:
-                getattr(a_instance, a_attribute_name)
-            except AttributeError:
-                print("Class {classname} has no attribute {attrname}.".format(
-                    classname=a_instance.__class__.__name__,
-                    attrname=a_attribute_name
-                    ))        
-
-        # Good to go, format condition function and a parameters.
-        c = {}
-        c['condition_func'] = condition_func
-        c['a_instance'] = a_instance
-        c['a_attribute_name'] = a_attribute_name
-        c['a_value'] = a_value
-
-        # Now, let's see whazzup with the b parameters
-        b_dict = kwargs.get('b_dict')        
-        if b_dict is not None:
-            b_instance = b_dict.get('instance')
-            b_attribute_name = b_dict.get('attribute_name')
-            b_value = b_dict.get('value')
-
-            # While we're checking, confirm instance attribute match
-            if b_instance is not None and b_attribute_name is not None:            
+            # If instance and attribute are provided, confirm valid match
+            if a_instance is not None and a_attribute_name is not None:
                 try:
-                    getattr(b_instance, b_attribute_name)
+                    getattr(a_instance, a_attribute_name)
                 except AttributeError:
                     print("Class {classname} has no attribute {attrname}.".format(
-                        classname=b_instance.__class__.__name__,
-                        attrname=b_attribute_name
-                    ))
-            # Add b parameters to the condition dictionary            
-            c['b_instance'] = b_instance
-            c['b_attribute_name'] = b_attribute_name
-            c['b_value'] = b_value  
+                        classname=a_instance.__class__.__name__,
+                        attrname=a_attribute_name
+                        ))        
+            # Initialize the condition dictionary object with the found parameters
+            c = {}
+            c['condition_func'] = condition_func
+            c['a_instance'] = a_instance
+            c['a_attribute_name'] = a_attribute_name
+
+        # Alternatively, a IS the parameter, go with that.
+        else:
+            c = {}
+            c['condition_func'] = condition_func
+            c['a_value'] = a
+        
+        # Now, let's see whazzup with the b parameters
+        if b is not None:
+            # Obtain as if b is a dict
+            if isinstance(b, dict):
+                b_instance = b.get('instance')
+                b_attribute_name = b.get('attribute_name')
+
+                # If instance and attribute are provided, confirm valid match
+                if b_instance is not None and b_attribute_name is not None:
+                    try:
+                        getattr(b_instance, b_attribute_name)
+                    except AttributeError:
+                        print("Class {classname} has no attribute {attrname}.".format(
+                            classname=b_instance.__class__.__name__,
+                            attrname=b_attribute_name
+                            ))        
+                # Add the b_parameters to the condition dictionary object.
+                c['b_instance'] = b_instance
+                c['b_attribute_name'] = b_attribute_name
+
+            # Alternatively, take b asis. Hooves...think horses.
+            else:
+                c['b_value'] = b
 
         return c
 
-    def when(self, condition_func, **kwargs):
+    def when(self, condition_func, a, b=None):
         """Updates list of pre-conditions for a rule."""
-        condition = self._condition(condition_func, **kwargs)
+        condition = self._condition(condition_func, a, b)
         self._when.append(condition)
         return self
 
-    def except_when(self, condition_func, **kwargs):
+    def except_when(self, condition_func, a, b=None):
         """Updates a list of except pre-conditions for a rule."""
-        condition = self._condition(condition_func, **kwargs)
+        condition = self._condition(condition_func, a, b)
         self._except_when.append(condition)
         return self
 
@@ -226,10 +237,10 @@ class Rule(ABC):
             for condition in conditions:
                 # GET A_VALUE
                 # Attempt to get the a_value direct from the dictionary 
-                if condition['a_value'] is not None:
+                if condition.get('a_value') is not None:
                     a_value = condition['a_value']
                 # Otherwise, extract from the instance and attribute provided
-                elif condition['a_instance'] is not None:
+                elif condition.get('a_instance') is not None:
                     instance = condition['a_instance']
                     attribute_name = condition['a_attribute_name']
                     try:
@@ -495,7 +506,7 @@ class BoolRule(Rule):
 
         if isArray(attribute_value):
             raise AttributeError("BoolRule is for strings. To evaluate\
-                array-like structures, use AllBollRule.")
+                array-like structures, use AllBoolRule.")
 
         if self.evaluate_when() and self.evaluate_except_when():
             if isinstance(attribute_value, bool):
@@ -691,8 +702,8 @@ class SemanticRule(Rule):
             val is None.
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None):
-        super(SemanticRule, self).__init__(val=val)
+    def __init__(self, value=None, instance=None, attribute_name=None):
+        super(SemanticRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_classname = instance.__class__.__name__
         self._external_attribute_name = attribute_name
@@ -701,7 +712,7 @@ class SemanticRule(Rule):
         try:
             self._external_attribute_value = getattr(self._external_instance, \
                 self._external_attribute_name)
-            self._val = self._evaluated_attribute_value
+            self._value = self._external_attribute_value
         except AttributeError:
             classname = self._external_instance.__class__.__name__
             msg = "{classname} has no attribute {attrname}.".format(
@@ -731,8 +742,8 @@ class EqualRule(SemanticRule):
         The name of the attribute containing the equality value 
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None):
-        super(EqualRule, self).__init__(val=val)
+    def __init__(self, value=None, instance=None, attribute_name=None):
+        super(EqualRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_attribute_name = attribute_name
 
@@ -742,12 +753,12 @@ class EqualRule(SemanticRule):
                                        attribute_value=attribute_value)
 
         # Obtain the value to compare to our evaluated attribute
-        if self._val is None:
+        if self._value is None:
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
         if self.evaluate_when() and self.evaluate_except_when():
-            if attribute_value == self._val: 
+            if attribute_value == self._value: 
                 self.isValid = True
             else:
                 self.isValid = False
@@ -759,11 +770,13 @@ class EqualRule(SemanticRule):
     def error_message(self):
         if self._external_instance:
             msg = "The {attribute} property of the {classname} class is not equal \
-                to {equalclass} property {equalattr} = {equalval}. \
+                to {externalclass} property {externalattr} = {externalval}. \
                 Received value: {value}.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    equalclass = self._external_instance.__class__.__name__,
+                    externalclass = self._external_instance.__class__.__name__,
+                    externalattr = self._external_attribute_name,
+                    externalval=self._external_attribute_value,
                     value=self._evaluated_attribute_value)
 
         else:
@@ -772,7 +785,7 @@ class EqualRule(SemanticRule):
                 Received value: {value}.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    val = self._val,
+                    val = self._value,
                     value=self._evaluated_attribute_value)                    
         
         formatted_msg = format_text(msg)
@@ -798,8 +811,8 @@ class NotEqualRule(SemanticRule):
         The name of the attribute containing the equality value 
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None):
-        super(NotEqualRule, self).__init__(val=val)
+    def __init__(self, value=None, instance=None, attribute_name=None):
+        super(NotEqualRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_attribute_name = attribute_name
 
@@ -809,12 +822,12 @@ class NotEqualRule(SemanticRule):
                                        attribute_value=attribute_value)
 
         # Obtain the value to compare to our evaluated attribute
-        if self._val is None:
+        if self._value is None:
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
         if self.evaluate_when() and self.evaluate_except_when():
-            if attribute_value != self._val: 
+            if attribute_value != self._value: 
                 self.isValid = True
             else:
                 self.isValid = False
@@ -841,7 +854,7 @@ class NotEqualRule(SemanticRule):
                 Received value: {value}.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    val = self._val,
+                    val = self._value,
                     value=self._evaluated_attribute_value)                    
         
         formatted_msg = format_text(msg)
@@ -868,8 +881,8 @@ class AllowedRule(SemanticRule):
         The name of the attribute containing the equality value 
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None):
-        super(AllowedRule, self).__init__(val=val)
+    def __init__(self, value=None, instance=None, attribute_name=None):
+        super(AllowedRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_attribute_name = attribute_name
 
@@ -879,12 +892,12 @@ class AllowedRule(SemanticRule):
                                        attribute_value=attribute_value)
 
          # Obtain the value(s) to compare to our evaluated attribute
-        if self._val is None:
+        if self._value is None:
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
         if self.evaluate_when() and self.evaluate_except_when():
-            if attribute_value in self._val: 
+            if attribute_value in self._value: 
                 self.isValid = True
             else:
                 self.isValid = False
@@ -902,7 +915,7 @@ class AllowedRule(SemanticRule):
                     equalclass = self._external_instance.__class__.__name__,
                     value=str(self._evaluated_attribute_value))
             msg = msg + "Allowed Value(s): {allowed}.".format(
-                allowed=str(self._val)
+                allowed=str(self._value)
             )
 
         else:
@@ -912,7 +925,7 @@ class AllowedRule(SemanticRule):
                     classname=self._evaluated_classname,
                     value=str(self._evaluated_attribute_value))
             msg = msg + "Allowed value(s): {allowed}".format(
-                allowed=str(self._val)
+                allowed=str(self._value)
             )
         
         formatted_msg = format_text(msg)
@@ -941,8 +954,8 @@ class DisAllowedRule(SemanticRule):
         The name of the attribute containing the equality value 
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None):
-        super(DisAllowedRule, self).__init__(val=val)
+    def __init__(self, value=None, instance=None, attribute_name=None):
+        super(DisAllowedRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_attribute_name = attribute_name
 
@@ -952,12 +965,12 @@ class DisAllowedRule(SemanticRule):
                                        attribute_value=attribute_value)
 
          # Obtain the value(s) to compare to our evaluated attribute
-        if self._val is None:
+        if self._value is None:
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
         if self.evaluate_when() and self.evaluate_except_when():
-            if attribute_value not in self._val: 
+            if attribute_value not in self._value: 
                 self.isValid = True
             else:
                 self.isValid = False
@@ -974,7 +987,7 @@ class DisAllowedRule(SemanticRule):
                     classname=self._evaluated_classname,                    
                     value=str(self._evaluated_attribute_value))
             msg = msg + "Disallowed Value(s): {disallowed}.".format(
-                disallowed=str(self._val)
+                disallowed=str(self._value)
             )
 
         else:
@@ -984,7 +997,7 @@ class DisAllowedRule(SemanticRule):
                     classname=self._evaluated_classname,
                     value=str(self._evaluated_attribute_value))
             msg = msg + "Disallowed value(s): {disallowed}".format(
-                disallowed=str(self._val)
+                disallowed=str(self._value)
             )
         
         formatted_msg = format_text(msg)
@@ -1015,9 +1028,9 @@ class LessRule(SemanticRule):
         The name of the attribute containing the equality value 
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None,
+    def __init__(self, value=None, instance=None, attribute_name=None,
                  equal_ok=False):
-        super(LessRule, self).__init__(val=val)
+        super(LessRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_attribute_name = attribute_name
         self._equal_ok = equal_ok
@@ -1028,15 +1041,15 @@ class LessRule(SemanticRule):
                                        attribute_value=attribute_value)
 
         # Obtain the value to compare to our evaluated attribute
-        if self._val is None:
+        if self._value is None:
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
         if self.evaluate_when() and self.evaluate_except_when():
-            if attribute_value < self._val: 
+            if attribute_value < self._value: 
                 self.isValid = True
             elif self._equal_ok:
-                if attribute_value == self._val:
+                if attribute_value == self._value:
                     self.isValid = True
                 else:
                     self.isValid = False
@@ -1064,7 +1077,7 @@ class LessRule(SemanticRule):
                 Received value: {value}.".format(
                     externalclass=self._external_classname,
                     externalattr=self._external_attribute_name,
-                    externalval = self._val,
+                    externalval = self._value,
                     value=self._evaluated_attribute_value)
 
         else:
@@ -1079,7 +1092,7 @@ class LessRule(SemanticRule):
 
             msg = msg + "{val}. \
                 Received value: {value}.".format(
-                    val=self._val,
+                    val=self._value,
                     value=self._evaluated_attribute_value)            
         
         formatted_msg = format_text(msg)
@@ -1109,9 +1122,9 @@ class GreaterRule(SemanticRule):
         The name of the attribute containing the equality value 
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None,
+    def __init__(self, value=None, instance=None, attribute_name=None,
                  equal_ok=False):
-        super(GreaterRule, self).__init__(val=val)
+        super(GreaterRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_attribute_name = attribute_name
         self._equal_ok = equal_ok
@@ -1126,15 +1139,15 @@ class GreaterRule(SemanticRule):
             and floats. Use the AllEqualRule for iterables.")
 
         # Obtain the value to compare to our evaluated attribute
-        if self._val is None:
+        if self._value is None:
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
         if self.evaluate_when() and self.evaluate_except_when():
-            if attribute_value > self._val: 
+            if attribute_value > self._value: 
                 self.isValid = True
             elif self._equal_ok:
-                if attribute_value == self._val:
+                if attribute_value == self._value:
                     self.isValid = True
                 else:
                     self.isValid = False
@@ -1162,7 +1175,7 @@ class GreaterRule(SemanticRule):
                 Received value: {value}.".format(
                     externalclass=self._external_classname,
                     externalattr=self._external_attribute_name,
-                    externalval = self._val,
+                    externalval = self._value,
                     value=self._evaluated_attribute_value)
 
         else:
@@ -1177,7 +1190,7 @@ class GreaterRule(SemanticRule):
 
             msg = msg + "{val}. \
                 Received value: {value}.".format(
-                    val=self._val,
+                    val=self._value,
                     value=self._evaluated_attribute_value)            
         
         formatted_msg = format_text(msg)
@@ -1207,9 +1220,9 @@ class RegexRule(SemanticRule):
         The name of the attribute containing the equality value 
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None,
+    def __init__(self, value=None, instance=None, attribute_name=None,
                  equal_ok=False):
-        super(RegexRule, self).__init__(val=val)
+        super(RegexRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_attribute_name = attribute_name        
 
@@ -1233,26 +1246,26 @@ class RegexRule(SemanticRule):
             raise ValueError("This rule applies only to strings.")
 
         # Obtain the value to compare to our evaluated attribute
-        if self._val is None:
+        if self._value is None:
             self.get_external_value()
 
         # Validate regex pattern(s)
-        if isinstance(self._val, str):
-            self.validate_regex(self._val)
-        elif isArray(self._val):
-            not_strings = [v for v in self._val if not isinstance(v, str)]
+        if isinstance(self._value, str):
+            self.validate_regex(self._value)
+        elif isArray(self._value):
+            not_strings = [v for v in self._value if not isinstance(v, str)]
             if not_strings:
                 raise ValueError("Some or all reference values are not strings.")
             else:
-                for v in self._val:
+                for v in self._value:
                     self.validate_regex(v)                
 
         # Evaluate if when / except when conditions are met/not met.
         if self.evaluate_when() and self.evaluate_except_when():
             # If array, then we evaluate to True of any matches.
-            if isArray(self._val):                
+            if isArray(self._value):                
                 regex_matches = []
-                for regex in self._val:
+                for regex in self._value:
                     regex_matches.append(\
                         self.evaluate_regex(self._evaluated_attribute_value, regex))
 
@@ -1262,7 +1275,7 @@ class RegexRule(SemanticRule):
                     self.isValid = False
                     self.invalid_value = attribute_value
                     self.invalid_message = self.error_message()
-            elif self.evaluate_regex(self._evaluated_attribute_value, self._val):
+            elif self.evaluate_regex(self._evaluated_attribute_value, self._value):
                 self.isValid = True
             else:
                 self.isValid = False
@@ -1279,7 +1292,7 @@ class RegexRule(SemanticRule):
             value=self._evaluated_attribute_value)
 
         msg = msg + "Regex pattern(s): {patterns}".format(
-            patterns=str(self._val)
+            patterns=str(self._value)
         )
 
         formatted_msg = format_text(msg)
@@ -1291,7 +1304,7 @@ class RegexRule(SemanticRule):
 # --------------------------------------------------------------------------- #                            
 class ArrayRule(Rule):
     """Abstract base class to evaluate array-like structures."""
-    def __init__(self):
+    def __init__(self, value=None):
         super(ArrayRule, self).__init__()
 
     def validate(self, instance, attribute_name, attribute_value):
@@ -1328,21 +1341,18 @@ class AllBoolRule(ArrayRule):
         None since this rule doesn't require a referene value. 
     """
 
-    def __init__(self, val=None):
-        super(AllBoolRule, self).__init__(val=val)
+    def __init__(self, value=None):
+        super(AllBoolRule, self).__init__(value=value)
 
     def validate(self, instance, attribute_name, attribute_value):
         super(AllBoolRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Convert the evaluated value to a numpy array
-        np_evaluated_value = np.array(self._evaluated_attribute_value)
-
         # Evaluate if when / except when conditions are met/not met, then proceed.
         if self.evaluate_when() and self.evaluate_except_when():
-            invalid_values = [v for v in np_evaluated_value\
-                 if not isinstance(v, bool)]
+            invalid_values = [v for v in self._evaluated_attribute_value\
+                 if (not isinstance(v, bool))]
             if invalid_values:
                 self.isValid = False
                 self.invalid_value = invalid_values
@@ -1375,20 +1385,17 @@ class AllIntRule(ArrayRule):
         None since this rule doesn't require a referene value.
     """
 
-    def __init__(self, val=None):
-        super(AllIntRule, self).__init__(val=val)
+    def __init__(self, value=None):
+        super(AllIntRule, self).__init__(value=value)
 
     def validate(self, instance, attribute_name, attribute_value):
         super(AllIntRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Convert the evaluated value to a numpy array
-        np_evaluated_value = np.array(self._evaluated_attribute_value)
-
         # Evaluate if when / except when conditions are met/not met, then proceed.
         if self.evaluate_when() and self.evaluate_except_when():
-            invalid_values = [v for v in np_evaluated_value\
+            invalid_values = [v for v in self._evaluated_attribute_value\
                  if not isinstance(v, int)]
             if invalid_values:
                 self.isValid = False
@@ -1422,20 +1429,17 @@ class AllFloatRule(ArrayRule):
         None since this rule doesn't require a referene value.
     """
 
-    def __init__(self, val=None):
-        super(AllFloatRule, self).__init__(val=val)
+    def __init__(self, value=None):
+        super(AllFloatRule, self).__init__(value=value)
 
     def validate(self, instance, attribute_name, attribute_value):
         super(AllFloatRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Convert the evaluated value to a numpy array
-        np_evaluated_value = np.array(self._evaluated_attribute_value)
-
         # Evaluate if when / except when conditions are met/not met, then proceed.
         if self.evaluate_when() and self.evaluate_except_when():
-            invalid_values = [v for v in np_evaluated_value\
+            invalid_values = [v for v in self._evaluated_attribute_value\
                  if not isinstance(v, float)]
             if invalid_values:
                 self.isValid = False
@@ -1469,20 +1473,17 @@ class AllNumberRule(ArrayRule):
         None since this rule doesn't require a referene value.
     """
 
-    def __init__(self, val=None):
-        super(AllNumberRule, self).__init__(val=val)
+    def __init__(self, value=None):
+        super(AllNumberRule, self).__init__(value=value)
 
     def validate(self, instance, attribute_name, attribute_value):
         super(AllNumberRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Convert the evaluated value to a numpy array
-        np_evaluated_value = np.array(self._evaluated_attribute_value)
-
         # Evaluate if when / except when conditions are met/not met, then proceed.
         if self.evaluate_when() and self.evaluate_except_when():
-            invalid_values = [v for v in np_evaluated_value\
+            invalid_values = [v for v in self._evaluated_attribute_value\
                  if not isinstance(v, (int, float))]
             if invalid_values:
                 self.isValid = False
@@ -1516,20 +1517,17 @@ class AllStringRule(ArrayRule):
         None since this rule doesn't require a referene value.
     """
 
-    def __init__(self, val=None):
-        super(AllStringRule, self).__init__(val=val)
+    def __init__(self, value=None):
+        super(AllStringRule, self).__init__(value=value)
 
     def validate(self, instance, attribute_name, attribute_value):
         super(AllStringRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Convert the evaluated value to a numpy array
-        np_evaluated_value = np.array(self._evaluated_attribute_value)
-
         # Evaluate if when / except when conditions are met/not met, then proceed.
         if self.evaluate_when() and self.evaluate_except_when():
-            invalid_values = [v for v in np_evaluated_value\
+            invalid_values = [v for v in self._evaluated_attribute_value\
                  if not isinstance(v, str)]
             if invalid_values:
                 self.isValid = False
@@ -1575,8 +1573,8 @@ class AllEqualRule(ArrayRule, SemanticRule):
         The name of the attribute containing the equality value 
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None):
-        super(AllEqualRule, self).__init__(val=val)
+    def __init__(self, value=None, instance=None, attribute_name=None):
+        super(AllEqualRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_attribute_name = attribute_name
 
@@ -1586,12 +1584,12 @@ class AllEqualRule(ArrayRule, SemanticRule):
                                        attribute_value=attribute_value)
 
         # Obtain the value to compare to our evaluated attribute
-        if self._val is None:
+        if self._value is None:
             self.get_external_value()
 
         # Convert the evaluated and reference structures to numpy arrays
         np_evaluated_value = np.array(self._evaluated_attribute_value)
-        np_reference_value = np.array(self._val)
+        np_reference_value = np.array(self._value)
 
         # Evaluate if when / except when conditions are met/not met, then proceed.
         if self.evaluate_when() and self.evaluate_except_when():
@@ -1620,7 +1618,7 @@ class AllEqualRule(ArrayRule, SemanticRule):
                 Received value: {value}.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    val = self._val,
+                    val = self._value,
                     value=self._evaluated_attribute_value)                    
         
         formatted_msg = format_text(msg)
@@ -1648,8 +1646,8 @@ class AllAllowedRule(ArrayRule, SemanticRule):
         The name of the attribute containing the equality value 
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None):
-        super(AllAllowedRule, self).__init__(val=val)
+    def __init__(self, value=None, instance=None, attribute_name=None):
+        super(AllAllowedRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_attribute_name = attribute_name
 
@@ -1659,12 +1657,12 @@ class AllAllowedRule(ArrayRule, SemanticRule):
                                        attribute_value=attribute_value)
 
         # Obtain the value(s) to compare to our evaluated attribute
-        if self._val is None:
+        if self._value is None:
             self.get_external_value()
 
         # Convert the evaluated and reference structures to numpy arrays
         np_evaluated_value = np.array(self._evaluated_attribute_value)
-        np_reference_value = np.array(self._val)
+        np_reference_value = np.array(self._value)
 
         # Evaluate if when / except when conditions are met/not met.
         if self.evaluate_when() and self.evaluate_except_when():
@@ -1689,7 +1687,7 @@ class AllAllowedRule(ArrayRule, SemanticRule):
                     classname=self._evaluated_classname,
                     value=str(self._evaluated_attribute_value))
             msg = msg + "Allowed Value(s): {allowed}.".format(
-                allowed=str(self._val)
+                allowed=str(self._value)
             )
 
         else:
@@ -1699,7 +1697,7 @@ class AllAllowedRule(ArrayRule, SemanticRule):
                     classname=self._evaluated_classname,
                     value=str(self._evaluated_attribute_value))
             msg = msg + "Allowed value(s): {allowed}".format(
-                allowed=str(self._val)
+                allowed=str(self._value)
             )
         
         formatted_msg = format_text(msg)
@@ -1725,8 +1723,8 @@ class AnyDisAllowedRule(ArrayRule, SemanticRule):
         The name of the attribute containing the equality value 
     """
 
-    def __init__(self, val=None, instance=None, attribute_name=None):
-        super(AnyDisAllowedRule, self).__init__(val=val)
+    def __init__(self, value=None, instance=None, attribute_name=None):
+        super(AnyDisAllowedRule, self).__init__(value=value)
         self._external_instance = instance
         self._external_attribute_name = attribute_name
 
@@ -1736,12 +1734,12 @@ class AnyDisAllowedRule(ArrayRule, SemanticRule):
                                        attribute_value=attribute_value)
 
         # Obtain the value(s) to compare to our evaluated attribute
-        if self._val is None:
+        if self._value is None:
             self.get_external_value()
 
         # Convert the evaluated and reference structures to numpy arrays
         np_evaluated_value = np.array(self._evaluated_attribute_value)
-        np_reference_value = np.array(self._val)
+        np_reference_value = np.array(self._value)
 
         # Evaluate if when / except when conditions are met/not met.
         if self.evaluate_when() and self.evaluate_except_when():
@@ -1766,7 +1764,7 @@ class AnyDisAllowedRule(ArrayRule, SemanticRule):
                     classname=self._evaluated_classname,
                     value=str(self._evaluated_attribute_value))
             msg = msg + "Disallowed Value(s): {disallowed}.".format(
-                disallowed=str(self._val)
+                disallowed=str(self._value)
             )
 
         else:
@@ -1776,7 +1774,7 @@ class AnyDisAllowedRule(ArrayRule, SemanticRule):
                     classname=self._evaluated_classname,
                     value=str(self._evaluated_attribute_value))
             msg = msg + "Disallowed value(s): {disallowed}".format(
-                disallowed=str(self._val)
+                disallowed=str(self._value)
             )
         
         formatted_msg = format_text(msg)

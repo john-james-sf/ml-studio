@@ -387,7 +387,7 @@ def isMatch(a,b):
     -------
     True if a matches the regex pattern in b. False otherwise.
     """
-    return(re.search(b,a))
+    return(re.search(a,b))
 
 
 

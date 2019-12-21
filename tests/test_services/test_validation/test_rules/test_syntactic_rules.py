@@ -45,6 +45,8 @@ import numpy as np
 from ml_studio.services.validation.rules import NoneRule, NotNoneRule, EmptyRule
 from ml_studio.services.validation.rules import NotEmptyRule, BoolRule, FloatRule
 from ml_studio.services.validation.rules import IntRule, NumberRule, StringRule
+from ml_studio.services.validation.rules import AllBoolRule, AllIntRule, AllFloatRule
+from ml_studio.services.validation.rules import AllNumberRule, AllStringRule
 
 from ml_studio.services.validation.conditions import isNone, isEmpty, isBool, isInt
 from ml_studio.services.validation.conditions import isFloat, isNumber, isString
@@ -164,29 +166,73 @@ class SyntacticRuleTests:
         assert validation_rule.isValid == False, "StringRule validation incorrectly succeeded."        
         assert validation_rule.invalid_message is not None, "StringRule incorrectly failed to produced invalid message"                  
 
+# --------------------------------------------------------------------------- #
+class SyntacticArrayRuleTests:
+
+    @mark.syntactic_array_rules
+    @mark.syntactic_array_rules_Bool_rule
+    def test_syntactic_AllBool_rule(self, get_validation_rule_test_object):
+        test_object = get_validation_rule_test_object        
+        validation_rule = AllBoolRule()
+        validation_rule.validate(test_object, 'a_b', [True, False, False])
+        assert validation_rule.isValid == True, "AllBoolRule validation incorrectly failed."
+        assert validation_rule.invalid_message is None, "BoolRule incorrectly produced invalid message"
+        validation_rule.validate(test_object, 'n', ['x'])
+        assert validation_rule.isValid == False, "AllBoolRule validation incorrectly succeeded."        
+        assert validation_rule.invalid_message is not None, "BoolRule incorrectly failed to produced invalid message"        
+
+    @mark.syntactic_array_rules
+    @mark.syntactic_array_rules_Int_rule
+    def test_syntactic_AllInt_rule(self, get_validation_rule_test_object):
+        test_object = get_validation_rule_test_object        
+        validation_rule = AllIntRule()
+        validation_rule.validate(test_object, 'n', [2,3,7,8,9])
+        assert validation_rule.isValid == True, "AllIntRule validation incorrectly failed."
+        assert validation_rule.invalid_message is None, "IntRule incorrectly produced invalid message"
+        validation_rule.validate(test_object, 'n', [2,3,2.9])
+        assert validation_rule.isValid == False, "AllIntRule validation incorrectly succeeded."        
+        assert validation_rule.invalid_message is not None, "IntRule incorrectly failed to produced invalid message"        
+
+    @mark.syntactic_array_rules
+    @mark.syntactic_array_rules_Float_rule
+    def test_syntactic_AllFloat_rule(self, get_validation_rule_test_object):
+        test_object = get_validation_rule_test_object        
+        validation_rule = AllFloatRule()
+        validation_rule.validate(test_object, 'n', [1.0, 2.0, 2.2, 3.6])
+        assert validation_rule.isValid == True, "AllFloatRule validation incorrectly failed."
+        assert validation_rule.invalid_message is None, "FloatRule incorrectly produced invalid message"
+        validation_rule.validate(test_object, 'n', [1,2,3,4.0])
+        assert validation_rule.isValid == False, "AllFloatRule validation incorrectly succeeded."        
+        assert validation_rule.invalid_message is not None, "FloatRule incorrectly failed to produced invalid message"  
+
+    @mark.syntactic_array_rules
+    @mark.syntactic_array_rules_Number_rule
+    def test_syntactic_AllNumber_rule(self, get_validation_rule_test_object):
+        test_object = get_validation_rule_test_object        
+        validation_rule = AllNumberRule()
+        validation_rule.validate(test_object, 'n', [2,3,2.0, 3.9])
+        assert validation_rule.isValid == True, "AllNumberRule validation incorrectly failed."
+        assert validation_rule.invalid_message is None, "NumberRule incorrectly produced invalid message"
+        validation_rule.validate(test_object, 'n', ['hat', True, 3])
+        assert validation_rule.isValid == False, "AllNumberRule validation incorrectly succeeded."        
+        assert validation_rule.invalid_message is not None, "NumberRule incorrectly failed to produced invalid message"          
+
+    @mark.syntactic_array_rules
+    @mark.syntactic_array_rules_String_rule
+    def test_syntactic_AllString_rule(self, get_validation_rule_test_object):
+        test_object = get_validation_rule_test_object        
+        validation_rule = AllStringRule()
+        validation_rule.validate(test_object, 'n', ['hat', 'bowl', 'skid'])
+        assert validation_rule.isValid == True, "AllStringRule validation incorrectly failed."
+        assert validation_rule.invalid_message is None, "StringRule incorrectly produced invalid message"
+        validation_rule.validate(test_object, 'n', ['rekkid', 2, False])
+        assert validation_rule.isValid == False, "AllStringRule validation incorrectly succeeded."        
+        assert validation_rule.invalid_message is not None, "StringRule incorrectly failed to produced invalid message"                  
+
+
+
 class SyntacticConditionTests:
 
-    # Syntactic Conditions
-    # --------------------
-    # * isNone : Evaluates whether the argument is None.
-    # * isEmpty : Evaluates whether the argument is empty string or whitespace.
-    # * isBool : Evaluates whether the argument is a Boolean.
-    # * isInt : Evaluates whether the argument is an integer.
-    # * isFloat : Evaluates whether the argument is an float.
-    # * isNumber : Evaluates whether the argument is a number.
-    # * isString : Evaluates whether the argument is a string. 
-    # * isDate : Evaluates whether a string is a valid datetime format.
-    
-
-    # Semantic Conditions
-    # -------------------
-    # * isEqual : Evaluates whether two arguments are equal  
-    # * isIn : Evaluates whether argument a is in argument b.
-    # * isLess : Evaluates whether argument a is less than argument b.
-    # * isGreater : Evaluates whether argument a is greater than argument b.
-    # * isBetween : Evaluates whether argument a is between min and maa. 
-    # * isMatch : Evaluates whether a string matches a regea pattern.    
-    # ======================================================================= #    
     @mark.syntactic_rules_condition
     @mark.syntactic_rules_condition_isNone    
     @mark.syntactic_rules_condition_isNone_when    

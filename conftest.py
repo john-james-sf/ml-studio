@@ -520,7 +520,7 @@ def get_validation_rule_test_object():
             self.d = '12/21/2001'
             self.f = 2.0
             self.e = ""
-            self.s = "shoes"
+            self.s = "hats"
             self.a_b = np.array([True, False, True, True, False])
             self.a_i = [2,3,3,5,7,10,12,13,39]
             self.a_f = [1.5, 2.8, 3.9]
