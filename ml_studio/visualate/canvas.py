@@ -2646,7 +2646,7 @@ class CanvasColorAxisBarTicks(CanvasComponent):
             Used with `tickvals`.
 
         """                
-        if isinstance(value, (pd.Series, np.array, np.generic, list, tuple)):
+        if isinstance(value, (pd.Series, np.ndarray, list, tuple)):
             self.__parameters['coloraxis_colorbar_ticktext'] = value         
         else:
             raise TypeError("value must be an array, tuple, list, numpy array \

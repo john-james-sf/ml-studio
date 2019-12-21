@@ -1,4 +1,4 @@
-Group #,Param #,category,classname,attribute,type,validator #,validator,_of rule,context_class,context_property,context_type,context_value,directive,value,inv_msg
+Group #,Param #,category,classname,attribute,type,validator #,validator,_of rule,context_class,context_attribute,context_type,context_value,directive,value,inv_msg
 1,1,titles,CanvasTitle,title_text,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
 1,1,titles,CanvasTitle,title_text,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
 1,2,titles,CanvasTitle,title_font_family,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
@@ -22,7 +22,7 @@ Group #,Param #,category,classname,attribute,type,validator #,validator,_of rule
 1,11,titles,CanvasTitle,title_pad.t,int,1,NumberValidator,NA,,,,,min,0,value must be a number greater or equal to min.
 1,11,titles,CanvasTitle,title_pad.b,int,1,NumberValidator,NA,,,,,min,0,value must be a number greater or equal to min.
 1,11,titles,CanvasTitle,title_pad.l,int,1,NumberValidator,NA,,,,,min,0,value must be a number greater or equal to min.
-2,1,legend,CanvasLegend,legend_show,bool,1,BooleanValidator,NA,,,,,bool,,value must be boolean
+2,1,legend,CanvasLegend,legend_show,bool,1,BooleanValidator,NA,,,,,type,bool,value must be boolean
 2,2,legend,CanvasLegend,legend_bgcolor,str,1,ColorValidator,anyof,CanvasLegend,legend_bgcolor,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
 2,2,legend,CanvasLegend,legend_bgcolor,str,2,ColorValidator,anyof,CanvasLegend,legend_bgcolor,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
 2,2,legend,CanvasLegend,legend_bgcolor,str,3,ColorValidator,anyof,CanvasLegend,legend_bgcolor,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
@@ -177,16 +177,16 @@ Group #,Param #,category,classname,attribute,type,validator #,validator,_of rule
 6,49,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickprefix,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
 6,50,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickprefix,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
 6,51,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_showtickprefix,str,1,DiscreteValidator,allof,,,,,allowed,"[""all"", ""first"", ""last"", ""none""]",unrecognized value
-6,51,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticksuffix,str,1,StringValidator,NA,,,,,empty_ok,TRUE,invalid string type
-6,52,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticksuffix,str,2,StringValidator,NA,,,,,type,str,invalid string type
+6,51,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticksuffix,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
+6,52,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticksuffix,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
 6,53,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_showticksuffix,str,1,DiscreteValidator,NA,,,,,allowed,"[""all"", ""first"", ""last"", ""none""]",unrecognized value
 6,54,colors,CanvasColorAxisBarNumbers,coloraxis_colorbar_separatethousands,bool,1,BooleanValidator,NA,,,,,type,bool,value must be a boolean
 6,55,colors,CanvasColorAxisBarNumbers,coloraxis_colorbar_exponentformat,str,1,DiscreteValidator,NA,,,,,allowed,"[""none"", ""e"", ""E"", ""power"", ""SI"", ""B""]",unrecognized value
 6,56,colors,CanvasColorAxisBarNumbers,coloraxis_colorbar_showexponent,str,1,DiscreteValidator,NA,,,,,allowed,"[""all"", ""first"", ""last"", ""none""]",unrecognized shoue
-6,56,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_text,str,1,StringValidator,NA,,,,,empty_ok,TRUE,invalid string type
-6,57,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_text,str,2,StringValidator,NA,,,,,type,str,invalid string type
-6,57,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_family,str,1,StringValidator,NA,,,,,empty_ok,TRUE,invalid string type
-6,58,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_family,str,2,StringValidator,NA,,,,,type,str,invalid string type
+6,56,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_text,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
+6,57,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_text,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
+6,57,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_family,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
+6,58,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_family,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
 6,58,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_size,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater than or equal to min.
 6,59,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_size,"int, float",2,NumberValidator,allof,,,,,min,1,unrecognized fonue
 6,60,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,str,1,ColorValidator,anyof,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
