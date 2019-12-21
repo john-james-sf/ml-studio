@@ -9,7 +9,7 @@ from sklearn import datasets
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 
-from ml_studio.entities.services.classes import Classes
+from ml_studio.services.classes import Classes
 from ml_studio.supervised_learning.training.monitor import History
 from ml_studio.supervised_learning.training.estimator import Estimator
 from ml_studio.supervised_learning.regression import LinearRegression
@@ -518,11 +518,13 @@ def get_validation_rule_test_object():
             self.n = None
             self.i = 5
             self.f = 2.0
+            self.e = ""
             self.s = "shoes"
             self.a_b = np.array([True, False, True, True, False])
             self.a_i = [2,3,3,5,7,10,12,13,39]
             self.a_f = [1.5, 2.8, 3.9]
             self.a_s = ['apples','oranges', 'pears', 'bananas']
+            self.a_e = ["", "", ""]
     test_object = TestClass()
     return test_object
 
@@ -534,16 +536,22 @@ def get_validation_rule_reference_object():
             self.n = None
             self.i = 2
             self.f = 9.3
+            self.e = ""
             self.s = "hats"
             self.a_b = np.array([True, True, True, False])
             self.a_i = [2,5,7,9,11,13,15,17,19,21]
-            self.a_f = np.arange(1.0, 10,0, .789)
+            self.a_f = np.linspace(1.0, 10,0, 30)
             self.a_s = ['apples','oranges']
+            self.a_e = ["", "", ""]
 
     reference_object = ReferenceClass()
     return reference_object
 
-
-
+# =========================================================================== #
+#                                SKIPPED TESTS                                #
+# =========================================================================== #
+# BE CAREFUL WITH THIS. THIS CODE SKIPS ENTIRE DIRECTORIES
+collect_ignore = ["setup.py"]
+collect_ignore.append("tests/test_visualize/*.py")
 
 #%%

@@ -100,8 +100,12 @@ import time
 import numpy as np
 import pandas as pd
 
-from ml_studio.services.classes import Classes
-from ml_studio.services.singleton import Borg
+from ml_studio.services.validation.conditions import isNone, isEmpty, isBool
+from ml_studio.services.validation.conditions import isDate, isInt, isFloat
+from ml_studio.services.validation.conditions import isNumber, isString, isDate
+from ml_studio.services.validation.conditions import isEqual, isIn, isLess
+from ml_studio.services.validation.conditions import isGreater, isMatch
+from ml_studio.services.validation.conditions import isArray
 
 # --------------------------------------------------------------------------- #
 #                                   RULE                                      #  
@@ -132,87 +136,80 @@ class Rule(ABC):
         self.invalid_value = None              
         self.invalid_message = None
 
-    def when(self, attribute_name, rule, instance=None):
-        """Indicate a condition that must pass before rule is evaluated.
+    def _condition(self, condition_func, **kwargs):
+        """Formats a condition function and parameters for runtime execution.
         
         Parameters
         ----------
-        attribute_name : str
-            The name of the attribute evaluated as part of this condition.            
+        condition_func : function
+            Condition function.            
 
-        rule : Rule
-            The specific rule to apply ot the 'attribute_name'
+        **kwargs : dict
+            Parameters for the condition function in the form of two dictionaries:
+                a_dict : the first parameter for the condition function
+                b_dict : the second parameter for the condition function, if required.
 
-        instance : ML Studio object
-            The object containing the attribute indicated by 'attribute_name'.          
-            If None, the attribute_name is assumed to be valid for the
-            validated instance.
-
-        Raises
-        ------
-        AttributeError if the instance is provided and the attribute indicated
-        by the 'attribute_name' isn't valid for the instance.
-        
-        """
-        # If the instance is provide, validate the instance by getting its name.
-        if instance is not None:
-            classname = instance.__class.__.__name__
-            # Confirm attribute is valid for this class
-            try:
-                getattr(instance, attribute_name) 
-            except AttributeError:
-                print("Attribute {attrname} is not valid for {classname}.".format(
-                    attrname = attribute_name,
-                    classname = classname
-                ))
-
-        d = {}
-        d['instance'] = instance
-        d['attribute_name'] = attribute_name
-        d['rule'] = rule
-        self._when.append(d)
-        return self
-
-    def except_when(self, attribute_name, rule, instance=None):
-        """Indicate a condition that must not pass before rule is evaluated.
-        
-        Parameters
-        ----------
-        attribute_name : str
-            The name of the attribute evaluated as part of this condition.            
-
-        rule : Rule
-            The specific rule to apply ot the 'attribute_name'
-
-        instance : ML Studio object
-            The object containing the attribute indicated by 'attribute_name'.          
-            If None, the attribute_name is assumed to be valid for the
-            validated instance.
+                a_dict, and optionally b_dict contain either:
+                    instance : an instance of a class containing a property to evaluate
+                    attribute_name : the name of the attribute to evaluate
+                    or
+                    value : the value of the parameter
 
         Raises
         ------
-        AttributeError if the instance is provided and the attribute indicated
-        by the 'attribute_name' isn't valid for the instance.
-        
+        AttributeError if an instance and attribute name are provided and 
+        attribute indicated by the attribute name is not a valid attribute
+        for the instance.         
         """
-        # If the instance is provide, validate the instance by getting its name.
-        if instance is not None:
-            classname = instance.__class.__.__name__
-            # Confirm attribute is valid for this class
-            try:
-                getattr(instance, attribute_name) 
-            except AttributeError:
-                print("Attribute {attrname} is not valid for {classname}.".format(
-                    attrname = attribute_name,
-                    classname = classname
-                ))
+        # Unpack kwargs
+        a_dict = kwargs.get('a_dict')
+        a_instance = a_dict.get('instance')
+        a_attribute_name = a_dict.get('attribute_name')
+        a_value = a_dict.get('value')
 
-        d = {}
-        d['instance'] = instance
-        d['attribute_name'] = attribute_name
-        d['rule'] = rule
-        self._except_when.append(d)
-        return self        
+        b_dict = kwargs.get('b_dict')
+        b_instance = b_dict.get('instance')
+        b_attribute_name = b_dict.get('attribute_name')
+        b_value = b_dict.get('value')
+
+        # If instance and attribute are provided, confirm valid match
+        if a_instance is not None and a_attribute_name is not None:
+            try:
+                getattr(a_instance, a_attribute_name)
+            except AttributeError:
+                print("Class {classname} has no attribute {attrname}.".format(
+                    classname=a_instance.__class__.__name__,
+                    attrname=a_attribute_name
+                    ))
+        if b_instance is not None and b_attribute_name is not None:            
+            try:
+                getattr(b_instance, b_attribute_name)
+            except AttributeError:
+                print("Class {classname} has no attribute {attrname}.".format(
+                    classname=b_instance.__class__.__name__,
+                    attrname=b_attribute_name
+                ))            
+
+        # Format the condition 
+        c = {}
+        c['condition_func'] = condition_func
+        c['a_instance'] = a_instance
+        c['a_attribute_name'] = a_attribute_name
+        c['a_value'] = a_value
+        c['b_instance'] = b_instance
+        c['b_attribute_name'] = b_attribute_name
+        c['b_value'] = b_value  
+        return c
+
+    def when(self, condition_func, **kwargs):
+        """Updates list of pre-conditions for a rule."""
+        condition = self._condition(condition_func, **kwargs)
+        self._when.append(condition)
+
+    def except_when(self, condition_func, **kwargs):
+        """Updates a list of except pre-conditions for a rule."""
+        condition = self._condition(condition_func, **kwargs)
+        self._except_when.append(condition)
 
     def evaluate_when(self):
         """Evaluates conditions and returns true if all conditions were met."""
@@ -220,20 +217,65 @@ class Rule(ABC):
             when_valid = []
             # Iterate through 'when' conditions
             for when in self._when:
-                # Get the instance variable from evaluated instance if necessary.
-                if not when['instance']:
-                    when['instance'] = self._evaluated_instance
-                try:
-                    when['attribute_value'] = getattr(when['instance'], when['attribute_name'])
-                # Punt if invalid attribute for the instance
-                except AttributeError:
-                    print("Attribute {attrname} is not valid for {classname}.".format(
-                        attrname = when['attribute_name'],
-                        classname = when['instance'].__class__.__name__
-                    ))
-                # Execute the rule and track the validity.                
-                when.rule(when['instance'], when['attribute_name'], when['attribute_value'])
-                when_valid.append(when.isValid)
+                # GET A_VALUE
+                # Attempt to get the a_value direct from the dictionary 
+                if when['a_value'] is not None:
+                    a_value = when['a_value']
+                # Otherwise, extract from the instance and attribute provided
+                elif when['a_instance'] is not None:
+                    instance = when['a_instance']
+                    attribute_name = when['a_attribute_name']
+                    try:
+                        a_value = getattr(instance, attribute_name)
+                    except AttributeError:
+                        print("Class {classname} has no attribute {attrname}.".format(
+                            classname = instance.__class__.__name__,
+                            attrname = attribute_name
+                        ))
+                # Lastly, if the a_instance is None, assume the attribute is 
+                # for the evaluated instance.
+                else:
+                    instance = self._evaluated_instance
+                    attribute_name = when['a_attribute_name']
+                    try:
+                        a_value = getattr(instance, attribute_name)
+                    except AttributeError:
+                        print("Class {classname} has no attribute {attrname}.".format(
+                            classname = instance.__class__.__name__,
+                            attrname = attribute_name
+                        ))                    
+
+                # GET B_VALUE
+                # Attemp to get the b_value directly from the dictionary
+                if when['b_value'] is not None:
+                    b_value = when['b_value']
+                # Otherwise, extract from the instance and attribute provided
+                elif when['b_instance'] is not None:
+                    instance = when['b_instance']
+                    attribute_name = when['b_attribute_name']
+                    try:
+                        b_value = getattr(instance, attribute_name)
+                    except AttributeError:
+                        print("Class {classname} has no attribute {attrname}.".format(
+                            classname = instance.__class__.__name__,
+                            attrname = attribute_name
+                        ))
+                # Lastly, if the b_instance is None, assume the attribute is 
+                # for the evaluated instance.
+                else:
+                    instance = self._evaluated_instance
+                    attribute_name = when['b_attribute_name']
+                    try:
+                        b_value = getattr(instance, attribute_name)
+                    except AttributeError:
+                        print("Class {classname} has no attribute {attrname}.".format(
+                            classname = instance.__class__.__name__,
+                            attrname = attribute_name
+                        ))     
+
+                # Execute the condition and append the result to the 'when_valid' list
+                condition = when['condition_func']
+                when_valid.append(condition(a_value, b_value))
             
             # If all valid, then True, otherwise False indicates the condition is not met.
             if all(when_valid):
@@ -248,32 +290,76 @@ class Rule(ABC):
         """Evaluates conditions and returns true if all conditions were NOT met."""
         if self._except_when:
             except_when_valid = []
-            # Iterate through 'except_when' conditions
+            # Iterate through 'when' conditions
             for except_when in self._except_when:
-                # Get the instance variable from evaluated instance if necessary.
-                if not except_when['instance']:
-                    except_when['instance'] = self._evaluated_instance
-                try:
-                    except_when['attribute_value'] = getattr(except_when['instance'], except_when['attribute_name'])
-                # Punt if invalid attribute for the instance
-                except AttributeError:
-                    print("Attribute {attrname} is not valid for {classname}.".format(
-                        attrname = except_when['attribute_name'],
-                        classname = except_when['instance'].__class__.__name__
-                    ))
-                # Execute the rule and track the validity.                
-                except_when.rule(except_when['instance'], except_when['attribute_name'], except_when['attribute_value'])
-                except_when_valid.append(except_when.isValid)
+                # GET A_VALUE
+                # Attempt to get the a_value direct from the dictionary 
+                if except_when['a_value'] is not None:
+                    a_value = except_when['a_value']
+                # Otherwise, extract from the instance and attribute provided
+                elif except_when['a_instance'] is not None:
+                    instance = except_when['a_instance']
+                    attribute_name = except_when['a_attribute_name']
+                    try:
+                        a_value = getattr(instance, attribute_name)
+                    except AttributeError:
+                        print("Class {classname} has no attribute {attrname}.".format(
+                            classname = instance.__class__.__name__,
+                            attrname = attribute_name
+                        ))
+                # Lastly, if the a_instance is None, assume the attribute is 
+                # for the evaluated instance.
+                else:
+                    instance = self._evaluated_instance
+                    attribute_name = except_when['a_attribute_name']
+                    try:
+                        a_value = getattr(instance, attribute_name)
+                    except AttributeError:
+                        print("Class {classname} has no attribute {attrname}.".format(
+                            classname = instance.__class__.__name__,
+                            attrname = attribute_name
+                        ))                    
+
+                # GET B_VALUE
+                # Attemp to get the b_value directly from the dictionary
+                if except_when['b_value'] is not None:
+                    b_value = except_when['b_value']
+                # Otherwise, extract from the instance and attribute provided
+                elif except_when['b_instance'] is not None:
+                    instance = except_when['b_instance']
+                    attribute_name = except_when['b_attribute_name']
+                    try:
+                        b_value = getattr(instance, attribute_name)
+                    except AttributeError:
+                        print("Class {classname} has no attribute {attrname}.".format(
+                            classname = instance.__class__.__name__,
+                            attrname = attribute_name
+                        ))
+                # Lastly, if the b_instance is None, assume the attribute is 
+                # for the evaluated instance.
+                else:
+                    instance = self._evaluated_instance
+                    attribute_name = except_when['b_attribute_name']
+                    try:
+                        b_value = getattr(instance, attribute_name)
+                    except AttributeError:
+                        print("Class {classname} has no attribute {attrname}.".format(
+                            classname = instance.__class__.__name__,
+                            attrname = attribute_name
+                        ))     
+
+                # Execute the condition and append the result to the 'except_when_valid' list
+                condition = except_when['condition_func']
+                except_when_valid.append(condition(a_value, b_value))
             
-            # If all except conditions are met, we return False, indicating that the except conditions were
-            # met and validation stops. Alternatively, we return True which allows the validation to continue.
-            if all(except_when_valid):
+            # If all valid, then True, otherwise False indicates the condition is not met.
+            if any(except_when_valid):
                 return False
             else:
                 return True
         # If there is no except_when condition, a True value just means we proceed with validation.
         else:
-            return True        
+            return True      
 
     @abstractmethod
     def validate(self, instance, attribute_name, attribute_value):
@@ -587,9 +673,10 @@ class NumberRule(Rule):
 class StringRule(Rule):
     """Evaluates whether the value of a specific property is an integer."""
 
-    def __init__(self, spaces_ok=False):
+    def __init__(self, spaces_ok=False, empty_ok=False):
         super(StringRule, self).__init__()
         self._spaces_ok = spaces_ok
+        self._empty_ok = empty_ok
 
     def validate(self, instance, attribute_name, attribute_value):
         super(StringRule, self).validate(instance=instance,
@@ -598,13 +685,18 @@ class StringRule(Rule):
 
         if self.evaluate_when() and self.evaluate_except_when():
             if isinstance(attribute_value, str):
-                if self._spaces_ok:
+                if self._spaces_ok and self._empty_ok:
                     self.isValid = True
+                elif not self._spaces_ok and (" " in attribute_value):
+                    self.isValid =False
+                    self.invalid_value = attribute_value
+                    self.invalid_message = self.error_message()
+                elif not self._empty_ok and attribute_value == "":
+                    self.isValid =False
+                    self.invalid_value = attribute_value
+                    self.invalid_message = self.error_message()
                 else:
-                    self.isValid = not (" " in attribute_value)
-                    if not self.isValid:
-                        self.invalid_value = attribute_value
-                        self.invalid_message = self.error_message()
+                    self.isValid = True
             else:
                 self.isValid = False
                 self.invalid_value = attribute_value
@@ -658,7 +750,7 @@ class SemanticRule(Rule):
                 self._external_attribute_name)
             self._val = self._evaluated_attribute_value
         except AttributeError:
-            classname = self._external_instance.__class.__.__name__
+            classname = self._external_instance.__class__.__name__
             msg = "{classname} has no attribute {attrname}.".format(
                 classname = classname,
                 attrname = self._external_attribute_name
@@ -718,7 +810,7 @@ class EqualRule(SemanticRule):
                 Received value: {value}.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    equalclass = self._external_instance.__class.__.__name__,
+                    equalclass = self._external_instance.__class__.__name__,
                     value=self._evaluated_attribute_value)
 
         else:
@@ -785,7 +877,7 @@ class NotEqualRule(SemanticRule):
                 Received value: {value}.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    externalclass = self._external_instance.__class.__.__name__,
+                    externalclass = self._external_instance.__class__.__name__,
                     externalattr = self._external_attribute_name,
                     externalval = self._external_attribute_value,
                     value=self._evaluated_attribute_value)
@@ -854,7 +946,7 @@ class AllowedRule(SemanticRule):
                 equal any of the allowed values. Received value: {value}.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    equalclass = self._external_instance.__class.__.__name__,
+                    equalclass = self._external_instance.__class__.__name__,
                     value=str(self._evaluated_attribute_value))
             msg = msg + "Allowed Value(s): {allowed}.".format(
                 allowed=str(self._val)
@@ -1566,7 +1658,7 @@ class AllEqualRule(ArrayRule, SemanticRule):
                 Received value: {value}.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    equalclass = self._external_instance.__class.__.__name__,
+                    equalclass = self._external_instance.__class__.__name__,
                     value=self._evaluated_attribute_value)
 
         else:
@@ -1740,28 +1832,7 @@ class AnyDisAllowedRule(ArrayRule, SemanticRule):
 # --------------------------------------------------------------------------- #
 #                              UTILITY FUNCTIONS                              #  
 # --------------------------------------------------------------------------- #
-def isString(x):
-    if isinstance(x, str):
-        return True
-    else:
-        return False
-def isArray(x):
-    if isinstance(x, (pd.Series, np.ndarray, list, tuple)):
-        return True
-    else:
-        return False
-
 def format_text(x):
     x = " ".join(x.split())
     formatted = textwrap.fill(textwrap.dedent(x))
     return formatted        
-
-def isEmpty(x):
-    if x is None:
-        return True
-    elif x == "":
-        return True
-    elif x.isspace():
-        return True
-    else:
-        return False
