@@ -106,4 +106,9 @@ class DataPackage():
         self._datasets = []
 
         # 
+#%%  
+import os
+repr(getpass.getuser())
 
+
+# %%

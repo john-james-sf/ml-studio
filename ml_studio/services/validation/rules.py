@@ -19,104 +19,194 @@
 # License: Modified BSD                                                       #
 # Copyright (c) 2019 Decision Scients                                         #
 # =========================================================================== #
-"""Module defines the rules used for validation.
+"""Module contains the builder / fluent interface classes for validation rules.
 
-The rules module categorizes rules in terms of the type of validation they 
-support and the data structure. The 
+This module implements the builder design pattern with a fluent interface,
+and includes:
 
-    * Syntactic Rules : Rules that ensure the data is syntactically correct
-    * Semantic Rules : Rules that ensure the data makes logical sense within
-        a context of other data elements or values  
-    * Semantic Rules (Arrays) : Rules that operate on arrays and verify 
-        semantic correctness via other data elements or values
-    * Syntactic Rules (Arrays) : Rules that operate on arrays and verify 
-        syntactical correctness
+    * Director : Director class that constructs validation rules
+    * BaseRuleBuilder : Abstract base class for rule building objects
 
-    The classes are as follows:
+    Syntactic Builders
+    ------------------
+    * NoneRuleBuilder : Concrete builder for the NoneRule, which evaluates 
+        whether the value of a specific property is equal to None.
+    * EmptyRuleBuilder : Concrete builder for the EmptyRule, which evaluates 
+        whether the value of a specific property is empty.
+    * BoolRuleBuilder : Concreate builder for the BoolRule, which evaluates 
+        whether the value of a specific property is Boolean.
+    * IntRuleBuilder : Concrete builder for the IntRule, which evaluates 
+        whether the value of a specific property is an integer, and optionally
+        whether the value is in accordance with min/max requirements.
+    * FloatRule : Concrete builder for the FloatRule, which evaluates 
+        whether the value of a specific property is an float, and optionally
+        whether the value is in accordance with min/max requirements.
+    * NumberRuleBuilder : Concrete builder for the NumberRule, which evaluates 
+        whether the value of a specific property is an a number, and optionally
+        whether the value is in accordance with min/max requirements.
+    * StringRuleBuilder : Concrete builder for the StringRule, which evaluates 
+        whether the value of a specific property is a string.
 
-    Syntactic Rules
-    --------------- 
-    * BaseRule : The abstract base class for rule classes.
-    * NoneRule : Ensures that a specific property is None.
-    * NotNoneRule : Ensures that a specific property is not None.
-    * EmptyRule : Ensures that a specific property is None, empty or whitespace.
-    * NotEmptyRule : Ensures that a specific property is not None, the
-        empty string or whitespace.
-    * BoolRule : Ensures that the value of a specific property is a Boolean.
-    * IntRule : Ensures that the value of a specific property is an integer.
-    * FloatRule : Ensures that the value of a specific property is a float.
-    * NumberRule : Ensures that the value of a specific property is a number.
-    * StringRule : Ensures that the value of a specific property is a string.    
+    Semantic Builders
+    -----------------
+    * EqualRuleBuilder : Concrete builder for the EqualRule, which ensures 
+        that the value of a specific property is equal to a particular value 
+        or that of another instance and/or property.        
+    * AllowedRuleBuilder : Concrete builder for the AllowedRule, which ensures 
+        the value of a specific property is one of a discrete set of allowed values. 
+    * DisAllowedRuleBuilder : Concrete builder for the EqualRule, which ensures the 
+        value of a specific property is none of a discrete set of disallowed values.     
+    * LessRuleBuilder : Concrete builder for the LessRule, which ensures the 
+        value of a specific property is less than a particular  value or that 
+        of another instance and / or property.   
+    * LessEqualRuleBuilder : Concrete builder for the LessEqualRule, which ensures the 
+        value of a specific property is less than or equal to a particular 
+        value or that of another instance and / or property.        
+    * GreaterRuleBuilder : Concrete builder for the EqualRule, which ensures the 
+        value of a specific property is greater than a particulcar value or greater 
+        than the value of another property.        
+    * RegexRuleBuilder : Concrete builder for the EqualRule, which ensures the 
+        value of a specific property matches the given regular expression(s).     
 
-    Semantic Rules
-    --------------
-    * SemanticRule : Base class for semantic rules.
-    * EqualRule : Ensures that the value of a specific property is
-        equal to a particular value or the value of another property.        
-    * NotEqualRule : Ensures that the value of a specific property is
-        not equal to a particular value or the value of another property.
-    * AllowedRule :Ensures the value of a specific property is one of a 
-        discrete set of allowed values. 
-    * DisAllowedRule :Ensures the value of a specific property is none of a 
-        discrete set of disallowed values.     
-    * LessRule : Ensures the value of a specific property is less than
-        a partiulcar value or less than the value of another property.
-    * GreaterRule : Ensures the value of a specific property is greater
-        than a particulcar value or greater than the value of another property.        
-    * RegexRule : Ensures the value of a specific property matches
-        the given regular expression(s). 
-
-    Syntactic Array Rules
+    Syntactic Array Rule Builders
     ---------------------
-    ArrayRules : Abstract base class for rules applying to arrays.
-    AllBoolRule : Ensures that all elements of a specific property are Boolean.
-    AllIntRule : Ensures that all elements of a specific property are integers.
-    AllFloatRule : Ensures that all elements of a specific property are floats.
-    AllNumberRule : Ensures that all elements of a specific property are numbers.
-    AllStringRule : Ensures that all elements of a specific property are strings.
+    ArrayRules : Abstract base class building rules that apply to arrays.
+    AllBoolRuleBuilder : Concrete builder for the AllBoolRule, which ensures that
+        all values of a specific property are Booleans.
+    AllIntRuleBuilder : Concrete builder for the AllIntRule, which ensures that
+        all values of a specific property are integers.
+    AllFloatRuleBuilder : Concrete builder for the AllFloatRule, which ensures that
+        all values of a specific property are Floats.
+    AllNumberRuleBuilder : Concrete builder for the AllNumberRule, which ensures that
+        all values of a specific property are numbers.
+    AllStringRuleBuilder : Concrete builder for the AllStringRule, which ensures that
+        all values of a specific property are strings.
 
-    Semantic Array Rules
+    Semantic Array Rule Builders
     --------------------
-    AllEqualRule : Ensures that all elements of a specific property are equal 
-        to all elements of a reference array-like.
-    AllAllowedRule : Ensures that all elements of a specific property are allowed.
-    AnyDisAllowedRule : Evaluates whether any elements of a specific property are 
-        disallowed.
+    AllEqualRuleBuilder : Concrete builder for the AllEqualRule, which ensures 
+        that all values of a specific property are equal to all elements of 
+        a reference array-like or a property on another object. 
+    AllAllowedRuleBuilder : Concrete builder for the AllAllowedRule, which 
+        ensures that all values of a specific property are allowed.
+    AnyDisAllowedRuleBuilder : Concrete builder for the AnyDisAllowedRule, 
+        which ensures that all values of a specific property are allowed.
+
+A rule is comprised of the following parts, each of which implemented via the
+BaseRuleBuilder interface.
+
+    * Metadata : The metadata associated with the rule, such as the date and
+        time, created, the creator and the Rule name.
+    * Target : The target of the validation, in terms of the names of the class
+        and attribute to be validated.
+    * Directive : The instructions executed during validation, along with its 
+        parameters. For instance, a NumberRule may have min and max as
+        rule parameters.
+    * Conditions : Two types of conditions are implemented: 'when' conditions
+        that must be passed before performing the validation and 'except when'
+        conditions that specify when a validation rule should not apply.
+    * Message : The message to render when the validation fails. 
+
 
 """
-
-from abc import ABC, abstractmethod
+#%%
+from abc import ABC, abstractmethod, abstractproperty
 import builtins
 from collections.abc import Iterable
 from dateutil.parser import parse
-import os
+from datetime import datetime
+import getpass
 import math
 import numbers
+import os
 import re
 import sys
 import textwrap
 import time
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
 
-from ml_studio.services.validation.conditions import isNone, isEmpty, isBool
-from ml_studio.services.validation.conditions import isDate, isInt, isFloat
-from ml_studio.services.validation.conditions import isNumber, isString, isDate
-from ml_studio.services.validation.conditions import isEqual, isIn, isLess
-from ml_studio.services.validation.conditions import isGreater, isMatch
+from ml_studio.services.validation.conditions import IsNone, IsEmpty, IsBool
+from ml_studio.services.validation.conditions import IsInt, IsFloat
+from ml_studio.services.validation.conditions import IsNumber, IsString
+from ml_studio.services.validation.conditions import IsEqual, IsIn, IsLess
+from ml_studio.services.validation.conditions import IsGreater, IsMatch
 from ml_studio.services.validation.conditions import isArray
 
+# --------------------------------------------------------------------------- #
+#                                RULEBUILDER                                  #  
+# --------------------------------------------------------------------------- #
+class RuleBuilder(ABC):
+    """The Builder interface specifies methods for creating the Rules objects. """
+
+    @abstractproperty
+    def rule(self):
+        pass
+
+    @abstractmethod
+    def for_target(self):
+        pass
+
+    @abstractmethod
+    def when(self):
+        pass
+
+    @abstractmethod
+    def when_any(self):
+        pass
+
+    @abstractmethod
+    def when_all(self):
+        pass
+
+# --------------------------------------------------------------------------- #
+#                            NONERULEBUILDER                                  #  
+# --------------------------------------------------------------------------- #
+class NoneRuleBuilder(RuleBuilder):
+    """Concrete Builder class for the NoneRule follows the RuleBuilder interface."""
+
+    def __init__(self, name, description=None):
+        """Instantiate a fresh Rule instance."""
+        self.reset()
+        self._rule.name = name
+        self._rule.description = description 
+
+    def reset(self):
+        """Creates a fresh instance of the Rule object."""
+        self._rule = NoneRule()
+
+    @property
+    def rule(self):
+        rule = self._rule
+        self.reset()
+        return rule
+
+    def when(self, condition):
+        self._rule.when(condition)
+
+    def not_when(self, condition):
+        self._rule.not_when(condition)
+
+
+
+    
+
+
+#%%
 # --------------------------------------------------------------------------- #
 #                                   RULE                                      #  
 # --------------------------------------------------------------------------- #
 class Rule(ABC):
     """Base class for all rules."""
 
-    def __init__(self, value=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
 
-        # The value to which the rule applies if any
-        self._value = value
+        # Designate unique/opaque userid and other metadata        
+        self._id = uuid4()
+        self._created = datetime.now()
+        self._user = getpass.getuser()
 
         # The evaluated property
         self._evaluated_instance = None
@@ -128,203 +218,64 @@ class Rule(ABC):
         # should not (except when) be applied. Each time the when and 
         # except when methods are called, the condition is added to 
         # the appropriate list.
-        self._when = []
-        self._except_when = []
+        self._conditions = dict()
 
         # Properties that capture the results of the validation.
         self.isValid = True
         self.invalid_value = None              
         self.invalid_message = None
 
-    def _condition(self, condition_func, a, b=None):
-        """Formats a condition function and parameters for runtime execution.
-        
-        Parameters
-        ----------
-        condition_func : function
-            Condition function.            
 
-        a : dict, int, float, str, array-like. 
-            The first parameter for the condition function.
-
-        b : dict, int, float, str, array-like. Optional.
-            The second parameter for the condition function. Optional if the
-            condition function takes only one value.
-        
-        Note
-        ----
-        a and b may be an int, float, str or array-like containing the value
-        being evaluated. Alternatively, a and b may be a dict object with two
-        members:
-            * instance : ML Studio object
-            * attribute_name : str
-        These members identify an object and the attribute being evaluated.
-
-        Raises
-        ------
-        AttributeError if an instance and attribute name are provided and 
-        attribute indicated by the attribute name is not a valid attribute
-        for the instance.         
-        """
-        # Obtain a from a dictionary
-        if isinstance(a, dict):
-            a_instance = a.get('instance')
-            a_attribute_name = a.get('attribute_name')
-
-            # If instance and attribute are provided, confirm valid match
-            if a_instance is not None and a_attribute_name is not None:
-                try:
-                    getattr(a_instance, a_attribute_name)
-                except AttributeError:
-                    print("Class {classname} has no attribute {attrname}.".format(
-                        classname=a_instance.__class__.__name__,
-                        attrname=a_attribute_name
-                        ))        
-            # Initialize the condition dictionary object with the found parameters
-            c = {}
-            c['condition_func'] = condition_func
-            c['a_instance'] = a_instance
-            c['a_attribute_name'] = a_attribute_name
-
-        # Alternatively, a IS the parameter, go with that.
-        else:
-            c = {}
-            c['condition_func'] = condition_func
-            c['a_value'] = a
-        
-        # Now, let's see whazzup with the b parameters
-        if b is not None:
-            # Obtain as if b is a dict
-            if isinstance(b, dict):
-                b_instance = b.get('instance')
-                b_attribute_name = b.get('attribute_name')
-
-                # If instance and attribute are provided, confirm valid match
-                if b_instance is not None and b_attribute_name is not None:
-                    try:
-                        getattr(b_instance, b_attribute_name)
-                    except AttributeError:
-                        print("Class {classname} has no attribute {attrname}.".format(
-                            classname=b_instance.__class__.__name__,
-                            attrname=b_attribute_name
-                            ))        
-                # Add the b_parameters to the condition dictionary object.
-                c['b_instance'] = b_instance
-                c['b_attribute_name'] = b_attribute_name
-
-            # Alternatively, take b asis. Hooves...think horses.
-            else:
-                c['b_value'] = b
-
-        return c
-
-    def when(self, condition_func, a, b=None):
-        """Updates list of pre-conditions for a rule."""
-        condition = self._condition(condition_func, a, b)
-        self._when.append(condition)
+    def when(self, condition):
+        """Adds a single condition that must be met for a rule to apply."""
+        self._conditions['when'] = [] or self._conditions['when']
+        self._conditions['when'].append(condition)
         return self
 
-    def except_when(self, condition_func, a, b=None):
-        """Updates a list of except pre-conditions for a rule."""
-        condition = self._condition(condition_func, a, b)
-        self._except_when.append(condition)
+    def when_all(self, conditions):
+        """Adds a list of rules, all of which must be met for a rule to apply."""
+        self._conditions['when_all'] = [] or self._conditions['when_all']
+        self._conditions['when_all'].append(condition)
         return self
 
-    def _evaluate_conditions(self, conditions):
-        if conditions:
-            when_valid = []
-            # Iterate through 'when' conditions
-            for condition in conditions:
-                # GET A_VALUE
-                # Attempt to get the a_value direct from the dictionary 
-                if condition.get('a_value') is not None:
-                    a_value = condition['a_value']
-                # Otherwise, extract from the instance and attribute provided
-                elif condition.get('a_instance') is not None:
-                    instance = condition['a_instance']
-                    attribute_name = condition['a_attribute_name']
-                    try:
-                        a_value = getattr(instance, attribute_name)
-                    except AttributeError:
-                        print("Class {classname} has no attribute {attrname}.".format(
-                            classname = instance.__class__.__name__,
-                            attrname = attribute_name
-                        ))
-                # Lastly, if the a_instance is None, assume the attribute is 
-                # for the evaluated instance.
-                elif condition.get('a_attribute_name') is not None:
-                    instance = self._evaluated_instance
-                    attribute_name = condition['a_attribute_name']
-                    try:
-                        a_value = getattr(instance, attribute_name)
-                    except AttributeError:
-                        print("Class {classname} has no attribute {attrname}.".format(
-                            classname = instance.__class__.__name__,
-                            attrname = attribute_name
-                        ))
-                else:
-                    a_value = None                    
+    def when_any(self, conditions):
+        """Adds a list of rules, all of which must be met for a rule to apply."""
+        self._conditions['when_any'] = [] or self._conditions['when_any']
+        self._conditions['when_any'].append(condition)
+        return self
 
-                # GET B_VALUE...if available
-                # Attempt to get the b_value directly from the dictionary
-                if condition.get('b_value') is not None:                
-                    b_value = condition['b_value']
-                # Otherwise, extract from the instance and attribute provided
-                elif condition.get('b_instance') is not None:
-                    instance = condition['b_instance']
-                    attribute_name = condition['b_attribute_name']
-                    try:
-                        b_value = getattr(instance, attribute_name)
-                    except AttributeError:
-                        print("Class {classname} has no attribute {attrname}.".format(
-                            classname = instance.__class__.__name__,
-                            attrname = attribute_name
-                        ))
-                # Lastly, if the b_instance is None and attribute_name is not, 
-                # assume the attribute is for the evaluated instance.
-                elif condition.get('b_attribute_name') is not None:
-                    instance = self._evaluated_instance
-                    attribute_name = condition['b_attribute_name']
-                    try:
-                        b_value = getattr(instance, attribute_name)
-                    except AttributeError:
-                        print("Class {classname} has no attribute {attrname}.".format(
-                            classname = instance.__class__.__name__,
-                            attrname = attribute_name
-                        ))
-                else:
-                    b_value = None                     
-
-                # Execute the condition and append the result to the 'condition_valid' list
-                condition_func = condition['condition_func']
-                when_valid.append(condition_func(a_value, b_value))
-
-            return when_valid
+    def _evaluate_when(self):
+        if self._conditions.get('when'):
+            results = []
+            for condition in self._conditions.get('when'):
+                results.append(condition())
+            return all(results)
         else:
             return True
 
-
-    def evaluate_when(self):
-        """Evaluates when conditions and returns true if all conditions were met."""
-        if self._when:
-            results = self._evaluate_conditions(self._when)
-            if isArray(results):
-                return all(results)
-            else:
-                return results
+    def _evaluate_when_all(self):
+        if self._conditions.get('when_all'):
+            results = []
+            for condition in self._conditions.get('when_all'):
+                results.append(condition())
+            return all(results)
         else:
             return True
 
-    def evaluate_except_when(self):
-        if self._except_when:
-            results = self._evaluate_conditions(self._except_when)
-            if isArray(results):
-                return not any(results)
-            else:
-                return not results
+    def _evaluate_when_any(self):
+        if self._conditions.get('when_any'):
+            results = []
+            for condition in self._conditions.get('when_any'):
+                results.append(condition())
+            return any(results)
         else:
-            return True    
-                    
+            return True
+
+    def evaluate_conditions(self):
+        """Evaluates 'when', 'when_all', and 'when_any' conditions."""
+        return self._evaluate_when() and self._evaluate_when_all() and \
+            self._evaluate_when_any()
+
     @abstractmethod
     def validate(self, instance, attribute_name, attribute_value):
         self._evaluated_instance = instance
@@ -359,7 +310,7 @@ class NoneRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if attribute_value is None: 
                 self.isValid = True
             else:
@@ -393,7 +344,7 @@ class NotNoneRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if attribute_value is not None: 
                 self.isValid = True
             else:
@@ -432,7 +383,7 @@ class EmptyRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if isEmpty(attribute_value): 
                 self.isValid = True
             else:
@@ -470,7 +421,7 @@ class NotEmptyRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if not isEmpty(attribute_value): 
                 self.isValid = True
             else:
@@ -508,7 +459,7 @@ class BoolRule(Rule):
             raise AttributeError("BoolRule is for strings. To evaluate\
                 array-like structures, use AllBoolRule.")
 
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if isinstance(attribute_value, bool):
                 self.isValid = True
             else:
@@ -542,7 +493,7 @@ class IntRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if isinstance(attribute_value, int):
                 self.isValid = True
             else:
@@ -576,7 +527,7 @@ class FloatRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if isinstance(attribute_value, float):
                 self.isValid = True
             else:
@@ -611,7 +562,7 @@ class NumberRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if isinstance(attribute_value, (int,float)):
                 self.isValid = True
             else:
@@ -647,7 +598,7 @@ class StringRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if isinstance(attribute_value, str):
                 if self._spaces_ok and self._empty_ok:
                     self.isValid = True
@@ -757,7 +708,7 @@ class EqualRule(SemanticRule):
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if attribute_value == self._value: 
                 self.isValid = True
             else:
@@ -826,7 +777,7 @@ class NotEqualRule(SemanticRule):
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if attribute_value != self._value: 
                 self.isValid = True
             else:
@@ -896,7 +847,7 @@ class AllowedRule(SemanticRule):
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if attribute_value in self._value: 
                 self.isValid = True
             else:
@@ -969,7 +920,7 @@ class DisAllowedRule(SemanticRule):
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if attribute_value not in self._value: 
                 self.isValid = True
             else:
@@ -1045,7 +996,7 @@ class LessRule(SemanticRule):
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if attribute_value < self._value: 
                 self.isValid = True
             elif self._equal_ok:
@@ -1143,7 +1094,7 @@ class GreaterRule(SemanticRule):
             self.get_external_value()
 
         # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if attribute_value > self._value: 
                 self.isValid = True
             elif self._equal_ok:
@@ -1261,7 +1212,7 @@ class RegexRule(SemanticRule):
                     self.validate_regex(v)                
 
         # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             # If array, then we evaluate to True of any matches.
             if isArray(self._value):                
                 regex_matches = []
@@ -1350,7 +1301,7 @@ class AllBoolRule(ArrayRule):
                                        attribute_value=attribute_value)
 
         # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             invalid_values = [v for v in self._evaluated_attribute_value\
                  if (not isinstance(v, bool))]
             if invalid_values:
@@ -1394,7 +1345,7 @@ class AllIntRule(ArrayRule):
                                        attribute_value=attribute_value)
 
         # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             invalid_values = [v for v in self._evaluated_attribute_value\
                  if not isinstance(v, int)]
             if invalid_values:
@@ -1438,7 +1389,7 @@ class AllFloatRule(ArrayRule):
                                        attribute_value=attribute_value)
 
         # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             invalid_values = [v for v in self._evaluated_attribute_value\
                  if not isinstance(v, float)]
             if invalid_values:
@@ -1482,7 +1433,7 @@ class AllNumberRule(ArrayRule):
                                        attribute_value=attribute_value)
 
         # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             invalid_values = [v for v in self._evaluated_attribute_value\
                  if not isinstance(v, (int, float))]
             if invalid_values:
@@ -1526,7 +1477,7 @@ class AllStringRule(ArrayRule):
                                        attribute_value=attribute_value)
 
         # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             invalid_values = [v for v in self._evaluated_attribute_value\
                  if not isinstance(v, str)]
             if invalid_values:
@@ -1592,7 +1543,7 @@ class AllEqualRule(ArrayRule, SemanticRule):
         np_reference_value = np.array(self._value)
 
         # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             if np.array_equal(np_evaluated_value, np_reference_value): 
                 self.isValid = True
             else:
@@ -1665,7 +1616,7 @@ class AllAllowedRule(ArrayRule, SemanticRule):
         np_reference_value = np.array(self._value)
 
         # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             # Evaluate whether any of the elements are not in the list of 
             # allowed values
             invalid_values = [e for e in np_evaluated_value if e not in np_reference_value]
@@ -1742,7 +1693,7 @@ class AnyDisAllowedRule(ArrayRule, SemanticRule):
         np_reference_value = np.array(self._value)
 
         # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_except_when():
+        if self.evaluate_when() and self.evaluate_not_when():
             # Evaluate whether any of the elements are not in the list of 
             # allowed values
             invalid_values = [e for e in np_evaluated_value if e in np_reference_value]
@@ -1787,3 +1738,6 @@ def format_text(x):
     x = " ".join(x.split())
     formatted = textwrap.fill(textwrap.dedent(x))
     return formatted        
+
+
+# %%

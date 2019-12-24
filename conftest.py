@@ -521,11 +521,17 @@ def get_validation_rule_test_object():
             self.f = 2.0
             self.e = ""
             self.s = "hats"
+            self.a_l = [4,3,2,5]
+            self.a_g = [3,4,6,8]
+            self.a_ge = [3,4,6,8]
+            self.a_le = [5,6,2,9]
             self.a_b = np.array([True, False, True, True, False])
-            self.a_i = [2,3,3,5,7,10,12,13,39]
+            self.a_i = [1,3,3,5,7,11,13,39]
             self.a_f = [1.5, 2.8, 3.9]
             self.a_s = ['apples','oranges', 'pears', 'bananas']
             self.a_e = ["", "", ""]
+            self.na_e = [[None, "Hats", 2.0], [3, False, 33,55]]
+            self.na_ne = [[None, "Hats", 2.0], [3, False, 33,55]]
     test_object = TestClass()
     return test_object
 
@@ -540,11 +546,17 @@ def get_validation_rule_reference_object():
             self.f = 9.3
             self.e = ""
             self.s = "hats"
-            self.a_b = np.array([True, True, True, False])
-            self.a_i = [2,5,7,9,11,13,15,17,19,21]
+            self.a_l = [8,12,31,33]
+            self.a_le = [5,6,2,9]
+            self.a_g = [2,3,5,7]
+            self.a_ge = [3,4,6,8]
+            self.a_b = np.array([True, False, True, True, False])
+            self.a_i = [1,2,3,5,7,9,11,13,15,17,19,21,39]
             self.a_f = np.linspace(1.0, 10,0, 30)
             self.a_s = ['apples','oranges']
             self.a_e = ["", "", ""]
+            self.na_e = [[None, "Hats", 2.0], [3, False, 33,55]]
+            self.na_ne = [[None, "Hats", 2.0], [3, False, 33,551]]
 
     reference_object = ReferenceClass()
     return reference_object

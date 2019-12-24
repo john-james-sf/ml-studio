@@ -52,9 +52,10 @@ from ml_studio.services.validation.rules import AllowedRule, DisAllowedRule
 from ml_studio.services.validation.rules import LessRule, GreaterRule
 from ml_studio.services.validation.rules import RegexRule
 
-from ml_studio.services.validation.conditions import isEqual, isIn, isLess
-from ml_studio.services.validation.conditions import isGreater, isMatch
+from ml_studio.services.validation.conditions import IsEqual, IsIn, IsLess
+from ml_studio.services.validation.conditions import IsGreater, IsMatch
 
+@mark.skip(reason="Refactoring conditions.")
 class SemanticRuleTests:
 
     @mark.semantic_rules
@@ -190,226 +191,227 @@ class SemanticRuleTests:
     # * isLess : Evaluates whether argument a is less than argument b.
     # * isGreater : Evaluates whether argument a is greater than argument b.
     # * isMatch : Evaluates whether a string matches a regea pattern.     
+
+@mark.skip(reason="Refactoring conditions.")    
+class SemanticRuleConditionTests:
+
+    @mark.semantic_rules
+    @mark.semantic_rules_condition
+    @mark.semantic_rules_when_condition_isequal
+    def test_semantic_rule_condition_isequal(self, get_validation_rule_test_object,
+                            get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Setup passing when condition
+        a = dict(instance=ref_object, attribute_name='s')
+        b = dict(instance=test_object, attribute_name='s')
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(IsEqual(a,b))
+        validation_rule.validate(test_object, 'i', 2)
+        assert validation_rule.isValid == True, "When Condition=isEqual, pass validation failed"
+        assert validation_rule.invalid_message is None, "Condition=isEqual, pass, validation message failed"
+        # Setup failing when condition
+        a = dict(instance=ref_object, attribute_name='b')
+        b = dict(instance=test_object, attribute_name='s')            
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(IsEqual(a,b))
+        validation_rule.validate(test_object, 'n', 5)
+        assert validation_rule.isValid == True, "When Condition=isEqual, fail, validation failed."        
+        assert validation_rule.invalid_message is None, "Condition=isEqual, fail no conditions, validation message failed"
+
+    @mark.semantic_rules
+    @mark.semantic_rules_condition
+    @mark.semantic_rules_not_when_condition_isequal
+    def test_semantic_rule_not_when_condition_isequal(self, get_validation_rule_test_object,
+                            get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object            
+        # Setup passing except when condition
+        a = dict(instance=ref_object, attribute_name='s')
+        b = dict(instance=test_object, attribute_name='s')
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').not_when(IsEqual(a,b))
+        validation_rule.validate(test_object, 'i', 2)
+        assert validation_rule.isValid == True, "Except When Condition=isEqual, pass validation failed"
+        assert validation_rule.invalid_message is None, "Condition=isEqual, pass, validation message failed"
+        # Setup failing except when condition
+        a = dict(instance=ref_object, attribute_name='b')
+        b = dict(instance=test_object, attribute_name='s')            
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').not_when(IsEqual(a,b))
+        validation_rule.validate(test_object, 'n', 5)
+        assert validation_rule.isValid == False, "Except When Condition=isEqual, fail, validation failed."        
+        assert validation_rule.invalid_message is not None, "Condition=isEqual, fail no conditions, validation message failed"
+
     
-    class SemanticRuleConditionTests:
+    @mark.semantic_rules
+    @mark.semantic_rules_condition
+    @mark.semantic_rules_when_condition_isin
+    def test_semantic_rule_condition_isin(self, get_validation_rule_test_object,
+                            get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Setup when passing condition
+        a = dict(instance=ref_object, attribute_name='s')
+        b = ['hats', 'coat', 'shoes']
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(IsIn(a,b))
+        validation_rule.validate(test_object, 'i', 2)
+        assert validation_rule.isValid == True, "When Condition=isIn, pass validation failed"
+        assert validation_rule.invalid_message is None, "When Condition=isIn, pass, validation message failed"
+        # Setup when failing condition
+        a = dict(instance=ref_object, attribute_name='b')
+        b = dict(instance=test_object, attribute_name='s')            
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(IsIn(a,b))
+        validation_rule.validate(test_object, 'n', 5)
+        assert validation_rule.isValid == True, "When Condition=isIn, fail, validation failed."        
+        assert validation_rule.invalid_message is None, "When Condition=isIn, fail no conditions, validation message failed"
 
-        @mark.semantic_rules
-        @mark.semantic_rules_condition
-        @mark.semantic_rules_when_condition_isequal
-        def test_semantic_rule_condition_isequal(self, get_validation_rule_test_object,
-                                get_validation_rule_reference_object):
-            test_object = get_validation_rule_test_object        
-            ref_object = get_validation_rule_reference_object
-            # Setup passing when condition
-            a = dict(instance=ref_object, attribute_name='s')
-            b = dict(instance=test_object, attribute_name='s')
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(isEqual, a,b)
-            validation_rule.validate(test_object, 'i', 2)
-            assert validation_rule.isValid == True, "When Condition=isEqual, pass validation failed"
-            assert validation_rule.invalid_message is None, "Condition=isEqual, pass, validation message failed"
-            # Setup failing when condition
-            a = dict(instance=ref_object, attribute_name='b')
-            b = dict(instance=test_object, attribute_name='s')            
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(isEqual, a,b)
-            validation_rule.validate(test_object, 'n', 5)
-            assert validation_rule.isValid == True, "When Condition=isEqual, fail, validation failed."        
-            assert validation_rule.invalid_message is None, "Condition=isEqual, fail no conditions, validation message failed"
+    @mark.semantic_rules
+    @mark.semantic_rules_condition
+    @mark.semantic_rules_not_when_condition_isin
+    def test_semantic_rule_not_whencondition_isin(self, get_validation_rule_test_object,
+                            get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Setup except when passing condition
+        a = dict(instance=ref_object, attribute_name='s')
+        b = ['hats', 'coat', 'shoes']
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').not_when(IsIn(a,b))
+        validation_rule.validate(test_object, 'i', 3)
+        assert validation_rule.isValid == True, "Except When Condition=isIn, pass validation failed"
+        assert validation_rule.invalid_message is None, "Except When Condition=isIn, pass, validation message failed"
+        # Setup except when failing condition
+        a = dict(instance=ref_object, attribute_name='b')
+        b = dict(instance=test_object, attribute_name='s')            
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').not_when(IsIn(a,b))
+        validation_rule.validate(test_object, 'n', 5)
+        assert validation_rule.isValid == False, "Except When Condition=isIn, fail, validation failed."        
+        assert validation_rule.invalid_message is not None, "Except When Condition=isIn, fail no conditions, validation message failed"            
 
-        @mark.semantic_rules
-        @mark.semantic_rules_condition
-        @mark.semantic_rules_except_when_condition_isequal
-        def test_semantic_rule_except_when_condition_isequal(self, get_validation_rule_test_object,
-                                get_validation_rule_reference_object):
-            test_object = get_validation_rule_test_object        
-            ref_object = get_validation_rule_reference_object            
-            # Setup passing except when condition
-            a = dict(instance=ref_object, attribute_name='s')
-            b = dict(instance=test_object, attribute_name='s')
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').except_when(isEqual, a,b)
-            validation_rule.validate(test_object, 'i', 2)
-            assert validation_rule.isValid == True, "Except When Condition=isEqual, pass validation failed"
-            assert validation_rule.invalid_message is None, "Condition=isEqual, pass, validation message failed"
-            # Setup failing except when condition
-            a = dict(instance=ref_object, attribute_name='b')
-            b = dict(instance=test_object, attribute_name='s')            
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').except_when(isEqual, a,b)
-            validation_rule.validate(test_object, 'n', 5)
-            assert validation_rule.isValid == False, "Except When Condition=isEqual, fail, validation failed."        
-            assert validation_rule.invalid_message is not None, "Condition=isEqual, fail no conditions, validation message failed"
+    @mark.semantic_rules
+    @mark.semantic_rules_condition
+    @mark.semantic_rules_when_condition_isless
+    def test_semantic_rule_condition_isless(self, get_validation_rule_test_object,
+                            get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Setup when passing condition
+        a = dict(instance=ref_object, attribute_name='i')
+        b = dict(instance=test_object, attribute_name='i')
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(IsLess(a,b))
+        validation_rule.validate(test_object, 'i', 2)
+        assert validation_rule.isValid == True, "When Condition=isLess, pass validation failed"
+        assert validation_rule.invalid_message is None, "Condition=isLess, pass, validation message failed"
+        # Setup when failing condition
+        a = dict(instance=ref_object, attribute_name='f')
+        b = dict(instance=test_object, attribute_name='f')            
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(IsLess(a,b))
+        validation_rule.validate(test_object, 'n', 5)
+        assert validation_rule.isValid == True, "When Condition=isLess, fail, validation failed."        
+        assert validation_rule.invalid_message is None, "Condition=isLess, fail no conditions, validation message failed"
 
-        
-        @mark.semantic_rules
-        @mark.semantic_rules_condition
-        @mark.semantic_rules_when_condition_isin
-        def test_semantic_rule_condition_isin(self, get_validation_rule_test_object,
-                                get_validation_rule_reference_object):
-            test_object = get_validation_rule_test_object        
-            ref_object = get_validation_rule_reference_object
-            # Setup when passing condition
-            a = dict(instance=ref_object, attribute_name='s')
-            b = ['hats', 'coat', 'shoes']
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(isIn, a,b)
-            validation_rule.validate(test_object, 'i', 2)
-            assert validation_rule.isValid == True, "When Condition=isIn, pass validation failed"
-            assert validation_rule.invalid_message is None, "When Condition=isIn, pass, validation message failed"
-            # Setup when failing condition
-            a = dict(instance=ref_object, attribute_name='b')
-            b = dict(instance=test_object, attribute_name='s')            
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(isIn, a,b)
-            validation_rule.validate(test_object, 'n', 5)
-            assert validation_rule.isValid == True, "When Condition=isIn, fail, validation failed."        
-            assert validation_rule.invalid_message is None, "When Condition=isIn, fail no conditions, validation message failed"
+    @mark.semantic_rules
+    @mark.semantic_rules_condition
+    @mark.semantic_rules_not_when_condition_isless
+    def test_semantic_rule_not_when_condition_isless(self, get_validation_rule_test_object,
+                            get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Setup except when passing condition
+        a = dict(instance=ref_object, attribute_name='i')
+        b = dict(instance=test_object, attribute_name='i')
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').not_when(IsLess(a,b))
+        validation_rule.validate(test_object, 'i', 3)
+        assert validation_rule.isValid == True, "When Condition=isLess, pass validation failed"
+        assert validation_rule.invalid_message is None, "Condition=isLess, pass, validation message failed"
+        # Setup except when failing condition
+        a = dict(instance=ref_object, attribute_name='f')
+        b = dict(instance=test_object, attribute_name='f')            
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').not_when(IsLess(a,b))
+        validation_rule.validate(test_object, 'n',2)
+        assert validation_rule.isValid == True, "When Condition=isLess, fail, validation failed."        
+        assert validation_rule.invalid_message is None, "Condition=isLess, fail no conditions, validation message failed"
 
-        @mark.semantic_rules
-        @mark.semantic_rules_condition
-        @mark.semantic_rules_except_when_condition_isin
-        def test_semantic_rule_except_whencondition_isin(self, get_validation_rule_test_object,
-                                get_validation_rule_reference_object):
-            test_object = get_validation_rule_test_object        
-            ref_object = get_validation_rule_reference_object
-            # Setup except when passing condition
-            a = dict(instance=ref_object, attribute_name='s')
-            b = ['hats', 'coat', 'shoes']
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').except_when(isIn, a,b)
-            validation_rule.validate(test_object, 'i', 3)
-            assert validation_rule.isValid == True, "Except When Condition=isIn, pass validation failed"
-            assert validation_rule.invalid_message is None, "Except When Condition=isIn, pass, validation message failed"
-            # Setup except when failing condition
-            a = dict(instance=ref_object, attribute_name='b')
-            b = dict(instance=test_object, attribute_name='s')            
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').except_when(isIn, a,b)
-            validation_rule.validate(test_object, 'n', 5)
-            assert validation_rule.isValid == False, "Except When Condition=isIn, fail, validation failed."        
-            assert validation_rule.invalid_message is not None, "Except When Condition=isIn, fail no conditions, validation message failed"            
+    @mark.semantic_rules
+    @mark.semantic_rules_condition
+    @mark.semantic_rules_when_condition_isgreater
+    def test_semantic_rule_condition_isgreater(self, get_validation_rule_test_object,
+                            get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Setup when passing condition
+        b = dict(instance=ref_object, attribute_name='i')
+        a = dict(instance=test_object, attribute_name='i')
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(IsGreater(a,b))
+        validation_rule.validate(test_object, 'i', 2)
+        assert validation_rule.isValid == True, "When Condition=isGreater, pass validation failed"
+        assert validation_rule.invalid_message is None, "Condition=isGreater, pass, validation message failed"
+        # Setup when failing condition
+        b = dict(instance=ref_object, attribute_name='f')
+        a = dict(instance=test_object, attribute_name='f')            
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(IsGreater(a,b))
+        validation_rule.validate(test_object, 'n', 5)
+        assert validation_rule.isValid == True, "When Condition=isGreater, fail, validation failed."        
+        assert validation_rule.invalid_message is None, "Condition=isGreater, fail no conditions, validation message failed"
 
-        @mark.semantic_rules
-        @mark.semantic_rules_condition
-        @mark.semantic_rules_when_condition_isless
-        def test_semantic_rule_condition_isless(self, get_validation_rule_test_object,
-                                get_validation_rule_reference_object):
-            test_object = get_validation_rule_test_object        
-            ref_object = get_validation_rule_reference_object
-            # Setup when passing condition
-            a = dict(instance=ref_object, attribute_name='i')
-            b = dict(instance=test_object, attribute_name='i')
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(isLess, a,b)
-            validation_rule.validate(test_object, 'i', 2)
-            assert validation_rule.isValid == True, "When Condition=isLess, pass validation failed"
-            assert validation_rule.invalid_message is None, "Condition=isLess, pass, validation message failed"
-            # Setup when failing condition
-            a = dict(instance=ref_object, attribute_name='f')
-            b = dict(instance=test_object, attribute_name='f')            
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(isLess, a,b)
-            validation_rule.validate(test_object, 'n', 5)
-            assert validation_rule.isValid == True, "When Condition=isLess, fail, validation failed."        
-            assert validation_rule.invalid_message is None, "Condition=isLess, fail no conditions, validation message failed"
+    @mark.semantic_rules
+    @mark.semantic_rules_condition
+    @mark.semantic_rules_not_when_condition_isgreater
+    def test_semantic_rule_not_when_condition_isgreater(self, get_validation_rule_test_object,
+                            get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Setup except when passing condition
+        b = dict(instance=ref_object, attribute_name='i')
+        a = dict(instance=test_object, attribute_name='i')
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').not_when(IsGreater(a,b))
+        validation_rule.validate(test_object, 'i', 3)
+        assert validation_rule.isValid == True, "When Condition=isGreater, pass validation failed"
+        assert validation_rule.invalid_message is None, "Condition=isGreater, pass, validation message failed"
+        # Setup except when failing condition
+        b = dict(instance=ref_object, attribute_name='f')
+        a = dict(instance=test_object, attribute_name='f')            
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').not_when(IsGreater(a,b))
+        validation_rule.validate(test_object, 'n',2)
+        assert validation_rule.isValid == True, "When Condition=isGreater, fail, validation failed."        
+        assert validation_rule.invalid_message is None, "Condition=isGreater, fail no conditions, validation message failed"
 
-        @mark.semantic_rules
-        @mark.semantic_rules_condition
-        @mark.semantic_rules_except_when_condition_isless
-        def test_semantic_rule_except_when_condition_isless(self, get_validation_rule_test_object,
-                                get_validation_rule_reference_object):
-            test_object = get_validation_rule_test_object        
-            ref_object = get_validation_rule_reference_object
-            # Setup except when passing condition
-            a = dict(instance=ref_object, attribute_name='i')
-            b = dict(instance=test_object, attribute_name='i')
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').except_when(isLess, a,b)
-            validation_rule.validate(test_object, 'i', 3)
-            assert validation_rule.isValid == True, "When Condition=isLess, pass validation failed"
-            assert validation_rule.invalid_message is None, "Condition=isLess, pass, validation message failed"
-            # Setup except when failing condition
-            a = dict(instance=ref_object, attribute_name='f')
-            b = dict(instance=test_object, attribute_name='f')            
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').except_when(isLess, a,b)
-            validation_rule.validate(test_object, 'n',2)
-            assert validation_rule.isValid == True, "When Condition=isLess, fail, validation failed."        
-            assert validation_rule.invalid_message is None, "Condition=isLess, fail no conditions, validation message failed"
+    @mark.semantic_rules
+    @mark.semantic_rules_condition
+    @mark.semantic_rules_when_condition_ismatch
+    def test_semantic_rule_condition_ismatch(self, get_validation_rule_test_object,
+                            get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Setup when passing condition
+        a = dict(instance=ref_object, attribute_name='s')
+        b = dict(instance=test_object, attribute_name='s')
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(IsMatch(a,b))
+        validation_rule.validate(test_object, 'i', 2)
+        assert validation_rule.isValid == True, "When Condition=isMatch, pass validation failed"
+        assert validation_rule.invalid_message is None, "Condition=isMatch, pass, validation message failed"
+        # Setup when failing condition
+        a = "cigaratte"
+        b = "after"
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(IsMatch(a,b))
+        validation_rule.validate(test_object, 'n', 5)
+        assert validation_rule.isValid == True, "When Condition=isMatch, fail, validation failed."        
+        assert validation_rule.invalid_message is None, "Condition=isMatch, fail no conditions, validation message failed"
 
-        @mark.semantic_rules
-        @mark.semantic_rules_condition
-        @mark.semantic_rules_when_condition_isgreater
-        def test_semantic_rule_condition_isgreater(self, get_validation_rule_test_object,
-                                get_validation_rule_reference_object):
-            test_object = get_validation_rule_test_object        
-            ref_object = get_validation_rule_reference_object
-            # Setup when passing condition
-            b = dict(instance=ref_object, attribute_name='i')
-            a = dict(instance=test_object, attribute_name='i')
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(isGreater, a,b)
-            validation_rule.validate(test_object, 'i', 2)
-            assert validation_rule.isValid == True, "When Condition=isGreater, pass validation failed"
-            assert validation_rule.invalid_message is None, "Condition=isGreater, pass, validation message failed"
-            # Setup when failing condition
-            b = dict(instance=ref_object, attribute_name='f')
-            a = dict(instance=test_object, attribute_name='f')            
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(isGreater, a,b)
-            validation_rule.validate(test_object, 'n', 5)
-            assert validation_rule.isValid == True, "When Condition=isGreater, fail, validation failed."        
-            assert validation_rule.invalid_message is None, "Condition=isGreater, fail no conditions, validation message failed"
-
-        @mark.semantic_rules
-        @mark.semantic_rules_condition
-        @mark.semantic_rules_except_when_condition_isgreater
-        def test_semantic_rule_except_when_condition_isgreater(self, get_validation_rule_test_object,
-                                get_validation_rule_reference_object):
-            test_object = get_validation_rule_test_object        
-            ref_object = get_validation_rule_reference_object
-            # Setup except when passing condition
-            b = dict(instance=ref_object, attribute_name='i')
-            a = dict(instance=test_object, attribute_name='i')
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').except_when(isGreater, a,b)
-            validation_rule.validate(test_object, 'i', 3)
-            assert validation_rule.isValid == True, "When Condition=isGreater, pass validation failed"
-            assert validation_rule.invalid_message is None, "Condition=isGreater, pass, validation message failed"
-            # Setup except when failing condition
-            b = dict(instance=ref_object, attribute_name='f')
-            a = dict(instance=test_object, attribute_name='f')            
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').except_when(isGreater, a,b)
-            validation_rule.validate(test_object, 'n',2)
-            assert validation_rule.isValid == True, "When Condition=isGreater, fail, validation failed."        
-            assert validation_rule.invalid_message is None, "Condition=isGreater, fail no conditions, validation message failed"
-
-        @mark.semantic_rules
-        @mark.semantic_rules_condition
-        @mark.semantic_rules_when_condition_ismatch
-        def test_semantic_rule_condition_ismatch(self, get_validation_rule_test_object,
-                                get_validation_rule_reference_object):
-            test_object = get_validation_rule_test_object        
-            ref_object = get_validation_rule_reference_object
-            # Setup when passing condition
-            a = dict(instance=ref_object, attribute_name='s')
-            b = dict(instance=test_object, attribute_name='s')
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(isMatch, a,b)
-            validation_rule.validate(test_object, 'i', 2)
-            assert validation_rule.isValid == True, "When Condition=isMatch, pass validation failed"
-            assert validation_rule.invalid_message is None, "Condition=isMatch, pass, validation message failed"
-            # Setup when failing condition
-            a = "cigaratte"
-            b = "after"
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').when(isMatch, a,b)
-            validation_rule.validate(test_object, 'n', 5)
-            assert validation_rule.isValid == True, "When Condition=isMatch, fail, validation failed."        
-            assert validation_rule.invalid_message is None, "Condition=isMatch, fail no conditions, validation message failed"
-
-        @mark.semantic_rules
-        @mark.semantic_rules_condition
-        @mark.semantic_rules_except_when_condition_ismatch
-        def test_semantic_rule_except_when_condition_ismatch(self, get_validation_rule_test_object,
-                                get_validation_rule_reference_object):
-            test_object = get_validation_rule_test_object        
-            ref_object = get_validation_rule_reference_object
-            # Setup except when passing condition
-            a = "cunning linguistics"
-            b = "cunning"
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').except_when(isMatch, a,b)
-            validation_rule.validate(test_object, 'i', 2)
-            assert validation_rule.isValid == True, "When Condition=isMatch, pass validation failed"
-            assert validation_rule.invalid_message is None, "Condition=isMatch, pass, validation message failed"
-            # Setup except when failing condition
-            a = "cunning linguistics"
-            b = "smoke"
-            validation_rule = EqualRule(instance=ref_object, attribute_name='i').except_when(isMatch, a,b)
-            validation_rule.validate(test_object, 'n',2)
-            assert validation_rule.isValid == True, "When Condition=isMatch, fail, validation failed."        
-            assert validation_rule.invalid_message is None, "Condition=isMatch, fail no conditions, validation message failed"            
+    @mark.semantic_rules
+    @mark.semantic_rules_condition
+    @mark.semantic_rules_not_when_condition_ismatch
+    def test_semantic_rule_not_when_condition_ismatch(self, get_validation_rule_test_object,
+                            get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Setup except when passing condition
+        a = "cunning linguistics"
+        b = "cunning"
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').not_when(IsMatch(a,b))
+        validation_rule.validate(test_object, 'i', 2)
+        assert validation_rule.isValid == True, "When Condition=isMatch, pass validation failed"
+        assert validation_rule.invalid_message is None, "Condition=isMatch, pass, validation message failed"
+        # Setup except when failing condition
+        a = "cunning linguistics"
+        b = "smoke"
+        validation_rule = EqualRule(instance=ref_object, attribute_name='i').not_when(IsMatch(a,b))
+        validation_rule.validate(test_object, 'n',2)
+        assert validation_rule.isValid == True, "When Condition=isMatch, fail, validation failed."        
+        assert validation_rule.invalid_message is None, "Condition=isMatch, fail no conditions, validation message failed"            
