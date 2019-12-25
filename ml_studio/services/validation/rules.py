@@ -92,6 +92,7 @@ from uuid import uuid4
 import numpy as np
 import pandas as pd
 
+from ml_studio.services.validation.conditions import Condition
 from ml_studio.services.validation.conditions import IsNone, IsEmpty, IsBool
 from ml_studio.services.validation.conditions import IsInt, IsFloat
 from ml_studio.services.validation.conditions import IsNumber, IsString
@@ -129,25 +130,34 @@ class Rule(ABC):
 
     def when(self, condition):
         """Adds a single condition that must be met for a rule to apply."""        
-        self._conditions['when'] = condition
+        if isinstance(condition, Condition):
+            self._conditions['when'] = condition
+        else:
+            raise TypeError("condition must be of type Condition.")
         return self
 
     def when_all(self, conditions):
         """Adds a list of rules, all of which must be met for a rule to apply."""
-        self._conditions['when_all'] = conditions
+        if isArray(conditions):
+            self._conditions['when_all'] = conditions
+        else:
+            raise TypeError("conditions must be an array-like object \
+                containing Condition objects.")
         return self
 
     def when_any(self, conditions):
         """Adds a list of rules, all of which must be met for a rule to apply."""        
-        self._conditions['when_any'] = conditions
+        if isArray(conditions):
+            self._conditions['when_any'] = conditions
+        else:
+            raise TypeError("conditions must be an array-like object \
+                containing Condition objects.")
         return self
 
     def _evaluate_when(self):
-        if self._conditions.get('when'):
-            results = []
-            for condition in self._conditions.get('when'):
-                results.append(condition())
-            return all(results)
+        condition = self._conditions.get('when')
+        if condition is not None:
+            return condition()
         else:
             return True
 
@@ -650,19 +660,24 @@ class SemanticRule(Rule):
 
     def _validate_params(self):
         super(SemanticRule, self)._validate_params()
-        if self._reference_value is None:
-            # Ensure instance and attribute_name are provided.
-            if self._reference_instance is None:
-                raise ValueError("If 'value' is None, 'instance' must be provided.")
-            if self._reference_attribute_name is None:
-                raise ValueError("If 'value' is None, 'attribute_name' must be provided.")        
-
+        if self._reference_instance:
             # Validate reference instance and attribute
             if not hasattr(self._reference_instance, self._reference_attribute_name):
                 raise AttributeError("{classname} has no attribute {attrname}.".format(
                         classname = self._reference_classname,
                         attrname = self._reference_attribute_name
                     ))          
+
+    def validate(self, instance, attribute_name, attribute_value):
+        super(SemanticRule, self).validate(instance=instance,
+                                       attribute_name=attribute_name,
+                                       attribute_value=attribute_value)
+
+        # Obtain the value to compare to our evaluated attribute from the reference 
+        # instance if not provided in the value property.
+        if self._reference_instance is not None:
+            self._reference_value = getattr(self._reference_instance, \
+                self._reference_attribute_name)                      
 
 # --------------------------------------------------------------------------- #
 #                                 EQUALRULE                                   #  
@@ -696,12 +711,6 @@ class EqualRule(SemanticRule):
         super(EqualRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
-
-        # Obtain the value to compare to our evaluated attribute from the reference 
-        # instance if not provided in the value property.
-        if self._reference_value is None:
-            self._reference_value = getattr(self._reference_instance, \
-                self._reference_attribute_name)  
 
         # Evaluate iff when conditions are met.
         if self.evaluate_conditions():
@@ -796,12 +805,6 @@ class NotEqualRule(SemanticRule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Obtain the value to compare to our evaluated attribute from the reference 
-        # instance if not provided in the value property.
-        if self._reference_value is None:
-            self._reference_value = getattr(self._reference_instance, \
-                self._reference_attribute_name)  
-
         # Evaluate iff when conditions are met.
         if self.evaluate_conditions():
             # If both evaluated and reference values are arrays, convert to
@@ -894,12 +897,6 @@ class AllowedRule(SemanticRule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Obtain the value to compare to our evaluated attribute from the reference 
-        # instance if not provided in the value property.
-        if self._reference_value is None:
-            self._reference_value = getattr(self._reference_instance, \
-                self._reference_attribute_name)  
-
         # Evaluate iff when conditions are met.
         if self.evaluate_conditions():
             # If the evaluated attribute is an array like 
@@ -968,12 +965,6 @@ class DisAllowedRule(SemanticRule):
         super(DisAllowedRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
-
-        # Obtain the value to compare to our evaluated attribute from the reference 
-        # instance if not provided in the value property.
-        if self._reference_value is None:
-            self._reference_value = getattr(self._reference_instance, \
-                self._reference_attribute_name)  
 
         # Evaluate iff when conditions are met.
         if self.evaluate_conditions():
@@ -1057,12 +1048,6 @@ class LessRule(SemanticRule):
         super(LessRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
-
-        # Obtain the value to compare to our evaluated attribute from the reference 
-        # instance if not provided in the value property.
-        if self._reference_value is None:
-            self._reference_value = getattr(self._reference_instance, \
-                self._reference_attribute_name)  
 
         # Evaluate iff when conditions are met.
         if self.evaluate_conditions():
@@ -1174,12 +1159,6 @@ class GreaterRule(SemanticRule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Obtain the value to compare to our evaluated attribute from the reference 
-        # instance if not provided in the value property.
-        if self._reference_value is None:
-            self._reference_value = getattr(self._reference_instance, \
-                self._reference_attribute_name)  
-
         # Evaluate iff when conditions are met.
         if self.evaluate_conditions():
             # If both evaluated and reference values are arrays, convert to
@@ -1279,12 +1258,6 @@ class RegexRule(SemanticRule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Obtain the value to compare to our evaluated attribute from the reference 
-        # instance if not provided in the value property.
-        if self._reference_value is None:
-            self._reference_value = getattr(self._reference_instance, \
-                self._reference_attribute_name)  
-
         # Raise exception if reference value is not a valid regex string.
         re.compile(self._reference_value)
 
@@ -1359,12 +1332,6 @@ class BetweenRule(SemanticRule):
         super(BetweenRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
-
-        # Obtain the value to compare to our evaluated attribute from the reference 
-        # instance if not provided in the value property.
-        if self._reference_value is None:
-            self._reference_value = getattr(self._reference_instance, \
-                self._reference_attribute_name)  
 
         # Confirm reference values contains min and max
         if not isArray(self._reference_value):

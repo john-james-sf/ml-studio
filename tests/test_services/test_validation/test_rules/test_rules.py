@@ -83,6 +83,14 @@ from ml_studio.services.validation.rules import AllowedRule, DisAllowedRule
 from ml_studio.services.validation.rules import LessRule, GreaterRule
 from ml_studio.services.validation.rules import BetweenRule, RegexRule
 
+from ml_studio.services.validation.conditions import IsNone, IsNotNone
+from ml_studio.services.validation.conditions import IsEmpty, IsNotEmpty
+from ml_studio.services.validation.conditions import IsEqual, IsNotEqual
+from ml_studio.services.validation.conditions import IsBool, IsInt
+from ml_studio.services.validation.conditions import IsFloat, IsNumber
+from ml_studio.services.validation.conditions import IsString, IsGreater
+from ml_studio.services.validation.conditions import IsLess, IsBetween
+
 class SyntacticRuleTests:
 
     @mark.syntactic_rules
@@ -383,11 +391,81 @@ class SyntacticRuleTests:
         assert rule.isValid == False, "Invalid StringRule evaluation"                             
         print(rule.invalid_message)          
 
+
+class SyntacticRuleWithConditionsTests:
+
+    @mark.syntactic_rules
+    @mark.syntactic_rules_with_conditions    
+    @mark.syntactic_rules_nonerule_with_conditions
+    def test_syntactic_rule_nonerule_with_conditions(self, get_validation_rule_test_object,
+                                                     get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Invalid condition type
+        with pytest.raises(TypeError):             
+            rule = NoneRule().when([IsGreater(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f')),
+                                IsEqual(a=dict(instance=test_object,attribute_name='a_le'),
+                                         b=dict(instance=ref_object, attribute_name='a_le'))])
+            rule.validate(test_object, 'i', test_object.i)    
+        # Invalid conditions type for when_any
+        with pytest.raises(TypeError):             
+            rule = NoneRule().when_any(IsGreater(a=dict(instance=test_object,attribute_name='i'),
+                                         b=dict(instance=ref_object, attribute_name='i')))
+            rule.validate(test_object, 'n', test_object.n)
+        # Invalid conditions type for when_all
+        with pytest.raises(TypeError):             
+            rule = NoneRule().when_all(IsGreater(a=dict(instance=test_object,attribute_name='i'),
+                                         b=dict(instance=ref_object, attribute_name='i')))
+            rule.validate(test_object, 'n', test_object.n)
+
+        # Evaluate with when condition is met
+        rule = NoneRule().when(IsGreater(a=dict(instance=test_object,attribute_name='i'),
+                                         b=dict(instance=ref_object, attribute_name='i')))
+        rule.validate(test_object, 'n', test_object.n)
+        assert rule.isValid == True, "Invalid NoneRule evaluation"
+        # Evaluate with when condition is not met
+        rule = NoneRule().when(IsLess(a=dict(instance=test_object,attribute_name='i'),
+                                      b=dict(instance=ref_object, attribute_name='i')))
+        rule.validate(test_object, 's', test_object.s)
+        assert rule.isValid == True, "Invalid NoneRule evaluation"        
+        # Evaluate with when_any is met (but rule not)
+        rule = NoneRule().when_any([IsGreater(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f')),
+                                IsEqual(a=dict(instance=test_object,attribute_name='a_le'),
+                                         b=dict(instance=ref_object, attribute_name='a_le'))])
+        rule.validate(test_object, 'i', test_object.i)
+        assert rule.isValid == False, "Invalid NoneRule evaluation"
+        print(rule.invalid_message)
+        # Evaluate with when_any is not met (but rule not)
+        rule = NoneRule().when_any([IsGreater(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f')),
+                                IsEqual(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f'))])
+        rule.validate(test_object, 'i', test_object.i)
+        assert rule.isValid == True, "Invalid NoneRule evaluation"
+        # Evaluate with when_all is met (but rule not)
+        rule = NoneRule().when_all([IsLess(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f')),
+                                IsEqual(a=dict(instance=test_object,attribute_name='a_le'),
+                                         b=dict(instance=ref_object, attribute_name='a_le'))])
+        rule.validate(test_object, 'i', test_object.i)
+        assert rule.isValid == False, "Invalid NoneRule evaluation"
+        print(rule.invalid_message)
+        # Evaluate with when_all is not met (but rule not)
+        rule = NoneRule().when_all([IsLess(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f')),
+                                IsEqual(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f'))])
+        rule.validate(test_object, 'i', test_object.i)
+        assert rule.isValid == True, "Invalid NoneRule evaluation"                        
+
+
 class SemanticRuleTests:
 
     @mark.semantic_rules
     @mark.semantic_rules_equal
-    def test_syntactic_rule_equalrule(self, get_validation_rule_test_object,
+    def test_semantic_rule_equalrule(self, get_validation_rule_test_object,
                                      get_validation_rule_reference_object):
         test_object = get_validation_rule_test_object        
         ref_object = get_validation_rule_reference_object
@@ -429,7 +507,7 @@ class SemanticRuleTests:
 
     @mark.semantic_rules
     @mark.semantic_rules_notequal
-    def test_syntactic_rule_notequalrule(self, get_validation_rule_test_object,
+    def test_semantic_rule_notequalrule(self, get_validation_rule_test_object,
                                      get_validation_rule_reference_object):
         test_object = get_validation_rule_test_object        
         ref_object = get_validation_rule_reference_object
@@ -471,7 +549,7 @@ class SemanticRuleTests:
 
     @mark.semantic_rules
     @mark.semantic_rules_allowed
-    def test_syntactic_rule_allowedrule(self, get_validation_rule_test_object,
+    def test_semantic_rule_allowedrule(self, get_validation_rule_test_object,
                                      get_validation_rule_reference_object):
         test_object = get_validation_rule_test_object        
         ref_object = get_validation_rule_reference_object
@@ -504,7 +582,7 @@ class SemanticRuleTests:
 
     @mark.semantic_rules
     @mark.semantic_rules_disallowed
-    def test_syntactic_rule_disallowedrule(self, get_validation_rule_test_object,
+    def test_semantic_rule_disallowedrule(self, get_validation_rule_test_object,
                                      get_validation_rule_reference_object):
         test_object = get_validation_rule_test_object        
         ref_object = get_validation_rule_reference_object
@@ -537,7 +615,7 @@ class SemanticRuleTests:
 
     @mark.semantic_rules
     @mark.semantic_rules_less
-    def test_syntactic_rule_lessrule(self, get_validation_rule_test_object,
+    def test_semantic_rule_lessrule(self, get_validation_rule_test_object,
                                      get_validation_rule_reference_object):
         test_object = get_validation_rule_test_object        
         ref_object = get_validation_rule_reference_object
@@ -591,7 +669,7 @@ class SemanticRuleTests:
 
     @mark.semantic_rules
     @mark.semantic_rules_greater
-    def test_syntactic_rule_greaterrule(self, get_validation_rule_test_object,
+    def test_semantic_rule_greaterrule(self, get_validation_rule_test_object,
                                      get_validation_rule_reference_object):
         test_object = get_validation_rule_test_object        
         ref_object = get_validation_rule_reference_object
@@ -645,7 +723,7 @@ class SemanticRuleTests:
 
     @mark.semantic_rules
     @mark.semantic_rules_between
-    def test_syntactic_rule_betweenrule(self, get_validation_rule_test_object,
+    def test_semantic_rule_betweenrule(self, get_validation_rule_test_object,
                                      get_validation_rule_reference_object):
         test_object = get_validation_rule_test_object        
         ref_object = get_validation_rule_reference_object
@@ -707,7 +785,7 @@ class SemanticRuleTests:
 
     @mark.semantic_rules
     @mark.semantic_rules_regex
-    def test_syntactic_rule_regexrule(self, get_validation_rule_test_object,
+    def test_semantic_rule_regexrule(self, get_validation_rule_test_object,
                                      get_validation_rule_reference_object):
         test_object = get_validation_rule_test_object        
         ref_object = get_validation_rule_reference_object
@@ -745,4 +823,71 @@ class SemanticRuleTests:
         assert rule.isValid == False, "Invalid BetweenRule evaluation"                               
         print(rule.invalid_message)
 
-        
+
+class SemanticRuleWithConditionsTests:
+
+    @mark.semantic_rules
+    @mark.semantic_rules_with_conditions    
+    @mark.semantic_rules_greaterrule_with_conditions
+    def test_semantic_rule_greaterrule_with_conditions(self, get_validation_rule_test_object,
+                                                     get_validation_rule_reference_object):
+        test_object = get_validation_rule_test_object        
+        ref_object = get_validation_rule_reference_object
+        # Invalid condition type
+        with pytest.raises(TypeError):             
+            rule = GreaterRule(value=5).when([IsGreater(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f')),
+                                IsEqual(a=dict(instance=test_object,attribute_name='a_le'),
+                                         b=dict(instance=ref_object, attribute_name='a_le'))])
+            rule.validate(test_object, 'i', test_object.i)    
+        # Invalid conditions type for when_any
+        with pytest.raises(TypeError):             
+            rule = GreaterRule(value=1).when_any(IsGreater(a=dict(instance=test_object,attribute_name='i'),
+                                         b=dict(instance=ref_object, attribute_name='i')))
+            rule.validate(test_object, 'n', test_object.n)
+        # Invalid conditions type for when_all
+        with pytest.raises(TypeError):             
+            rule = GreaterRule(value=1).when_all(IsGreater(a=dict(instance=test_object,attribute_name='i'),
+                                         b=dict(instance=ref_object, attribute_name='i')))
+            rule.validate(test_object, 'n', test_object.n)
+
+        # Evaluate with when condition is met
+        rule = GreaterRule(value=2).when(IsGreater(a=dict(instance=test_object,attribute_name='i'),
+                                         b=dict(instance=ref_object, attribute_name='i')))
+        rule.validate(test_object, 'i', test_object.i)
+        assert rule.isValid == True, "Invalid GreaterRule evaluation"
+        # Evaluate with when condition is not met
+        rule = GreaterRule(value=1).when(IsLess(a=dict(instance=test_object,attribute_name='i'),
+                                      b=dict(instance=ref_object, attribute_name='i')))
+        rule.validate(test_object, 's', test_object.s)
+        assert rule.isValid == True, "Invalid GreaterRule evaluation"        
+        # Evaluate with when_any is met (but rule not)
+        rule = GreaterRule(value=10).when_any([IsGreater(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f')),
+                                IsEqual(a=dict(instance=test_object,attribute_name='a_le'),
+                                         b=dict(instance=ref_object, attribute_name='a_le'))])
+        rule.validate(test_object, 'i', test_object.i)
+        assert rule.isValid == False, "Invalid GreaterRule evaluation"
+        print(rule.invalid_message)
+        # Evaluate with when_any is not met (but rule not)
+        rule = GreaterRule(value=1).when_any([IsGreater(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f')),
+                                IsEqual(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f'))])
+        rule.validate(test_object, 'i', test_object.i)
+        assert rule.isValid == True, "Invalid GreaterRule evaluation"
+        # Evaluate with when_all is met (but rule not)
+        rule = GreaterRule(value=10).when_all([IsLess(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f')),
+                                IsEqual(a=dict(instance=test_object,attribute_name='a_le'),
+                                         b=dict(instance=ref_object, attribute_name='a_le'))])
+        rule.validate(test_object, 'i', test_object.i)
+        assert rule.isValid == False, "Invalid GreaterRule evaluation"
+        print(rule.invalid_message)
+        # Evaluate with when_all is not met (but rule not)
+        rule = GreaterRule(value=1).when_all([IsLess(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f')),
+                                IsEqual(a=dict(instance=test_object,attribute_name='f'),
+                                         b=dict(instance=ref_object, attribute_name='f'))])
+        rule.validate(test_object, 'i', test_object.i)
+        assert rule.isValid == True, "Invalid GreaterRule evaluation"            

@@ -56,9 +56,7 @@ variable values relative to other values or objects.
     * IsNotEqual : Evaluates whether two arguments are not equal  
     * IsIn : Evaluates whether a is in b.    
     * IsLess : Evaluates whether a < b.
-    * IsLessEqual : Evaluates whether a <= b.
     * IsGreater : Evaluates whether a > b.
-    * IsGreaterEqual : Evaluates whether a >= b.
     * IsBetween : Evaluates whether argument a is between min and max. 
     * IsMatch : Evaluates whether a string matches a regex pattern.
 

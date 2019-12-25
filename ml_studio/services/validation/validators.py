@@ -35,7 +35,7 @@ for each rule.
 #%%
 from abc import ABC, abstractmethod
 import builtins
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 import os
 import math
 import numbers
@@ -47,15 +47,51 @@ import time
 import numpy as np
 import pandas as pd
 # --------------------------------------------------------------------------- #
+#                                  VALIDERATOR                                #
+# --------------------------------------------------------------------------- #
+class Validerator(Iterator):
+    """An iterator class for Validators."""
+    
+    # Keeps track of current position
+    _position: int = None
+
+    def __init__(self, collection):
+        self._collection = collection
+        self._position = 0
+
+    def __next__(self):
+        """Returns the next item in the sequence. At end, raise StopIteration."""
+        try:
+            value = self._collection[self._position]
+            self._position += 1
+        except IndexError:
+            raise StopIteration()
+        
+        return value
+# --------------------------------------------------------------------------- #
 #                              BASEVALIDATOR                                  #
 # --------------------------------------------------------------------------- #
-class BaseValidator(ABC):
+class BaseValidator(ABC, Iterable):
     """Abstract base class for all validator objects."""
 
     def __init__(self):
         self._rules = []
 
-    def get_rule()
+    def __iter__(self):
+        return Validerator(self._rules)
+
+    def add_rule(self, rule):
+        self._rules.append(rule)
+        return self
+
+    def del_rule(self, rule):
+        if rule in self._rules:
+            self._rules.remove(rule)
+        return self
+
+    def show_rules(self):
+        print()
+
 
     def add_rule(self, rule):
         self._rules.append(rule)
