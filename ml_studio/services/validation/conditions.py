@@ -240,7 +240,7 @@ class IsBool(SyntacticCondition):
             for a in self.a:
                 results.append(IsBool(a)())
             return all(results)
-        elif isinstance(self.a, bool):
+        elif isinstance(self.a, (bool, np.bool_)):
             return True
         else:
             return False

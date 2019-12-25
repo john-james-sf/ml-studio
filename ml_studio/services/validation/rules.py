@@ -19,94 +19,58 @@
 # License: Modified BSD                                                       #
 # Copyright (c) 2019 Decision Scients                                         #
 # =========================================================================== #
-"""Module contains the builder / fluent interface classes for validation rules.
+"""Module contains the validation rules.
 
-This module implements the builder design pattern with a fluent interface,
+This module implements the strategy design pattern with a fluent interface,
 and includes:
 
-    * Director : Director class that constructs validation rules
-    * BaseRuleBuilder : Abstract base class for rule building objects
-
-    Syntactic Builders
+    Syntactic Rules
     ------------------
-    * NoneRuleBuilder : Concrete builder for the NoneRule, which evaluates 
-        whether the value of a specific property is equal to None.
-    * EmptyRuleBuilder : Concrete builder for the EmptyRule, which evaluates 
-        whether the value of a specific property is empty.
-    * BoolRuleBuilder : Concreate builder for the BoolRule, which evaluates 
-        whether the value of a specific property is Boolean.
-    * IntRuleBuilder : Concrete builder for the IntRule, which evaluates 
-        whether the value of a specific property is an integer, and optionally
-        whether the value is in accordance with min/max requirements.
-    * FloatRule : Concrete builder for the FloatRule, which evaluates 
-        whether the value of a specific property is an float, and optionally
-        whether the value is in accordance with min/max requirements.
-    * NumberRuleBuilder : Concrete builder for the NumberRule, which evaluates 
-        whether the value of a specific property is an a number, and optionally
-        whether the value is in accordance with min/max requirements.
-    * StringRuleBuilder : Concrete builder for the StringRule, which evaluates 
-        whether the value of a specific property is a string.
+    * NoneRule : NoneRule, which evaluates whether the value of a specific 
+        property is equal to None.
+    * NotNoneRule : NotNoneRule, which evaluates whether the value of a 
+        specific property is not equal to None.
+    * EmptyRule : EmptyRule, which evaluates whether the value of a 
+        specific property is empty.
+    * NotEmptyRule : NotEmptyRule, which evaluates whether the value 
+        of a specific property is not empty.        
+    * BoolRule : BoolRule, which evaluates whether the value of a 
+        specific property is Boolean.
+    * IntRule : IntRule, which evaluates whether the value of a specific 
+        property is an integer.
+    * FloatRule : FloatRule, which evaluates whether the value of a 
+        specific property is an float.
+    * NumberRule : NumberRule, which evaluates whether the value of a 
+        specific property is an a number.
+    * StringRule : StringRule, which evaluates whether the value of a 
+        specific property is a string.
 
-    Semantic Builders
+    Semantic Rules
     -----------------
-    * EqualRuleBuilder : Concrete builder for the EqualRule, which ensures 
-        that the value of a specific property is equal to a particular value 
-        or that of another instance and/or property.        
-    * AllowedRuleBuilder : Concrete builder for the AllowedRule, which ensures 
-        the value of a specific property is one of a discrete set of allowed values. 
-    * DisAllowedRuleBuilder : Concrete builder for the EqualRule, which ensures the 
-        value of a specific property is none of a discrete set of disallowed values.     
-    * LessRuleBuilder : Concrete builder for the LessRule, which ensures the 
-        value of a specific property is less than a particular  value or that 
-        of another instance and / or property.   
-    * LessEqualRuleBuilder : Concrete builder for the LessEqualRule, which ensures the 
-        value of a specific property is less than or equal to a particular 
-        value or that of another instance and / or property.        
-    * GreaterRuleBuilder : Concrete builder for the EqualRule, which ensures the 
-        value of a specific property is greater than a particulcar value or greater 
-        than the value of another property.        
-    * RegexRuleBuilder : Concrete builder for the EqualRule, which ensures the 
+    * EqualRule : EqualRule, which ensures that the value of a specific property    
+        is equal to a particular value  or that of another instance 
+        and/or property.  
+    * NotEqualRule : NotEqualRule, which ensures that the value of a specific 
+        property is not equal to a particular value or that of another instance 
+        and/or property.                
+    * AllowedRule : AllowedRule, which ensures the value of a specific property 
+        is one of a discrete set of allowed values. 
+    * DisAllowedRule : EqualRule, which ensures the value of a specific property 
+        is none of a discrete set of disallowed values.     
+    * LessRule : LessRule, which ensures the value of a specific property is 
+        less than a particular  value or that of another instance and / or 
+        property. If the inclusive parameter is True, this evaluates
+        less than or equal to.
+    * GreaterRule : GreaterRule, which ensures the value of a specific property 
+        is greater than a particulcar value or greater than the value of 
+        another property. If the inclusive parameter is True, this evaluates
+        greater than or equal to.
+    * BetweenRule : BetweenRule, which ensures the value of a specific property 
+        is between than a particulcar value or greater than the value of 
+        another property. If the inclusive parameter is True, the range is 
+        evaluated as inclusive.
+    * RegexRule : EqualRule, which ensures the 
         value of a specific property matches the given regular expression(s).     
-
-    Syntactic Array Rule Builders
-    ---------------------
-    ArrayRules : Abstract base class building rules that apply to arrays.
-    AllBoolRuleBuilder : Concrete builder for the AllBoolRule, which ensures that
-        all values of a specific property are Booleans.
-    AllIntRuleBuilder : Concrete builder for the AllIntRule, which ensures that
-        all values of a specific property are integers.
-    AllFloatRuleBuilder : Concrete builder for the AllFloatRule, which ensures that
-        all values of a specific property are Floats.
-    AllNumberRuleBuilder : Concrete builder for the AllNumberRule, which ensures that
-        all values of a specific property are numbers.
-    AllStringRuleBuilder : Concrete builder for the AllStringRule, which ensures that
-        all values of a specific property are strings.
-
-    Semantic Array Rule Builders
-    --------------------
-    AllEqualRuleBuilder : Concrete builder for the AllEqualRule, which ensures 
-        that all values of a specific property are equal to all elements of 
-        a reference array-like or a property on another object. 
-    AllAllowedRuleBuilder : Concrete builder for the AllAllowedRule, which 
-        ensures that all values of a specific property are allowed.
-    AnyDisAllowedRuleBuilder : Concrete builder for the AnyDisAllowedRule, 
-        which ensures that all values of a specific property are allowed.
-
-A rule is comprised of the following parts, each of which implemented via the
-BaseRuleBuilder interface.
-
-    * Metadata : The metadata associated with the rule, such as the date and
-        time, created, the creator and the Rule name.
-    * Target : The target of the validation, in terms of the names of the class
-        and attribute to be validated.
-    * Directive : The instructions executed during validation, along with its 
-        parameters. For instance, a NumberRule may have min and max as
-        rule parameters.
-    * Conditions : Two types of conditions are implemented: 'when' conditions
-        that must be passed before performing the validation and 'except when'
-        conditions that specify when a validation rule should not apply.
-    * Message : The message to render when the validation fails. 
-
 
 """
 #%%
@@ -136,112 +100,46 @@ from ml_studio.services.validation.conditions import IsGreater, IsMatch
 from ml_studio.services.validation.conditions import isArray
 
 # --------------------------------------------------------------------------- #
-#                                RULEBUILDER                                  #  
-# --------------------------------------------------------------------------- #
-class RuleBuilder(ABC):
-    """The Builder interface specifies methods for creating the Rules objects. """
-
-    @abstractproperty
-    def rule(self):
-        pass
-
-    @abstractmethod
-    def for_target(self):
-        pass
-
-    @abstractmethod
-    def when(self):
-        pass
-
-    @abstractmethod
-    def when_any(self):
-        pass
-
-    @abstractmethod
-    def when_all(self):
-        pass
-
-# --------------------------------------------------------------------------- #
-#                            NONERULEBUILDER                                  #  
-# --------------------------------------------------------------------------- #
-class NoneRuleBuilder(RuleBuilder):
-    """Concrete Builder class for the NoneRule follows the RuleBuilder interface."""
-
-    def __init__(self, name, description=None):
-        """Instantiate a fresh Rule instance."""
-        self.reset()
-        self._rule.name = name
-        self._rule.description = description 
-
-    def reset(self):
-        """Creates a fresh instance of the Rule object."""
-        self._rule = NoneRule()
-
-    @property
-    def rule(self):
-        rule = self._rule
-        self.reset()
-        return rule
-
-    def when(self, condition):
-        self._rule.when(condition)
-
-    def not_when(self, condition):
-        self._rule.not_when(condition)
-
-
-
-    
-
-
-#%%
-# --------------------------------------------------------------------------- #
 #                                   RULE                                      #  
 # --------------------------------------------------------------------------- #
 class Rule(ABC):
     """Base class for all rules."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *kwargs):
 
         # Designate unique/opaque userid and other metadata        
         self._id = uuid4()
         self._created = datetime.now()
         self._user = getpass.getuser()
-
+        
         # The evaluated property
         self._evaluated_instance = None
         self._evaluated_classname = None
         self._evaluated_attribute_name = None
         self._evaluated_attribute_value = None  
 
-        # Two lists. Each containing conditions for when the rule should (when) or
-        # should not (except when) be applied. Each time the when and 
-        # except when methods are called, the condition is added to 
-        # the appropriate list.
+        # Three types of conditions: 'when', 'when_any', and 'when_all'.
+        # The latter two take a list of conditions
         self._conditions = dict()
 
         # Properties that capture the results of the validation.
         self.isValid = True
-        self.invalid_value = None              
+        self.decisive_values = []              
         self.invalid_message = None
 
-
     def when(self, condition):
-        """Adds a single condition that must be met for a rule to apply."""
-        self._conditions['when'] = [] or self._conditions['when']
-        self._conditions['when'].append(condition)
+        """Adds a single condition that must be met for a rule to apply."""        
+        self._conditions['when'] = condition
         return self
 
     def when_all(self, conditions):
         """Adds a list of rules, all of which must be met for a rule to apply."""
-        self._conditions['when_all'] = [] or self._conditions['when_all']
-        self._conditions['when_all'].append(condition)
+        self._conditions['when_all'] = conditions
         return self
 
     def when_any(self, conditions):
-        """Adds a list of rules, all of which must be met for a rule to apply."""
-        self._conditions['when_any'] = [] or self._conditions['when_any']
-        self._conditions['when_any'].append(condition)
+        """Adds a list of rules, all of which must be met for a rule to apply."""        
+        self._conditions['when_any'] = conditions
         return self
 
     def _evaluate_when(self):
@@ -276,21 +174,23 @@ class Rule(ABC):
         return self._evaluate_when() and self._evaluate_when_all() and \
             self._evaluate_when_any()
 
+    def _validate_params(self):
+        # Ensure the evaluated class and attribute are a valid match          
+        if not hasattr(self._evaluated_instance, 
+                       self._evaluated_attribute_name):
+            raise AttributeError("{attrname} is not a valid attribute for \
+                {classname}.".format(
+                    attrname=self._evaluated_attribute_name,
+                    classname=self._evaluated_classname
+                ))
+
     @abstractmethod
     def validate(self, instance, attribute_name, attribute_value):
         self._evaluated_instance = instance
         self._evaluated_classname = instance.__class__.__name__
         self._evaluated_attribute_name = attribute_name
-        self._evaluated_attribute_value = attribute_value            
-        # Creates validation to ensure that the attribute value being 
-        # evaluated is not an array-like.
-        if isArray(attribute_value):
-            raise AttributeError("{classname} is for strings, numerics, and \
-                Booleans. To evaluate array-like structures, use the \
-                All{classname} or Any{classname} instead.".format(
-                    classname = self.__class__.__name__
-                )
-            )
+        self._evaluated_attribute_value = attribute_value          
+        self._validate_params()
 
     @abstractmethod
     def error_message(self):
@@ -310,19 +210,31 @@ class NoneRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_not_when():
-            if attribute_value is None: 
-                self.isValid = True
-            else:
+        if self.evaluate_conditions():
+            # If array, start recursion
+            if isArray(attribute_value):                
+                for v in attribute_value: 
+                    self.validate(self._evaluated_instance, \
+                        self._evaluated_attribute_name,v)                                       
+            # Otherwise, we have a literal value we can evaluate 
+            elif attribute_value is not None: 
+                self.decisive_values.append(attribute_value)     
+
+            # Validity is based upon the presence of invalid values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+            else:
+                self.isValid = True
+        # If conditions aren't met, the rule can't be applied and so we 
+        # set isValid to True by convention.
         else:
             self.isValid = True
+        return self
 
     def error_message(self):
         msg = "The {attribute} property of the {classname} class is not None. \
-            Received value: {value}.".format(
+            Invalid value(s): '{value}'.".format(
                 attribute=self._evaluated_attribute_name,
                 classname=self._evaluated_classname,
                 value=self._evaluated_attribute_value)
@@ -331,10 +243,10 @@ class NoneRule(Rule):
         return formatted_msg
 
 # --------------------------------------------------------------------------- #
-#                                NOTNONERULE                                  #  
+#                                NotNoneRULE                                  #  
 # --------------------------------------------------------------------------- #            
 class NotNoneRule(Rule):
-    """Evaluates whether the value of a specific property is None."""
+    """Evaluates whether the value of a specific property is not None."""
 
     def __init__(self):
         super(NotNoneRule, self).__init__()
@@ -344,36 +256,44 @@ class NotNoneRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_not_when():
-            if attribute_value is not None: 
-                self.isValid = True
-            else:
+        if self.evaluate_conditions():
+            # If array, start recursion
+            if isArray(attribute_value):                
+                for v in attribute_value: 
+                    self.validate(self._evaluated_instance, \
+                        self._evaluated_attribute_name,v)                                       
+            # Otherwise, we have a literal value we can evaluate 
+            elif attribute_value is None: 
+                self.decisive_values.append(attribute_value)     
+
+            # Validity is based upon the presence of invalid values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+            else:
+                self.isValid = True
+        # If conditions aren't met, the rule can't be applied and so we 
+        # set isValid to True by convention.
         else:
             self.isValid = True
+        return self
 
     def error_message(self):
-        msg = "The {attribute} property of the {classname} class is None. \
-            Received value: {value}.".format(
+        msg = "The {attribute} property of the {classname} class has values \
+            that are None.".format(
                 attribute=self._evaluated_attribute_name,
-                classname=self._evaluated_classname,
-                value=self._evaluated_attribute_value)
+                classname=self._evaluated_classname)
         
         formatted_msg = format_text(msg)
         return formatted_msg
 
 
+
 # --------------------------------------------------------------------------- #
-#                                EMPTYRULE                                    #  
+#                                EmptyRULE                                    #  
 # --------------------------------------------------------------------------- #            
 class EmptyRule(Rule):
-    """Evaluates whether the value of a specific property is empty.
-    
-    A value is considered empty if it equals None, the empty string or 
-    whitespace.
-    """
+    """Evaluates whether the value of a specific property is Empty."""
 
     def __init__(self):
         super(EmptyRule, self).__init__()
@@ -383,19 +303,31 @@ class EmptyRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_not_when():
-            if isEmpty(attribute_value): 
-                self.isValid = True
-            else:
+        if self.evaluate_conditions():
+            # If array, start recursion
+            if isArray(attribute_value):                
+                for v in attribute_value: 
+                    self.validate(self._evaluated_instance, \
+                        self._evaluated_attribute_name,v)                                       
+            # Otherwise, we have a literal value we can evaluate 
+            elif not IsEmpty(attribute_value)(): 
+                self.decisive_values.append(attribute_value)     
+
+            # Validity is based upon the presence of invalid values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+            else:
+                self.isValid = True
+        # If conditions aren't met, the rule can't be applied and so we 
+        # set isValid to True by convention.
         else:
             self.isValid = True
+        return self
 
     def error_message(self):
-        msg = "The {attribute} property of the {classname} class is not empty. \
-            Received value: {value}.".format(
+        msg = "The {attribute} property of the {classname} class is not Empty. \
+            Invalid value(s): '{value}'.".format(
                 attribute=self._evaluated_attribute_name,
                 classname=self._evaluated_classname,
                 value=self._evaluated_attribute_value)
@@ -404,14 +336,10 @@ class EmptyRule(Rule):
         return formatted_msg
 
 # --------------------------------------------------------------------------- #
-#                                NOTEMPTYRULE                                 #  
+#                                NotEmptyRULE                                 #  
 # --------------------------------------------------------------------------- #            
 class NotEmptyRule(Rule):
-    """Evaluates whether the value of a specific property is empty.
-    
-    A value is considered empty if it equals None, the empty string or 
-    whitespace.
-    """
+    """Evaluates whether the value of a specific property is NotEmpty."""
 
     def __init__(self):
         super(NotEmptyRule, self).__init__()
@@ -421,31 +349,43 @@ class NotEmptyRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_not_when():
-            if not isEmpty(attribute_value): 
-                self.isValid = True
+        if self.evaluate_conditions():
+            # If array, start recursion
+            if isArray(attribute_value):                
+                for v in attribute_value: 
+                    self.validate(self._evaluated_instance, \
+                        self._evaluated_attribute_name,v)      
+
+            # Otherwise, we have a literal value we can evaluate 
+            elif not IsEmpty(attribute_value)(): 
+                self.decisive_values.append(attribute_value)     
+
+            # Validation passes if we have any non-empty values
+            if self.decisive_values:
+                self.isValid = True                
             else:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+        # If conditions aren't met, the rule can't be applied and so we 
+        # set isValid to True by convention.
         else:
             self.isValid = True
+        return self
 
     def error_message(self):
-        msg = "The {attribute} property of the {classname} class is empty. \
-            Received value: {value}.".format(
+        msg = "The {attribute} property of the {classname} class is \
+            Empty.".format(
                 attribute=self._evaluated_attribute_name,
-                classname=self._evaluated_classname,
-                value=self._evaluated_attribute_value)
+                classname=self._evaluated_classname)
         
         formatted_msg = format_text(msg)
         return formatted_msg
 
 # --------------------------------------------------------------------------- #
-#                                BOOLRULE                                     #  
+#                                 BoolRULE                                    #  
 # --------------------------------------------------------------------------- #            
 class BoolRule(Rule):
-    """Evaluates whether the value of a specific property is a boolean."""
+    """Evaluates whether the value of a specific property is NotEmpty."""
 
     def __init__(self):
         super(BoolRule, self).__init__()
@@ -455,35 +395,44 @@ class BoolRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if isArray(attribute_value):
-            raise AttributeError("BoolRule is for strings. To evaluate\
-                array-like structures, use AllBoolRule.")
+        if self.evaluate_conditions():
+            # If array, start recursion
+            if isArray(attribute_value):                
+                for v in attribute_value: 
+                    self.validate(self._evaluated_instance, \
+                        self._evaluated_attribute_name,v)      
+                                                         
+            # Otherwise, we have a literal value we can evaluate 
+            elif not isinstance(attribute_value, (bool, np.bool_)): 
+                self.decisive_values.append(attribute_value)     
 
-        if self.evaluate_when() and self.evaluate_not_when():
-            if isinstance(attribute_value, bool):
-                self.isValid = True
-            else:
+            # Validation fails if we have Non-Boolean values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
-                self.invalid_message = self.error_message()
+                self.invalid_message = self.error_message()                
+            else:
+                self.isValid = True
+        # If conditions aren't met, the rule can't be applied and so we 
+        # set isValid to True by convention.
         else:
             self.isValid = True
+        return self
 
     def error_message(self):
-        msg = "The {attribute} property of the {classname} class is not Boolean. \
-            Received value: {value}.".format(
+        msg = "The {attribute} property of the {classname} class has values \
+            that are not Boolean. Invalid value(s): '{value}'".format(
                 attribute=self._evaluated_attribute_name,
                 classname=self._evaluated_classname,
-                value=self._evaluated_attribute_value)
+                value=self.decisive_values)
         
         formatted_msg = format_text(msg)
         return formatted_msg
 
 # --------------------------------------------------------------------------- #
-#                                INTRULE                                      #   
+#                                 IntRULE                                     #  
 # --------------------------------------------------------------------------- #            
 class IntRule(Rule):
-    """Evaluates whether the value of a specific property is an integer."""
+    """Evaluates whether the value of a specific property is NotEmpty."""
 
     def __init__(self):
         super(IntRule, self).__init__()
@@ -493,31 +442,45 @@ class IntRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_not_when():
-            if isinstance(attribute_value, int):
-                self.isValid = True
-            else:
+        if self.evaluate_conditions():
+            # If array, start recursion
+            if isArray(attribute_value):                
+                for v in attribute_value: 
+                    self.validate(self._evaluated_instance, \
+                        self._evaluated_attribute_name,v)      
+                                                         
+            # Otherwise, we have a literal value we can evaluate 
+            elif not isinstance(attribute_value, int): 
+                self.decisive_values.append(attribute_value)     
+
+            # Validation fails if we have Non int values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
-                self.invalid_message = self.error_message()
+                self.invalid_message = self.error_message()                
+            else:
+                self.isValid = True
+        # If conditions aren't met, the rule can't be applied and so we 
+        # set isValid to True by convention.
         else:
             self.isValid = True
+        return self
 
     def error_message(self):
-        msg = "The {attribute} property of the {classname} class is not an integer. \
-            Received value: {value}.".format(
+        msg = "The {attribute} property of the {classname} class has values \
+            that are not integers. Invalid value(s): '{value}'".format(
                 attribute=self._evaluated_attribute_name,
                 classname=self._evaluated_classname,
-                value=self._evaluated_attribute_value)
+                value=self.decisive_values)
         
         formatted_msg = format_text(msg)
         return formatted_msg
 
+
 # --------------------------------------------------------------------------- #
-#                                FLOATRULE                                    #   
+#                                FloatRULE                                    #  
 # --------------------------------------------------------------------------- #            
 class FloatRule(Rule):
-    """Evaluates whether the value of a specific property is an integer."""
+    """Evaluates whether the value of a specific property is NotEmpty."""
 
     def __init__(self):
         super(FloatRule, self).__init__()
@@ -527,32 +490,44 @@ class FloatRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_not_when():
-            if isinstance(attribute_value, float):
-                self.isValid = True
-            else:
+        if self.evaluate_conditions():
+            # If array, start recursion
+            if isArray(attribute_value):                
+                for v in attribute_value: 
+                    self.validate(self._evaluated_instance, \
+                        self._evaluated_attribute_name,v)      
+                                                         
+            # Otherwise, we have a literal value we can evaluate 
+            elif not isinstance(attribute_value, float): 
+                self.decisive_values.append(attribute_value)     
+
+            # Validation fails if we have Non float values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
-                self.invalid_message = self.error_message()
+                self.invalid_message = self.error_message()                
+            else:
+                self.isValid = True
+        # If conditions aren't met, the rule can't be applied and so we 
+        # set isValid to True by convention.
         else:
             self.isValid = True
+        return self
 
     def error_message(self):
-        msg = "The {attribute} property of the {classname} class is not a float. \
-            Received value: {value}.".format(
+        msg = "The {attribute} property of the {classname} class has values \
+            that are not floats. Invalid value(s): '{value}'".format(
                 attribute=self._evaluated_attribute_name,
                 classname=self._evaluated_classname,
-                value=self._evaluated_attribute_value)
+                value=self.decisive_values)
         
         formatted_msg = format_text(msg)
         return formatted_msg
 
-
 # --------------------------------------------------------------------------- #
-#                              NUMBERRULE                                     #   
+#                                NumberRULE                                   #  
 # --------------------------------------------------------------------------- #            
 class NumberRule(Rule):
-    """Evaluates whether the value of a specific property is an integer."""
+    """Evaluates whether the value of a specific property is NotEmpty."""
 
     def __init__(self):
         super(NumberRule, self).__init__()
@@ -562,72 +537,85 @@ class NumberRule(Rule):
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_not_when():
-            if isinstance(attribute_value, (int,float)):
-                self.isValid = True
-            else:
+        if self.evaluate_conditions():
+            # If array, start recursion
+            if isArray(attribute_value):                
+                for v in attribute_value: 
+                    self.validate(self._evaluated_instance, \
+                        self._evaluated_attribute_name,v)      
+                                                         
+            # Otherwise, we have a literal value we can evaluate 
+            elif not isinstance(attribute_value, (int,float)): 
+                self.decisive_values.append(attribute_value)     
+
+            # Validation fails if we have Non number values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
-                self.invalid_message = self.error_message()
+                self.invalid_message = self.error_message()                
+            else:
+                self.isValid = True
+        # If conditions aren't met, the rule can't be applied and so we 
+        # set isValid to True by convention.
         else:
             self.isValid = True
+        return self
 
     def error_message(self):
-        msg = "The {attribute} property of the {classname} class is not a number. \
-            Received value: {value}.".format(
+        msg = "The {attribute} property of the {classname} class has values \
+            that are not numbers. Invalid value(s): '{value}'".format(
                 attribute=self._evaluated_attribute_name,
                 classname=self._evaluated_classname,
-                value=self._evaluated_attribute_value)
+                value=self.decisive_values)
         
         formatted_msg = format_text(msg)
-        return formatted_msg 
+        return formatted_msg
 
 # --------------------------------------------------------------------------- #
-#                              STRINGRULE                                     #   
+#                                StringRULE                                   #  
 # --------------------------------------------------------------------------- #            
 class StringRule(Rule):
-    """Evaluates whether the value of a specific property is an integer."""
+    """Evaluates whether the value of a specific property is NotEmpty."""
 
-    def __init__(self, spaces_ok=False, empty_ok=False):
+    def __init__(self):
         super(StringRule, self).__init__()
-        self._spaces_ok = spaces_ok
-        self._empty_ok = empty_ok
 
     def validate(self, instance, attribute_name, attribute_value):
         super(StringRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if self.evaluate_when() and self.evaluate_not_when():
-            if isinstance(attribute_value, str):
-                if self._spaces_ok and self._empty_ok:
-                    self.isValid = True
-                elif not self._spaces_ok and (" " in attribute_value):
-                    self.isValid =False
-                    self.invalid_value = attribute_value
-                    self.invalid_message = self.error_message()
-                elif not self._empty_ok and attribute_value == "":
-                    self.isValid =False
-                    self.invalid_value = attribute_value
-                    self.invalid_message = self.error_message()
-                else:
-                    self.isValid = True
-            else:
+        if self.evaluate_conditions():
+            # If array, start recursion
+            if isArray(attribute_value):                
+                for v in attribute_value: 
+                    self.validate(self._evaluated_instance, \
+                        self._evaluated_attribute_name,v)      
+                                                         
+            # Otherwise, we have a literal value we can evaluate 
+            elif not isinstance(attribute_value, str): 
+                self.decisive_values.append(attribute_value)     
+
+            # Validation fails if we have Non string values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
-                self.invalid_message = self.error_message()
+                self.invalid_message = self.error_message()                
+            else:
+                self.isValid = True
+        # If conditions aren't met, the rule can't be applied and so we 
+        # set isValid to True by convention.
         else:
             self.isValid = True
+        return self
 
     def error_message(self):
-        msg = "The {attribute} property of the {classname} class is not a string. \
-            Received value: {value}.".format(
+        msg = "The {attribute} property of the {classname} class has values \
+            that are not strings. Invalid value(s): '{value}'".format(
                 attribute=self._evaluated_attribute_name,
                 classname=self._evaluated_classname,
-                value=self._evaluated_attribute_value)
+                value=self.decisive_values)
         
         formatted_msg = format_text(msg)
-        return formatted_msg                
+        return formatted_msg              
 
 # --------------------------------------------------------------------------- #
 #                                SEMANTICRULE                                 #  
@@ -635,42 +623,46 @@ class StringRule(Rule):
 class SemanticRule(Rule):
     """Abstract base class for rules requiring cross-reference to other objects.
 
-    This class introduces the instance and attribute name for an external
+    This class introduces the instance and attribute name for an reference
     value in the constructor. Another method is exposed to obtain the value
-    from the external object. 
+    from the reference object. 
     
     Parameters
     ----------
-    val : Any
-        The external value 
+    value : Any
+        The validated value must be equal to this value.
 
     instance : ML Studio object
-        The instance of a class containing the external value. Required if 
-            val is None.
+        The instance of a class containing the equality value
 
     attribute_name : str
-        The name of the attribute containing the external value. Required if
-            val is None.
+        The name of the attribute containing the equality value 
+
     """
 
     def __init__(self, value=None, instance=None, attribute_name=None):
-        super(SemanticRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_classname = instance.__class__.__name__
-        self._external_attribute_name = attribute_name
+        super(SemanticRule, self).__init__()
+        self._reference_value = value
+        self._reference_instance = instance
+        self._reference_attribute_name = attribute_name
+        if instance:
+            self._reference_classname = instance.__class__.__name__        
 
-    def get_external_value(self):
-        try:
-            self._external_attribute_value = getattr(self._external_instance, \
-                self._external_attribute_name)
-            self._value = self._external_attribute_value
-        except AttributeError:
-            classname = self._external_instance.__class__.__name__
-            msg = "{classname} has no attribute {attrname}.".format(
-                classname = classname,
-                attrname = self._external_attribute_name
-            )
-            print(msg)            
+    def _validate_params(self):
+        super(SemanticRule, self)._validate_params()
+        if self._reference_value is None:
+            # Ensure instance and attribute_name are provided.
+            if self._reference_instance is None:
+                raise ValueError("If 'value' is None, 'instance' must be provided.")
+            if self._reference_attribute_name is None:
+                raise ValueError("If 'value' is None, 'attribute_name' must be provided.")        
+
+            # Validate reference instance and attribute
+            if not hasattr(self._reference_instance, self._reference_attribute_name):
+                raise AttributeError("{classname} has no attribute {attrname}.".format(
+                        classname = self._reference_classname,
+                        attrname = self._reference_attribute_name
+                    ))          
 
 # --------------------------------------------------------------------------- #
 #                                 EQUALRULE                                   #  
@@ -678,12 +670,14 @@ class SemanticRule(Rule):
 class EqualRule(SemanticRule):
     """Evaluates equality of a property vis-a-vis another value or property.
     
-    The EqualRule applies to strings, ints, and floats. Array-like structures
-    are evaluated with the AllEqualRule.
+    The EqualRule applies to basic types as well as array-like objects. Array-
+    like objects are evaluated against basic types by recursing over each 
+    element of the array. When evaluating two array-like objects, equality
+    is evaluated element-wise using numpy array-equal.
 
     Parameters
     ----------
-    val : Any
+    value : Any
         The validated value must be equal to this value.
 
     instance : ML Studio object
@@ -694,65 +688,95 @@ class EqualRule(SemanticRule):
     """
 
     def __init__(self, value=None, instance=None, attribute_name=None):
-        super(EqualRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_attribute_name = attribute_name
+        super(EqualRule, self).__init__(value=value,
+                                        instance=instance,
+                                        attribute_name=attribute_name)
 
     def validate(self, instance, attribute_name, attribute_value):
         super(EqualRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Obtain the value to compare to our evaluated attribute
-        if self._value is None:
-            self.get_external_value()
+        # Obtain the value to compare to our evaluated attribute from the reference 
+        # instance if not provided in the value property.
+        if self._reference_value is None:
+            self._reference_value = getattr(self._reference_instance, \
+                self._reference_attribute_name)  
 
-        # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_not_when():
-            if attribute_value == self._value: 
-                self.isValid = True
-            else:
+        # Evaluate iff when conditions are met.
+        if self.evaluate_conditions():
+            # If both evaluated and reference values are arrays, convert to
+            # numpy arrays and use numpy.array_equal
+            if isArray(self._evaluated_attribute_value) and isArray(self._reference_value):
+                # Convert both to numpy arrays for element wise comparisons
+                attribute_value = np.array(self._evaluated_attribute_value)
+                reference_value = np.array(self._reference_value)
+                if not np.array_equal(attribute_value, reference_value):
+                    self.decisive_values.append(attribute_value)
+            # If the evaluated attribute is an array like 
+            # (and the reference value isn't), Recursively evaluate equality
+            elif isArray(self._evaluated_attribute_value):
+                for v in self._evaluated_attribute_value:
+                    self.validate(self._evaluated_instance, 
+                                  self._evaluated_attribute_name,
+                                  v)
+
+            # If the reference value is an array (and the evaluated value isn't)
+            # They obviously are not equal
+            elif isArray(self._reference_value):
+                self.decisive_values.append(self._evaluated_attribute_value)
+
+            # Lastly, we are evaluating two basic, non-array types 
+            elif self._evaluated_attribute_value != self._reference_value: 
+                self.decisive_values.append(self._evaluated_attribute_value)
+
+            # Equality is based upon the presence of decisive (invalid) values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+            else:
+                self.isValid = True
         else:
             self.isValid = True
 
     def error_message(self):
-        if self._external_instance:
+        if self._reference_instance:
             msg = "The {attribute} property of the {classname} class is not equal \
-                to {externalclass} property {externalattr} = {externalval}. \
-                Received value: {value}.".format(
+                to {referenceclass} property {referenceattr} = {referenceval}. \
+                Invalid value(s): '{value}'.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    externalclass = self._external_instance.__class__.__name__,
-                    externalattr = self._external_attribute_name,
-                    externalval=self._external_attribute_value,
-                    value=self._evaluated_attribute_value)
+                    referenceclass = self._reference_classname,
+                    referenceattr = self._reference_attribute_name,
+                    referenceval=self._reference_value,
+                    value=self.decisive_values)
 
         else:
             msg = "The {attribute} property of the {classname} class is not equal \
                 to {val}. \
-                Received value: {value}.".format(
+                Invalid value(s): '{value}'.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    val = self._value,
-                    value=self._evaluated_attribute_value)                    
+                    val = self._reference_value,
+                    value=self.decisive_values)                    
         
         formatted_msg = format_text(msg)
         return formatted_msg 
+
 # --------------------------------------------------------------------------- #
-#                                 NOTEQUALRULE                                #  
+#                              NOTEQUALRULE                                   #  
 # --------------------------------------------------------------------------- #            
 class NotEqualRule(SemanticRule):
     """Evaluates equality of a property vis-a-vis another value or property.
     
-    The EqualRule applies to strings, ints, and floats. Array-like structures
-    are evaluated with the AllNotEqualRule.
+    The NotEqualRule applies to basic types as well as array-like objects. Array-
+    like objects are evaluated against basic types by recursing over each 
+    element of the array. When evaluating two array-like objects, equality
+    is evaluated element-wise using numpy array-equal.
 
     Parameters
     ----------
-    val : Any
+    value : Any
         The validated value must be equal to this value.
 
     instance : ML Studio object
@@ -763,194 +787,227 @@ class NotEqualRule(SemanticRule):
     """
 
     def __init__(self, value=None, instance=None, attribute_name=None):
-        super(NotEqualRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_attribute_name = attribute_name
+        super(NotEqualRule, self).__init__(value=value,
+                                        instance=instance,
+                                        attribute_name=attribute_name)
 
     def validate(self, instance, attribute_name, attribute_value):
         super(NotEqualRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Obtain the value to compare to our evaluated attribute
-        if self._value is None:
-            self.get_external_value()
+        # Obtain the value to compare to our evaluated attribute from the reference 
+        # instance if not provided in the value property.
+        if self._reference_value is None:
+            self._reference_value = getattr(self._reference_instance, \
+                self._reference_attribute_name)  
 
-        # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_not_when():
-            if attribute_value != self._value: 
-                self.isValid = True
-            else:
+        # Evaluate iff when conditions are met.
+        if self.evaluate_conditions():
+            # If both evaluated and reference values are arrays, convert to
+            # numpy arrays and use numpy.array_equal
+            if isArray(self._evaluated_attribute_value) and isArray(self._reference_value):
+                # Convert both to numpy arrays for element wise comparisons
+                attribute_value = np.array(self._evaluated_attribute_value)
+                reference_value = np.array(self._reference_value)
+                if np.array_equal(attribute_value, reference_value):
+                    self.decisive_values.append(attribute_value)
+            # If the evaluated attribute is an array like 
+            # (and the reference value isn't), Recursively evaluate equality
+            elif isArray(self._evaluated_attribute_value):
+                for v in self._evaluated_attribute_value:
+                    self.validate(self._evaluated_instance, 
+                                  self._evaluated_attribute_name,
+                                  v)
+
+            # If the reference value is an array (and the evaluated value isn't)
+            # They obviously are not equal
+            elif isArray(self._reference_value):
+                pass
+
+            # Lastly, we are evaluating two basic, non-array types 
+            elif self._evaluated_attribute_value == self._reference_value: 
+                self.decisive_values.append(self._evaluated_attribute_value)
+
+            # NotEquality is based upon the presence of decisive (invalid) values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+            else:
+                self.isValid = True
         else:
             self.isValid = True
 
     def error_message(self):
-        if self._external_instance:
+        if self._reference_instance:
             msg = "The {attribute} property of the {classname} class is equal \
-                to {externalclass} property {externalattr} = {externalval}. \
-                Received value: {value}.".format(
+                to {referenceclass} property {referenceattr} = {referenceval}. \
+                Invalid value(s): '{value}'.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    externalclass = self._external_instance.__class__.__name__,
-                    externalattr = self._external_attribute_name,
-                    externalval = self._external_attribute_value,
-                    value=self._evaluated_attribute_value)
+                    referenceclass = self._reference_classname,
+                    referenceattr = self._reference_attribute_name,
+                    referenceval=self._reference_value,
+                    value=self.decisive_values)
 
         else:
             msg = "The {attribute} property of the {classname} class is equal \
                 to {val}. \
-                Received value: {value}.".format(
+                Invalid value(s): '{value}'.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    val = self._value,
-                    value=self._evaluated_attribute_value)                    
+                    val = self._reference_value,
+                    value=self.decisive_values)                    
         
         formatted_msg = format_text(msg)
         return formatted_msg 
 
 # --------------------------------------------------------------------------- #
-#                               ALLOWEDRULE                                   #  
+#                                ALLOWEDRULE                                  #  
 # --------------------------------------------------------------------------- #            
 class AllowedRule(SemanticRule):
-    """Evaluates whether the value(s) of an evaluated property are allowed.
-    
-    The AllowedRule applies to strings, ints, and floats. Array-like structures
-    are evaluated with the AllAllowedRule.
+    """Evaluates whether the value or values of a property is/are allowed.
 
+    The evaluated property is confirmed to be one of a set of allowed values. 
+    If the evaluated property is an array-like, its values are recursively
+    evaluated against the allowed values.
+    
     Parameters
     ----------
-    val : Any
-        The validated value must be equal to this value.
+    value : Any
+        The allowed values.
 
     instance : ML Studio object
-        The instance of a class containing the equality value
+        The instance of a class containing the allowed values.
 
     attribute_name : str
-        The name of the attribute containing the equality value 
+        The name of the attribute containing the allowed values.
     """
 
     def __init__(self, value=None, instance=None, attribute_name=None):
-        super(AllowedRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_attribute_name = attribute_name
+        super(AllowedRule, self).__init__(value=value,
+                                        instance=instance,
+                                        attribute_name=attribute_name)
 
     def validate(self, instance, attribute_name, attribute_value):
         super(AllowedRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-         # Obtain the value(s) to compare to our evaluated attribute
-        if self._value is None:
-            self.get_external_value()
+        # Obtain the value to compare to our evaluated attribute from the reference 
+        # instance if not provided in the value property.
+        if self._reference_value is None:
+            self._reference_value = getattr(self._reference_instance, \
+                self._reference_attribute_name)  
 
-        # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_not_when():
-            if attribute_value in self._value: 
-                self.isValid = True
-            else:
+        # Evaluate iff when conditions are met.
+        if self.evaluate_conditions():
+            # If the evaluated attribute is an array like 
+            # (and the reference value isn't), Recursively evaluate allowedity
+            if isArray(self._evaluated_attribute_value):
+                for v in self._evaluated_attribute_value:
+                    self.validate(self._evaluated_instance, 
+                                  self._evaluated_attribute_name,
+                                  v)
+
+            # If evaluated attribute is not among the allowed values, append
+            # to decisive values list.     
+            elif self._evaluated_attribute_value not in self._reference_value:
+                self.decisive_values.append(self._evaluated_attribute_value)
+
+            # Validity is based upon the presence of decisive (invalid) values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+            else:
+                self.isValid = True
         else:
             self.isValid = True
 
     def error_message(self):
-        if self._external_instance:
-            msg = "The {attribute} property of the {classname} class does not \
-                equal any of the allowed values. Received value: {value}.".format(
-                    attribute=self._evaluated_attribute_name,
-                    classname=self._evaluated_classname,
-                    equalclass = self._external_instance.__class__.__name__,
-                    value=str(self._evaluated_attribute_value))
-            msg = msg + "Allowed Value(s): {allowed}.".format(
-                allowed=str(self._value)
-            )
+        msg = "The value of {attribute} property of the {classname} class is \
+            not allowed. Allowed value(s): '{allowed}' \
+            Invalid value(s): '{value}'.".format(
+                attribute=self._evaluated_attribute_name,
+                classname=self._evaluated_classname,
+                allowed = self._reference_value,
+                value=self.decisive_values)
 
-        else:
-            msg = "The {attribute} property of the {classname} class does not \
-                equal any of the allowed values. Received value: {value}.".format(
-                    attribute=self._evaluated_attribute_name,
-                    classname=self._evaluated_classname,
-                    value=str(self._evaluated_attribute_value))
-            msg = msg + "Allowed value(s): {allowed}".format(
-                allowed=str(self._value)
-            )
-        
         formatted_msg = format_text(msg)
         return formatted_msg 
 
 
-
 # --------------------------------------------------------------------------- #
-#                               DISALLOWEDRULE                                #  
+#                                DISALLOWEDRULE                               #  
 # --------------------------------------------------------------------------- #            
 class DisAllowedRule(SemanticRule):
-    """Evaluates whether the value of an evaluated property are disallowed.
-    
-    The DisAllowedRule applies to strings, ints, and floats. Array-like 
-    structures are evaluated with the AllDisAllowedRule.
+    """Evaluates whether the value or values of a property is/are disallowed.
 
+    The evaluated property is confirmed not to be one of a set of disallowed 
+    values. If the evaluated property is an array-like, its values are recursively
+    evaluated against the disallowed values.
+    
     Parameters
     ----------
-    val : Any
-        The validated value must be equal to this value.
+    value : Any
+        The disallowed values.
 
     instance : ML Studio object
-        The instance of a class containing the equality value
+        The instance of a class containing the disallowed values.
 
     attribute_name : str
-        The name of the attribute containing the equality value 
+        The name of the attribute containing the disallowed values.
     """
 
     def __init__(self, value=None, instance=None, attribute_name=None):
-        super(DisAllowedRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_attribute_name = attribute_name
+        super(DisAllowedRule, self).__init__(value=value,
+                                        instance=instance,
+                                        attribute_name=attribute_name)
 
     def validate(self, instance, attribute_name, attribute_value):
         super(DisAllowedRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-         # Obtain the value(s) to compare to our evaluated attribute
-        if self._value is None:
-            self.get_external_value()
+        # Obtain the value to compare to our evaluated attribute from the reference 
+        # instance if not provided in the value property.
+        if self._reference_value is None:
+            self._reference_value = getattr(self._reference_instance, \
+                self._reference_attribute_name)  
 
-        # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_not_when():
-            if attribute_value not in self._value: 
-                self.isValid = True
-            else:
+        # Evaluate iff when conditions are met.
+        if self.evaluate_conditions():
+            # If the evaluated attribute is an array like 
+            # (and the reference value isn't), Recursively evaluate disallowedity
+            if isArray(self._evaluated_attribute_value):
+                for v in self._evaluated_attribute_value:
+                    self.validate(self._evaluated_instance, 
+                                  self._evaluated_attribute_name,
+                                  v)
+
+            # If evaluated attribute is not among the disallowed values, append
+            # to decisive values list.     
+            elif self._evaluated_attribute_value in self._reference_value:
+                self.decisive_values.append(self._evaluated_attribute_value)
+
+            # Validity is based upon the presence of decisive (invalid) values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+            else:
+                self.isValid = True
         else:
             self.isValid = True
 
     def error_message(self):
-        if self._external_instance:
-            msg = "The {attribute} property of the {classname} class equals \
-                a disallowed value. Received value: {value}.".format(
-                    attribute=self._evaluated_attribute_name,
-                    classname=self._evaluated_classname,                    
-                    value=str(self._evaluated_attribute_value))
-            msg = msg + "Disallowed Value(s): {disallowed}.".format(
-                disallowed=str(self._value)
-            )
+        msg = "The value of {attribute} property of the {classname} class is \
+            not allowed. Disallowed value(s): '{disallowed}' \
+            Invalid value(s): '{value}'.".format(
+                attribute=self._evaluated_attribute_name,
+                classname=self._evaluated_classname,
+                disallowed = self._reference_value,
+                value=self.decisive_values)
 
-        else:
-            msg = "The {attribute} property of the {classname} class equal \
-                a disallowed value. Received value: {value}.".format(
-                    attribute=self._evaluated_attribute_name,
-                    classname=self._evaluated_classname,
-                    value=str(self._evaluated_attribute_value))
-            msg = msg + "Disallowed value(s): {disallowed}".format(
-                disallowed=str(self._value)
-            )
-        
         formatted_msg = format_text(msg)
         return formatted_msg 
 
@@ -959,92 +1016,114 @@ class DisAllowedRule(SemanticRule):
 #                                 LESSRULE                                    #  
 # --------------------------------------------------------------------------- #            
 class LessRule(SemanticRule):
-    """Evaluates whether a value of a specific property is less than a reference.
-
-    The reference may be provided in the val parameter or may be provided
-    via an external object and attribute.
+    """Evaluates whether a property is less than another value or property.
     
-    The LessRule applies to strings, ints, and floats. Array-like structures
-    are evaluated with the AllEqualRule.
+    The LessRule applies to basic types as well as array-like objects. Array-
+    like objects are evaluated against basic types by recursing over each 
+    element of the array. When evaluating two array-like objects, the LessRule
+    is evaluated element-wise using numpy array-less.
 
     Parameters
     ----------
-    val : Any
-        The validated value must be equal to this value.
+    value : Any
+        The validated value must be less to this value.
 
     instance : ML Studio object
-        The instance of a class containing the equality value
+        The instance of a class containing the lessity value
 
     attribute_name : str
-        The name of the attribute containing the equality value 
+        The name of the attribute containing the lessity value 
+
+    inclusive : bool
+        If True, LessRule evaluates less than or equal. Otherwise it 
+        evaluates less than exclusively.
     """
 
     def __init__(self, value=None, instance=None, attribute_name=None,
-                 equal_ok=False):
-        super(LessRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_attribute_name = attribute_name
-        self._equal_ok = equal_ok
+                 inclusive=True):
+        super(LessRule, self).__init__(value=value,
+                                        instance=instance,
+                                        attribute_name=attribute_name)
+        self._inclusive = inclusive
+
+    def _validate_params(self):
+        super(LessRule, self)._validate_params()
+        if isArray(self._reference_value) and not \
+            isArray(self._evaluated_attribute_value):
+            raise ValueError("the 'value' parameter can be an array-like, only \
+                when the evaluated attribute value is an array-like.")
 
     def validate(self, instance, attribute_name, attribute_value):
         super(LessRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Obtain the value to compare to our evaluated attribute
-        if self._value is None:
-            self.get_external_value()
+        # Obtain the value to compare to our evaluated attribute from the reference 
+        # instance if not provided in the value property.
+        if self._reference_value is None:
+            self._reference_value = getattr(self._reference_instance, \
+                self._reference_attribute_name)  
 
-        # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_not_when():
-            if attribute_value < self._value: 
-                self.isValid = True
-            elif self._equal_ok:
-                if attribute_value == self._value:
-                    self.isValid = True
+        # Evaluate iff when conditions are met.
+        if self.evaluate_conditions():
+            # If both evaluated and reference values are arrays, convert to
+            # numpy arrays and use numpy.array_less
+            if isArray(self._evaluated_attribute_value) and isArray(self._reference_value):
+                # Convert both to numpy arrays for element wise comparisons
+                attribute_value = np.array(self._evaluated_attribute_value)
+                reference_value = np.array(self._reference_value)
+                if self._inclusive:
+                    if not any(np.less_equal(attribute_value, reference_value)):
+                        self.decisive_values.append(attribute_value)
                 else:
-                    self.isValid = False
-                    self.invalid_value = attribute_value
-                    self.invalid_message = self.error_message()
-            else:
+                    if not any(np.less(attribute_value, reference_value)):
+                        self.decisive_values.append(attribute_value)
+
+            # If the evaluated attribute is an array like 
+            # (and the reference value isn't), Recursively evaluate.
+            elif isArray(self._evaluated_attribute_value):
+                for v in self._evaluated_attribute_value:
+                    self.validate(self._evaluated_instance, 
+                                  self._evaluated_attribute_name,
+                                  v)
+
+            # Lastly, we are evaluating two basic, non-array types             
+            elif self._inclusive and \
+                self._evaluated_attribute_value > self._reference_value:
+                self.decisive_values.append(self._evaluated_attribute_value)
+            elif not self._inclusive and \
+                (self._evaluated_attribute_value >= self._reference_value):
+                self.decisive_values.append(self._evaluated_attribute_value)
+
+            # Validity is based upon the presence of decisive (invalid) values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+            else:
+                self.isValid = True
         else:
             self.isValid = True
 
     def error_message(self):
-        if self._external_instance:
-            msg = "The {attribute} property of the {classname} class is not \
-                less than ".format(
-                attribute=self._evaluated_attribute_name,
-                classname=self._evaluated_classname
-            )
-
-            if self._equal_ok:
-                msg = msg + "or equal to "
-
-            msg = msg + "{externalclass} property {externalattr} = {externalval}. \
-                Received value: {value}.".format(
-                    externalclass=self._external_classname,
-                    externalattr=self._external_attribute_name,
-                    externalval = self._value,
-                    value=self._evaluated_attribute_value)
+        if self._reference_instance:
+            msg = "The {attribute} property of the {classname} class is not less \
+                than {referenceclass} property {referenceattr} = {referenceval}. \
+                Invalid value(s): '{value}'.".format(
+                    attribute=self._evaluated_attribute_name,
+                    classname=self._evaluated_classname,
+                    referenceclass = self._reference_classname,
+                    referenceattr = self._reference_attribute_name,
+                    referenceval=self._reference_value,
+                    value=self.decisive_values)
 
         else:
-            msg = "The {attribute} property of the {classname} class is not \
-                less than ".format(
-                attribute=self._evaluated_attribute_name,
-                classname=self._evaluated_classname
-            )
-
-            if self._equal_ok:
-                msg = msg + "or equal to "
-
-            msg = msg + "{val}. \
-                Received value: {value}.".format(
-                    val=self._value,
-                    value=self._evaluated_attribute_value)            
+            msg = "The {attribute} property of the {classname} class is not less \
+                to {referenceval}. \
+                Invalid value(s): '{value}'.".format(
+                    attribute=self._evaluated_attribute_name,
+                    classname=self._evaluated_classname,
+                    referenceval = self._reference_value,
+                    value=self.decisive_values)                    
         
         formatted_msg = format_text(msg)
         return formatted_msg 
@@ -1053,260 +1132,181 @@ class LessRule(SemanticRule):
 #                               GREATERRULE                                   #  
 # --------------------------------------------------------------------------- #            
 class GreaterRule(SemanticRule):
-    """Evaluates whether a value of a specific property is greater than a reference.
-
-    The reference may be provided in the val parameter or may be provided
-    via an external object and attribute.
+    """Evaluates whether a property is greater than another value or property.
     
-    The GreaterRule applies to strings, ints, and floats. Array-like structures
-    are evaluated with the AllEqualRule.
+    The GreaterRule applies to basic types as well as array-like objects. Array-
+    like objects are evaluated against basic types by recursing over each 
+    element of the array. When evaluating two array-like objects, the GreaterRule
+    is evaluated element-wise using numpy array-greater.
 
     Parameters
     ----------
-    val : Any
-        The validated value must be equal to this value.
+    value : Any
+        The validated value must be greater to this value.
 
     instance : ML Studio object
-        The instance of a class containing the equality value
+        The instance of a class containing the greaterity value
 
     attribute_name : str
-        The name of the attribute containing the equality value 
+        The name of the attribute containing the greaterity value 
+
+    inclusive : bool
+        If True, GreaterRule evaluates greater than or equal. Otherwise it 
+        evaluates greater than exclusively.
     """
 
     def __init__(self, value=None, instance=None, attribute_name=None,
-                 equal_ok=False):
-        super(GreaterRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_attribute_name = attribute_name
-        self._equal_ok = equal_ok
+                 inclusive=True):
+        super(GreaterRule, self).__init__(value=value,
+                                        instance=instance,
+                                        attribute_name=attribute_name)
+        self._inclusive = inclusive
+
+    def _validate_params(self):
+        super(GreaterRule, self)._validate_params()
+        if isArray(self._reference_value) and not \
+            isArray(self._evaluated_attribute_value):
+            raise ValueError("the 'value' parameter can be an array-like, only \
+                when the evaluated attribute value is an array-like.")
 
     def validate(self, instance, attribute_name, attribute_value):
         super(GreaterRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if isinstance(attribute_value, (pd.Series, np.ndarray, tuple, list)):
-            raise ValueError("This rule applies only to strings, integers, \
-            and floats. Use the AllEqualRule for iterables.")
+        # Obtain the value to compare to our evaluated attribute from the reference 
+        # instance if not provided in the value property.
+        if self._reference_value is None:
+            self._reference_value = getattr(self._reference_instance, \
+                self._reference_attribute_name)  
 
-        # Obtain the value to compare to our evaluated attribute
-        if self._value is None:
-            self.get_external_value()
-
-        # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_not_when():
-            if attribute_value > self._value: 
-                self.isValid = True
-            elif self._equal_ok:
-                if attribute_value == self._value:
-                    self.isValid = True
+        # Evaluate iff when conditions are met.
+        if self.evaluate_conditions():
+            # If both evaluated and reference values are arrays, convert to
+            # numpy arrays and use numpy.array_greater
+            if isArray(self._evaluated_attribute_value) and isArray(self._reference_value):
+                # Convert both to numpy arrays for element wise comparisons
+                attribute_value = np.array(self._evaluated_attribute_value)
+                reference_value = np.array(self._reference_value)
+                if self._inclusive:
+                    if not all(np.greater_equal(attribute_value, reference_value)):
+                        self.decisive_values.append(attribute_value)
                 else:
-                    self.isValid = False
-                    self.invalid_value = attribute_value
-                    self.invalid_message = self.error_message()
-            else:
+                    if not all(np.greater(attribute_value, reference_value)):
+                        self.decisive_values.append(attribute_value)
+
+            # If the evaluated attribute is an array like 
+            # (and the reference value isn't), Recursively evaluate.
+            elif isArray(self._evaluated_attribute_value):
+                for v in self._evaluated_attribute_value:
+                    self.validate(self._evaluated_instance, 
+                                  self._evaluated_attribute_name,
+                                  v)
+
+            # Lastly, we are evaluating two basic, non-array types             
+            elif self._inclusive and \
+                self._evaluated_attribute_value < self._reference_value:
+                self.decisive_values.append(self._evaluated_attribute_value)
+            elif not self._inclusive and \
+                (self._evaluated_attribute_value <= self._reference_value):
+                self.decisive_values.append(self._evaluated_attribute_value)
+
+            # Validity is based upon the presence of decisive (invalid) values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+            else:
+                self.isValid = True
         else:
             self.isValid = True
 
     def error_message(self):
-        if self._external_instance:
-            msg = "The {attribute} property of the {classname} class is not \
-                greater than ".format(
-                attribute=self._evaluated_attribute_name,
-                classname=self._evaluated_classname
-            )
-
-            if self._equal_ok:
-                msg = msg + "or equal to "
-
-            msg = msg + "{externalclass} property {externalattr} = {externalval}. \
-                Received value: {value}.".format(
-                    externalclass=self._external_classname,
-                    externalattr=self._external_attribute_name,
-                    externalval = self._value,
-                    value=self._evaluated_attribute_value)
+        if self._reference_instance:
+            msg = "The {attribute} property of the {classname} class is not greater \
+                than {referenceclass} property {referenceattr} = {referenceval}. \
+                Invalid value(s): '{value}'.".format(
+                    attribute=self._evaluated_attribute_name,
+                    classname=self._evaluated_classname,
+                    referenceclass = self._reference_classname,
+                    referenceattr = self._reference_attribute_name,
+                    referenceval=self._reference_value,
+                    value=self.decisive_values)
 
         else:
-            msg = "The {attribute} property of the {classname} class is not \
-                greater than ".format(
-                attribute=self._evaluated_attribute_name,
-                classname=self._evaluated_classname
-            )
-
-            if self._equal_ok:
-                msg = msg + "or equal to "
-
-            msg = msg + "{val}. \
-                Received value: {value}.".format(
-                    val=self._value,
-                    value=self._evaluated_attribute_value)            
+            msg = "The {attribute} property of the {classname} class is not greater \
+                to {referenceval}. \
+                Invalid value(s): '{value}'.".format(
+                    attribute=self._evaluated_attribute_name,
+                    classname=self._evaluated_classname,
+                    referenceval = self._reference_value,
+                    value=self.decisive_values)                    
         
         formatted_msg = format_text(msg)
         return formatted_msg 
+
+
 
 # --------------------------------------------------------------------------- #
 #                               REGEXRULE                                     #  
 # --------------------------------------------------------------------------- #            
 class RegexRule(SemanticRule):
-    """Evaluates whether a value of a property matches regex pattern(s).
-
-    The reference may be provided in the val parameter or may be provided
-    via an external object and attribute.
+    """Evaluates whether a property is regex than another value or property.
     
-    The RegexRule applies to strings and can be evaluated against one or 
-    several regex patterns.
+    The RegexRule validates basic types and array-like objects against a
+    regex string pattern. 
 
     Parameters
     ----------
-    val : Any
-        The validated value must be equal to this value.
+    value : Any
+        The validated value must be regex to this value.
 
     instance : ML Studio object
-        The instance of a class containing the equality value
+        The instance of a class containing the regexity value
 
     attribute_name : str
-        The name of the attribute containing the equality value 
+        The name of the attribute containing the regexity value 
     """
 
     def __init__(self, value=None, instance=None, attribute_name=None,
-                 equal_ok=False):
-        super(RegexRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_attribute_name = attribute_name        
-
-    def validate_regex(self, string):
-        try:
-            re.compile(string)
-        except re.error as e:
-            raise AssertionError(e)
-
-    def evaluate_regex(self, string, regex):        
-        return re.search(regex, string)
-
-
+                 inclusive=True):
+        super(RegexRule, self).__init__(value=value,
+                                        instance=instance,
+                                        attribute_name=attribute_name)
+        self._inclusive = inclusive
 
     def validate(self, instance, attribute_name, attribute_value):
         super(RegexRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        if not isString(self._evaluated_attribute_value):
-            raise ValueError("This rule applies only to strings.")
+        # Obtain the value to compare to our evaluated attribute from the reference 
+        # instance if not provided in the value property.
+        if self._reference_value is None:
+            self._reference_value = getattr(self._reference_instance, \
+                self._reference_attribute_name)  
 
-        # Obtain the value to compare to our evaluated attribute
-        if self._value is None:
-            self.get_external_value()
+        # Raise exception if reference value is not a valid regex string.
+        re.compile(self._reference_value)
 
-        # Validate regex pattern(s)
-        if isinstance(self._value, str):
-            self.validate_regex(self._value)
-        elif isArray(self._value):
-            not_strings = [v for v in self._value if not isinstance(v, str)]
-            if not_strings:
-                raise ValueError("Some or all reference values are not strings.")
+        # Evaluate iff when conditions are met.
+        if self.evaluate_conditions():
+            # If the evaluated attribute is an array like, Recursively evaluate.
+            if isArray(self._evaluated_attribute_value):
+                for v in self._evaluated_attribute_value:
+                    self.validate(self._evaluated_instance, 
+                                  self._evaluated_attribute_name,
+                                  v)
+
+            # Lastly, we are evaluating two basic, non-array types             
             else:
-                for v in self._value:
-                    self.validate_regex(v)                
+                matches = re.search(self._reference_value, 
+                                    self._evaluated_attribute_value)
+                if not matches:                
+                    self.decisive_values.append(self._evaluated_attribute_value)
 
-        # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_not_when():
-            # If array, then we evaluate to True of any matches.
-            if isArray(self._value):                
-                regex_matches = []
-                for regex in self._value:
-                    regex_matches.append(\
-                        self.evaluate_regex(self._evaluated_attribute_value, regex))
-
-                if any(regex_matches):
-                    self.isValid = True
-                else:
-                    self.isValid = False
-                    self.invalid_value = attribute_value
-                    self.invalid_message = self.error_message()
-            elif self.evaluate_regex(self._evaluated_attribute_value, self._value):
-                self.isValid = True
-            else:
+            # Validity is based upon the presence of decisive (invalid) values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value           
-                self.invalid_message = self.error_message()                     
-        else:
-            self.isValid = True
-
-    def error_message(self):
-        msg = "The {attribute} property of the {classname} class did not \
-            match (any of) the regex patterns. Received values: {value}.".format(
-            attribute=self._evaluated_attribute_name,
-            classname=self._evaluated_classname,
-            value=self._evaluated_attribute_value)
-
-        msg = msg + "Regex pattern(s): {patterns}".format(
-            patterns=str(self._value)
-        )
-
-        formatted_msg = format_text(msg)
-        return formatted_msg 
-
-
-# --------------------------------------------------------------------------- #
-#                                ARRAYRULES                                   #   
-# --------------------------------------------------------------------------- #                            
-class ArrayRule(Rule):
-    """Abstract base class to evaluate array-like structures."""
-    def __init__(self, value=None):
-        super(ArrayRule, self).__init__()
-
-    def validate(self, instance, attribute_name, attribute_value):
-        self._evaluated_instance = instance
-        self._evaluated_classname = instance.__class__.__name__
-        self._evaluated_attribute_name = attribute_name
-        self._evaluated_attribute_value = attribute_value          
-
-        # Creates validation to ensure that the attribute value being
-        # evaluated is an array-like.
-        if not isArray(attribute_value):
-            # Find the 'sister' classname for non array-like structures
-            sister_classname = self.__class__.__name__.replace('Any', "")
-            sister_classname = sister_classname.replace('All', "")
-
-            raise AttributeError("{classname} is for numpy arrays, pandas\
-                Series, lists, tuples and other array-like structures. \
-                To evaluate non array-like structures, use the \
-                {sister_classname} instead.".format(
-                    classname = self.__class__.__name__,
-                    sister_classname = sister_classname
-                )
-            )
-
-# --------------------------------------------------------------------------- #
-#                                ALLBOOLRULE                                  #  
-# --------------------------------------------------------------------------- #            
-class AllBoolRule(ArrayRule):
-    """Evaluates whether all elements of a property are Booleans.
-    
-    Parameters
-    ----------
-    val : None
-        None since this rule doesn't require a referene value. 
-    """
-
-    def __init__(self, value=None):
-        super(AllBoolRule, self).__init__(value=value)
-
-    def validate(self, instance, attribute_name, attribute_value):
-        super(AllBoolRule, self).validate(instance=instance,
-                                       attribute_name=attribute_name,
-                                       attribute_value=attribute_value)
-
-        # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_not_when():
-            invalid_values = [v for v in self._evaluated_attribute_value\
-                 if (not isinstance(v, bool))]
-            if invalid_values:
-                self.isValid = False
-                self.invalid_value = invalid_values
                 self.invalid_message = self.error_message()
             else:
                 self.isValid = True
@@ -1314,422 +1314,124 @@ class AllBoolRule(ArrayRule):
             self.isValid = True
 
     def error_message(self):
-        msg = "The {attribute} property of the {classname} class contains \
-            values which are not Booleans. \
-            Received value: {value}.".format(
+        msg = "The {attribute} property of the {classname} class does not  \
+            match regex pattern {referenceval}. \
+            Invalid value(s): '{value}'.".format(
                 attribute=self._evaluated_attribute_name,
                 classname=self._evaluated_classname,
-                value=str(self.invalid_value))
+                referenceval=self._reference_value,
+                value=self.decisive_values)
 
         formatted_msg = format_text(msg)
         return formatted_msg 
 
-# --------------------------------------------------------------------------- #
-#                                ALLINTRULE                                   #  
-# --------------------------------------------------------------------------- #            
-class AllIntRule(ArrayRule):
-    """Evaluates whether all elements of a property are Booleans.
-    
-    Parameters
-    ----------
-    val : None
-        None since this rule doesn't require a referene value.
-    """
+class BetweenRule(SemanticRule):
+    """Evaluates whether the value of a property is between a min/max.
 
-    def __init__(self, value=None):
-        super(AllIntRule, self).__init__(value=value)
-
-    def validate(self, instance, attribute_name, attribute_value):
-        super(AllIntRule, self).validate(instance=instance,
-                                       attribute_name=attribute_name,
-                                       attribute_value=attribute_value)
-
-        # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_not_when():
-            invalid_values = [v for v in self._evaluated_attribute_value\
-                 if not isinstance(v, int)]
-            if invalid_values:
-                self.isValid = False
-                self.invalid_value = invalid_values
-                self.invalid_message = self.error_message()
-            else:
-                self.isValid = True
-        else:
-            self.isValid = True
-
-    def error_message(self):
-        msg = "The {attribute} property of the {classname} class contains \
-            values which are not integers. \
-            Received value: {value}.".format(
-                attribute=self._evaluated_attribute_name,
-                classname=self._evaluated_classname,
-                value=str(self.invalid_value))
-
-        formatted_msg = format_text(msg)
-        return formatted_msg 
-
-# --------------------------------------------------------------------------- #
-#                              ALLFLOATSRULE                                  #  
-# --------------------------------------------------------------------------- #            
-class AllFloatRule(ArrayRule):
-    """Evaluates whether all elements of a property are Booleans.
-    
-    Parameters
-    ----------
-    val : None
-        None since this rule doesn't require a referene value.
-    """
-
-    def __init__(self, value=None):
-        super(AllFloatRule, self).__init__(value=value)
-
-    def validate(self, instance, attribute_name, attribute_value):
-        super(AllFloatRule, self).validate(instance=instance,
-                                       attribute_name=attribute_name,
-                                       attribute_value=attribute_value)
-
-        # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_not_when():
-            invalid_values = [v for v in self._evaluated_attribute_value\
-                 if not isinstance(v, float)]
-            if invalid_values:
-                self.isValid = False
-                self.invalid_value = invalid_values
-                self.invalid_message = self.error_message()
-            else:
-                self.isValid = True
-        else:
-            self.isValid = True
-
-    def error_message(self):
-        msg = "The {attribute} property of the {classname} class contains \
-            values which are not floats. \
-            Received value: {value}.".format(
-                attribute=self._evaluated_attribute_name,
-                classname=self._evaluated_classname,
-                value=str(self.invalid_value))
-
-        formatted_msg = format_text(msg)
-        return formatted_msg 
-
-# --------------------------------------------------------------------------- #
-#                             ALLNUMBERSRULE                                  #  
-# --------------------------------------------------------------------------- #            
-class AllNumberRule(ArrayRule):
-    """Evaluates whether all elements of a property are Booleans.
-    
-    Parameters
-    ----------
-    val : None
-        None since this rule doesn't require a referene value.
-    """
-
-    def __init__(self, value=None):
-        super(AllNumberRule, self).__init__(value=value)
-
-    def validate(self, instance, attribute_name, attribute_value):
-        super(AllNumberRule, self).validate(instance=instance,
-                                       attribute_name=attribute_name,
-                                       attribute_value=attribute_value)
-
-        # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_not_when():
-            invalid_values = [v for v in self._evaluated_attribute_value\
-                 if not isinstance(v, (int, float))]
-            if invalid_values:
-                self.isValid = False
-                self.invalid_value = invalid_values
-                self.invalid_message = self.error_message()
-            else:
-                self.isValid = True
-        else:
-            self.isValid = True
-
-    def error_message(self):
-        msg = "The {attribute} property of the {classname} class contains \
-            values which are not numbers. \
-            Received value: {value}.".format(
-                attribute=self._evaluated_attribute_name,
-                classname=self._evaluated_classname,
-                value=str(self.invalid_value))
-
-        formatted_msg = format_text(msg)
-        return formatted_msg 
-
-# --------------------------------------------------------------------------- #
-#                             ALLSTRINGSSRULE                                 #  
-# --------------------------------------------------------------------------- #            
-class AllStringRule(ArrayRule):
-    """Evaluates whether all elements of a property are Booleans.
-    
-    Parameters
-    ----------
-    val : None
-        None since this rule doesn't require a referene value.
-    """
-
-    def __init__(self, value=None):
-        super(AllStringRule, self).__init__(value=value)
-
-    def validate(self, instance, attribute_name, attribute_value):
-        super(AllStringRule, self).validate(instance=instance,
-                                       attribute_name=attribute_name,
-                                       attribute_value=attribute_value)
-
-        # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_not_when():
-            invalid_values = [v for v in self._evaluated_attribute_value\
-                 if not isinstance(v, str)]
-            if invalid_values:
-                self.isValid = False
-                self.invalid_value = invalid_values
-                self.invalid_message = self.error_message()
-            else:
-                self.isValid = True
-        else:
-            self.isValid = True
-
-    def error_message(self):
-        msg = "The {attribute} property of the {classname} class contains \
-            values which are not strings. \
-            Received value: {value}.".format(
-                attribute=self._evaluated_attribute_name,
-                classname=self._evaluated_classname,
-                value=str(self.invalid_value))
-
-        formatted_msg = format_text(msg)
-        return formatted_msg         
-
-# --------------------------------------------------------------------------- #
-#                                ALLEQUALRULE                                 #  
-# --------------------------------------------------------------------------- #            
-class AllEqualRule(ArrayRule, SemanticRule):
-    """Evaluates equality of a property vis-a-vis another value or property.
-    
-    The EqualRule applies to array-like structures validated against a 
-    reference array-like structure. The validation evaluates to True if the
-    evaluated and reference array-like structures have the same shape, and 
-    all elements of the reference array-like are included in the evaluated 
-    array-like structure.
+    Evaluates whether the value of a property falls within a range specified
+    by a min, max, and inclusive parameter. The inclusive parameter is a 
+    Boolean and indicates whether the range should be inclusive of the min and
+    max parameters.
 
     Parameters
     ----------
-    val : Any
-        The validated value must be equal to this value.
+    value : array-like of int or float of length=2. Optional
+        Contains min and max values
 
     instance : ML Studio object
-        The instance of a class containing the equality value
+        The instance of a class containing reference attribute
 
     attribute_name : str
-        The name of the attribute containing the equality value 
-    """
+        The name of the attribute containing the min and max values 
 
-    def __init__(self, value=None, instance=None, attribute_name=None):
-        super(AllEqualRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_attribute_name = attribute_name
+    inclusive : bool
+        If True, the range is inclusive of min/max values.
+
+    """
+    def __init__(self, value=None, instance=None, attribute_name=None,
+                 inclusive=True):
+        super(BetweenRule, self).__init__(value=value,
+                                        instance=instance,
+                                        attribute_name=attribute_name)
+        self._inclusive = inclusive
 
     def validate(self, instance, attribute_name, attribute_value):
-        super(AllEqualRule, self).validate(instance=instance,
+        super(BetweenRule, self).validate(instance=instance,
                                        attribute_name=attribute_name,
                                        attribute_value=attribute_value)
 
-        # Obtain the value to compare to our evaluated attribute
-        if self._value is None:
-            self.get_external_value()
+        # Obtain the value to compare to our evaluated attribute from the reference 
+        # instance if not provided in the value property.
+        if self._reference_value is None:
+            self._reference_value = getattr(self._reference_instance, \
+                self._reference_attribute_name)  
 
-        # Convert the evaluated and reference structures to numpy arrays
-        np_evaluated_value = np.array(self._evaluated_attribute_value)
-        np_reference_value = np.array(self._value)
+        # Confirm reference values contains min and max
+        if not isArray(self._reference_value):
+            raise TypeError("the reference value must be an array-like \
+                of length=2, containing two numbers, min and max.")
+        elif len(self._reference_value) != 2:
+            raise ValueError("the reference value must be an array-like \
+                of length=2, containing two numbers, min and max.")
+        elif not isinstance(self._reference_value[0], (int, float)) or \
+            not isinstance(self._reference_value[1], (int, float)):
+            raise ValueError("the reference value must be an array-like \
+                of length=2, containing two numbers, min and max.")
 
-        # Evaluate if when / except when conditions are met/not met, then proceed.
-        if self.evaluate_when() and self.evaluate_not_when():
-            if np.array_equal(np_evaluated_value, np_reference_value): 
-                self.isValid = True
-            else:
+        # Evaluate iff when conditions are met.
+        if self.evaluate_conditions():
+            # If the evaluated attribute is an array like, Recursively evaluate.
+            if isArray(self._evaluated_attribute_value):
+                for v in self._evaluated_attribute_value:
+                    self.validate(self._evaluated_instance, 
+                                  self._evaluated_attribute_name,
+                                  v)
+
+            # Lastly, we are evaluating two basic, non-array types             
+            elif self._inclusive and \
+                (self._evaluated_attribute_value < self._reference_value[0] or\
+                    self._evaluated_attribute_value > self._reference_value[1]):
+                self.decisive_values.append(self._evaluated_attribute_value)
+            elif not self._inclusive and \
+                (self._evaluated_attribute_value <= self._reference_value[0] or\
+                    self._evaluated_attribute_value >= self._reference_value[1]):
+                self.decisive_values.append(self._evaluated_attribute_value)
+
+            # Validity is based upon the presence of decisive (invalid) values
+            if self.decisive_values:
                 self.isValid = False
-                self.invalid_value = attribute_value
                 self.invalid_message = self.error_message()
+            else:
+                self.isValid = True
         else:
             self.isValid = True
 
     def error_message(self):
-        if self._external_instance:
-            msg = "The {attribute} property of the {classname} class is not equal \
-                to {equalclass} property {equalattr} = {equalval}. \
-                Received value: {value}.".format(
+        if self._reference_instance:
+            msg = "The {attribute} property of the {classname} class is not greater \
+                than {referenceclass} property {referenceattr} = {referenceval}. \
+                Invalid value(s): '{value}'.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    equalclass = self._external_instance.__class__.__name__,
-                    value=self._evaluated_attribute_value)
+                    referenceclass = self._reference_classname,
+                    referenceattr = self._reference_attribute_name,
+                    referenceval=self._reference_value,
+                    value=self.decisive_values)
 
         else:
-            msg = "The {attribute} property of the {classname} class is not equal \
-                to {val}. \
-                Received value: {value}.".format(
+            msg = "The {attribute} property of the {classname} class is not greater \
+                to {referenceval}. \
+                Invalid value(s): '{value}'.".format(
                     attribute=self._evaluated_attribute_name,
                     classname=self._evaluated_classname,
-                    val = self._value,
-                    value=self._evaluated_attribute_value)                    
+                    referenceval = self._reference_value,
+                    value=self.decisive_values)                    
         
         formatted_msg = format_text(msg)
-        return formatted_msg 
+        return formatted_msg                                    
 
-
-# --------------------------------------------------------------------------- #
-#                               ALLALLOWEDRULE                                #  
-# --------------------------------------------------------------------------- #            
-class AllAllowedRule(ArrayRule, SemanticRule):
-    """Evaluates whether the value(s) of an evaluated property are allowed.
+     
     
-    The AllAllowedRule applies to array-like objects and evaluates whether
-    all elements are allowed.
-
-    Parameters
-    ----------
-    val : Any
-        The validated value must be equal to this value.
-
-    instance : ML Studio object
-        The instance of a class containing the equality value
-
-    attribute_name : str
-        The name of the attribute containing the equality value 
-    """
-
-    def __init__(self, value=None, instance=None, attribute_name=None):
-        super(AllAllowedRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_attribute_name = attribute_name
-
-    def validate(self, instance, attribute_name, attribute_value):
-        super(AllAllowedRule, self).validate(instance=instance,
-                                       attribute_name=attribute_name,
-                                       attribute_value=attribute_value)
-
-        # Obtain the value(s) to compare to our evaluated attribute
-        if self._value is None:
-            self.get_external_value()
-
-        # Convert the evaluated and reference structures to numpy arrays
-        np_evaluated_value = np.array(self._evaluated_attribute_value)
-        np_reference_value = np.array(self._value)
-
-        # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_not_when():
-            # Evaluate whether any of the elements are not in the list of 
-            # allowed values
-            invalid_values = [e for e in np_evaluated_value if e not in np_reference_value]
-            if invalid_values: 
-                self.isValid = False
-                self.Invalid_value = invalid_values
-                self.invalid_message = self.error_message()
-            else:
-                self.isValid = True
-        else:
-            self.isValid = True
-
-    def error_message(self):
-        if self._external_instance:
-            msg = "The {attribute} property of the {classname} class contains \
-                values that are not among the allowed values. Received \
-                    value: {value}.".format(
-                    attribute=self._evaluated_attribute_name,
-                    classname=self._evaluated_classname,
-                    value=str(self._evaluated_attribute_value))
-            msg = msg + "Allowed Value(s): {allowed}.".format(
-                allowed=str(self._value)
-            )
-
-        else:
-            msg = "The {attribute} property of the {classname} class does not \
-                equal any of the allowed values. Received value: {value}.".format(
-                    attribute=self._evaluated_attribute_name,
-                    classname=self._evaluated_classname,
-                    value=str(self._evaluated_attribute_value))
-            msg = msg + "Allowed value(s): {allowed}".format(
-                allowed=str(self._value)
-            )
-        
-        formatted_msg = format_text(msg)
-        return formatted_msg 
-# --------------------------------------------------------------------------- #
-#                               ANYDISALLOWEDRULE                             #  
-# --------------------------------------------------------------------------- #            
-class AnyDisAllowedRule(ArrayRule, SemanticRule):
-    """Evaluates whether the value(s) of an evaluated property are disallowed.
-    
-    The AnyDisAllowedRule applies to array-like objects and evaluates whether
-    any elements are allowed.
-
-    Parameters
-    ----------
-    val : Any
-        The validated value must be equal to this value.
-
-    instance : ML Studio object
-        The instance of a class containing the equality value
-
-    attribute_name : str
-        The name of the attribute containing the equality value 
-    """
-
-    def __init__(self, value=None, instance=None, attribute_name=None):
-        super(AnyDisAllowedRule, self).__init__(value=value)
-        self._external_instance = instance
-        self._external_attribute_name = attribute_name
-
-    def validate(self, instance, attribute_name, attribute_value):
-        super(AnyDisAllowedRule, self).validate(instance=instance,
-                                       attribute_name=attribute_name,
-                                       attribute_value=attribute_value)
-
-        # Obtain the value(s) to compare to our evaluated attribute
-        if self._value is None:
-            self.get_external_value()
-
-        # Convert the evaluated and reference structures to numpy arrays
-        np_evaluated_value = np.array(self._evaluated_attribute_value)
-        np_reference_value = np.array(self._value)
-
-        # Evaluate if when / except when conditions are met/not met.
-        if self.evaluate_when() and self.evaluate_not_when():
-            # Evaluate whether any of the elements are not in the list of 
-            # allowed values
-            invalid_values = [e for e in np_evaluated_value if e in np_reference_value]
-            if invalid_values: 
-                self.isValid = False
-                self.Invalid_value = invalid_values
-                self.invalid_message = self.error_message()
-            else:
-                self.isValid = True
-        else:
-            self.isValid = True
-
-    def error_message(self):
-        if self._external_instance:
-            msg = "The {attribute} property of the {classname} class contains \
-                values that are disallowed. Received \
-                    value: {value}.".format(
-                    attribute=self._evaluated_attribute_name,
-                    classname=self._evaluated_classname,
-                    value=str(self._evaluated_attribute_value))
-            msg = msg + "Disallowed Value(s): {disallowed}.".format(
-                disallowed=str(self._value)
-            )
-
-        else:
-            msg = "The {attribute} property of the {classname} class contains \
-                values that are disallowed. Received value: {value}.".format(
-                    attribute=self._evaluated_attribute_name,
-                    classname=self._evaluated_classname,
-                    value=str(self._evaluated_attribute_value))
-            msg = msg + "Disallowed value(s): {disallowed}".format(
-                disallowed=str(self._value)
-            )
-        
-        formatted_msg = format_text(msg)
-        return formatted_msg 
 
 # --------------------------------------------------------------------------- #
 #                              UTILITY FUNCTIONS                              #  

@@ -522,6 +522,8 @@ def get_validation_rule_test_object():
             self.e = ""
             self.s = "hats"
             self.a_l = [4,3,2,5]
+            self.a_n = [None, None, None]
+            self.a_xn = [None, None, 9]
             self.a_g = [3,4,6,8]
             self.a_ge = [3,4,6,8]
             self.a_le = [5,6,2,9]
@@ -530,6 +532,12 @@ def get_validation_rule_test_object():
             self.a_f = [1.5, 2.8, 3.9]
             self.a_s = ['apples','oranges', 'pears', 'bananas']
             self.a_e = ["", "", ""]
+            self.na_i = [[2, 44], 6]
+            self.na_f = [[2.3, 4.4], 6.0]
+            self.na_b = [[False, True], False]
+            self.na_n = [[None, None], None]
+            self.na_s = [["Discs", "Equalizer"], "Turntables"]
+            self.na_xn = [[8, '9'], 'hat']
             self.na_e = [[None, "Hats", 2.0], [3, False, 33,55]]
             self.na_ne = [[None, "Hats", 2.0], [3, False, 33,55]]
     test_object = TestClass()
