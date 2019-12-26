@@ -55,6 +55,14 @@ class Classes:
             classnames.append(k)
         return classnames
 
+    def search_classnames(self, classname):
+        """Searches by classname and returns True if found, False otherwise."""
+        classnames = self.get_classnames()
+        if classname in classnames:
+            return True
+        else:
+            return False
+
 
     def add_class(self, instance):
         """Add class to Classes.

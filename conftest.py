@@ -519,6 +519,8 @@ def get_validation_rule_test_object():
             self.i = 5
             self.d = '12/21/2001'
             self.f = 2.0
+            self.color_hex = "#800000"
+            self.color_rgb = "rgb(128,0,0)"
             self.e = ""
             self.s = "hats"
             self.a_l = [4,3,2,5]

@@ -133,15 +133,26 @@ class Histogram(DataVisualator):
 
     """
 
-    def __init__(self, name=None, nbins=0, cumulative=False, 
-                 marginal=None, orientation='v', title=None, **kwargs):    
-        super(Histogram, self).__init__(name=name, title=title,**kwargs)
+    def __init__(self, nbins=0, cumulative=False, marginal=None, orientation='v', 
+                 template="none", width=None, height=600,
+                 title=None,  **kwargs):    
+        self.color = color
+        self.labels = labels
         self.nbins = nbins
         self.cumulative = cumulative
         self.marginal = marginal
         self.orientation = orientation
+        self.xrange = xrange
+        self.yrange = yrange
+        self.template = template
+        self.width = width
+        self.height = height
+        self.title = title
         
-    def fit(self, x, y=None, dataset=None):
+    def fit(self, x, y, dataframe=None, color=None, labels=None, nbins=0,
+                 cumulative=False, marginal=None, orientation='v', xrange=None,
+                 yrange=None, template="none", width=None, height=600,
+                 title=None,  **kwargs):
         """ Fits the visualator to the data.
         
         Parameters

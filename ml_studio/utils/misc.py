@@ -6,11 +6,7 @@
 import re
 import random
 import string
-
-def randomString(stringLength=5):
-    """Generate a random string of fixed length """
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(stringLength))
+import textwrap
 
 def proper(s):
     """Strips then capitalizes each word in a string.""" 
@@ -26,6 +22,11 @@ def snake(s):
     pattern = '_' + '{2,}'
     s = re.sub(pattern, '_', s)
     return s
+
+def format_text(x):
+    x = " ".join(x.split())
+    formatted = textwrap.fill(textwrap.dedent(x))
+    return formatted        
 
 
 # %%

@@ -74,6 +74,7 @@ import time
 import numpy as np
 import pandas as pd
 
+from ml_studio.utils.data_operations import is_array
 # --------------------------------------------------------------------------- #
 #                            Syntactic Conditions                             #  
 # --------------------------------------------------------------------------- #
@@ -95,6 +96,7 @@ class Condition(ABC):
     def __init__(self, a, b=None):
         self.a = a
         self.b = b
+        self._compiled = False
 
     def _extract_data(self):        
         if isinstance(self.a, dict):
@@ -119,6 +121,12 @@ class Condition(ABC):
                         classname=instance.__class__.__name__,
                         attrname=attribute_name
                     ))    
+
+    def compile(self):
+        """Extracts data into a and optionally b properties.""" 
+        if not self._compiled:
+            self._extract_data()
+        self._compiled = True
 
     @abstractmethod
     def __call__(self):
@@ -146,8 +154,11 @@ class IsNone(SyntacticCondition):
         super(IsNone, self).__init__(a=a)
 
     def __call__(self):
-        self._extract_data()
-        if isArray(self.a):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a):
             results = []
             for a in self.a:
                  results.append(IsNone(a)())            
@@ -164,8 +175,11 @@ class IsNotNone(SyntacticCondition):
         super(IsNotNone, self).__init__(a=a)
 
     def __call__(self):
-        self._extract_data()
-        if isArray(self.a):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a):
             results = []
             for a in self.a:
                  results.append(IsNotNone(a)())            
@@ -182,8 +196,11 @@ class IsEmpty(SyntacticCondition):
         super(IsEmpty, self).__init__(a=a)    
 
     def __call__(self):
-        self._extract_data()
-        if isArray(self.a):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsEmpty(a)())
@@ -206,8 +223,11 @@ class IsNotEmpty(SyntacticCondition):
         super(IsNotEmpty, self).__init__(a=a)    
 
     def __call__(self):
-        self._extract_data()
-        if isArray(self.a):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsNotEmpty(a)())
@@ -232,8 +252,11 @@ class IsBool(SyntacticCondition):
         super(IsBool, self).__init__(a=a)    
 
     def __call__(self):
-        self._extract_data()
-        if isArray(self.a):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsBool(a)())
@@ -249,8 +272,11 @@ class IsInt(SyntacticCondition):
         super(IsInt, self).__init__(a=a)    
 
     def __call__(self):
-        self._extract_data()
-        if isArray(self.a):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsInt(a)())
@@ -269,8 +295,11 @@ class IsFloat(SyntacticCondition):
         super(IsFloat, self).__init__(a=a)    
 
     def __call__(self):
-        self._extract_data()
-        if isArray(self.a):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsFloat(a)())
@@ -288,8 +317,11 @@ class IsNumber(SyntacticCondition):
         super(IsNumber, self).__init__(a=a)    
 
     def __call__(self):
-        self._extract_data()
-        if isArray(self.a):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsNumber(a)())
@@ -308,8 +340,11 @@ class IsString(SyntacticCondition):
         super(IsString, self).__init__(a=a)    
 
     def __call__(self):
-        self._extract_data()
-        if isArray(self.a):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsString(a)())
@@ -350,14 +385,16 @@ class IsEqual(SemanticCondition):
         super(IsEqual, self).__init__(a=a,b=b)    
 
     def __call__(self):
-        self._extract_data()
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
 
-        if isArray(self.a):
+        if is_array(self.a):
             self.a = np.array(self.a)
-        if isArray(self.b):
+        if is_array(self.b):
             self.b = np.array(self.b)
 
-        if isArray(self.a) and isArray(self.b):
+        if is_array(self.a) and is_array(self.b):
             if self.a.shape == self.b.shape:
                 if np.array_equal(self.a, self.b):
                     return True
@@ -373,14 +410,16 @@ class IsNotEqual(SemanticCondition):
         super(IsNotEqual, self).__init__(a=a,b=b)    
 
     def __call__(self):
-        self._extract_data()
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
 
-        if isArray(self.a):
+        if is_array(self.a):
             self.a = np.array(self.a)
-        if isArray(self.b):
+        if is_array(self.b):
             self.b = np.array(self.b)
 
-        if isArray(self.a) and isArray(self.b):
+        if is_array(self.a) and is_array(self.b):
             if self.a.shape == self.b.shape:
                 if np.array_equal(self.a, self.b):
                     return False
@@ -414,15 +453,18 @@ class IsIn(SemanticCondition):
         super(IsIn, self).__init__(a=a,b=b)    
 
     def __call__(self):
-        self._extract_data()
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
         if isinstance(self.a, str) and isinstance(self.b, str):
             return self.a in self.b
-        elif isArray(self.a):
+        elif is_array(self.a):
             results = []
             for a in self.a:
                  results.append(IsIn(a, self.b)())
             return all(results)
-        elif isArray(self.b):
+        elif is_array(self.b):
             return self.a in self.b        
         else:
             return self.a == self.b
@@ -450,15 +492,18 @@ class IsNotIn(SemanticCondition):
         super(IsNotIn, self).__init__(a=a,b=b)    
 
     def __call__(self):
-        self._extract_data()
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
         if isinstance(self.a, str) and isinstance(self.b, str):
             return self.a not in self.b
-        elif isArray(self.a):
+        elif is_array(self.a):
             results = []
             for a in self.a:
                  results.append(IsNotIn(a, self.b)())
             return any(results)
-        elif isArray(self.b):
+        elif is_array(self.b):
             return self.a not in self.b        
         else:
             return self.a != self.b
@@ -490,8 +535,11 @@ class IsLess(SemanticCondition):
         self._inclusive = inclusive
 
     def __call__(self):
-        self._extract_data()          
-        if isArray(self.a) and isArray(self.b):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+ 
+        if is_array(self.a) and is_array(self.b):
             # Convert array-likes to numpy arrays              
             self.a = np.array(self.a)
             self.b = np.array(self.b)
@@ -503,13 +551,13 @@ class IsLess(SemanticCondition):
                     return all(np.less(self.a,self.b))
             else:
                 raise ValueError("If a and b are arrays, they must have the same shape.")
-        elif isArray(self.a):
+        elif is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsLess(a,self.b))
             return all(results)
 
-        elif isArray(self.b):
+        elif is_array(self.b):
             raise ValueError("b can be an array only when a is an array.")
         else: 
             if self._inclusive:
@@ -544,8 +592,11 @@ class IsGreater(SemanticCondition):
         self._inclusive = inclusive
 
     def __call__(self):
-        self._extract_data()          
-        if isArray(self.a) and isArray(self.b):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a) and is_array(self.b):
             # Convert array-likes to numpy arrays              
             self.a = np.array(self.a)
             self.b = np.array(self.b)
@@ -557,13 +608,13 @@ class IsGreater(SemanticCondition):
                     return all(np.greater(self.a,self.b))
             else:
                 raise ValueError("If a and b are arrays, they must have the same shape.")
-        elif isArray(self.a):
+        elif is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsGreater(a,self.b))
             return all(results)
 
-        elif isArray(self.b):
+        elif is_array(self.b):
             raise ValueError("b can be an array only when a is an array.")
         else: 
             if self._inclusive:
@@ -598,7 +649,10 @@ class IsBetween(SemanticCondition):
         self._inclusive = inclusive
 
     def __call__(self):
-        self._extract_data()   
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
         # Confirm b has a length of two and has integer or float componenets
         if len(self.b) != 2:
             raise ValueError("b must be an array-like containing min and max values.")
@@ -606,7 +660,7 @@ class IsBetween(SemanticCondition):
             not isinstance(self.b[1], (int,float)):
             raise TypeError("the components of b must be numbers")
         
-        if isArray(self.a):
+        if is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsBetween(a,self.b)())
@@ -643,8 +697,11 @@ class IsMatch(SemanticCondition):
         super(IsMatch, self).__init__(a=a,b=b)    
 
     def __call__(self):
-        self._extract_data()   
-        if isArray(self.a):
+        # Compile if not already compiled
+        if not self._compiled:
+            self.compile()
+
+        if is_array(self.a):
             results = []
             for a in self.a:
                 results.append(IsMatch(a, self.b)())
@@ -655,12 +712,3 @@ class IsMatch(SemanticCondition):
                 return True
             else:
                 return False
-
-# --------------------------------------------------------------------------- #
-#                               Utility Functions                             #  
-# --------------------------------------------------------------------------- #
-def isArray(a, b=None):
-    if isinstance(a, (pd.Series, np.ndarray, list, tuple)):
-        return True
-    else:
-        return False
