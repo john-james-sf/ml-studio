@@ -139,6 +139,9 @@ class Rule(ABC):
         self._invalid_messages = []
         self._invalid_values = []
 
+    # ----------------------------------------------------------------------- #
+    #                               Properties                                #
+    # ----------------------------------------------------------------------- #
     @property
     def array_ok(self):
         return self._array_ok
@@ -158,6 +161,9 @@ class Rule(ABC):
     def invalid_messages(self):
         return self._invalid_values
 
+    # ----------------------------------------------------------------------- #
+    #                               Conditions                                #
+    # ----------------------------------------------------------------------- #
     def when(self, condition):
         """Adds a single condition that must be met for a rule to apply."""        
         if isinstance(condition, Condition):
@@ -214,6 +220,9 @@ class Rule(ABC):
         return self._evaluate_when() and self._evaluate_when_all() and \
             self._evaluate_when_any()
 
+    # ----------------------------------------------------------------------- #
+    #                     Validate Parameters and Compile                     #
+    # ----------------------------------------------------------------------- #
     def _validate_params(self, value):
         # Ensure the target class and attribute_name are a match.
         if not hasattr(self._target, self._target_attribute_name):
@@ -234,6 +243,9 @@ class Rule(ABC):
                     ))                    
 
     def compile(self):
+        self._is_valid = True
+        self._invalid_values = []
+        self._invalid_messages = []        
         
         if self._conditions:
             if self._conditions.get('when'):
@@ -247,21 +259,60 @@ class Rule(ABC):
                     condition.compile()
                     self._conditions['when_all'][idx] = condition                
 
+    # ----------------------------------------------------------------------- #
+    #                         Validation Methods                              #
+    # ----------------------------------------------------------------------- #
     @abstractmethod
-    def validate(self, value, **kwargs):       
+    def _get_evaluation_function(self, value):
+        pass
+
+    @abstractmethod
+    def _coerce(self, value, kind=None, force_numeric=False):
+        pass
+
+    def validate(self, value, coerced=False):       
         self._validate_params(value)
         self.compile()  
-        
-    def _evaluate_validity(self, value):
-        """Stores the validated value, formats messages and sets is_valid."""
-        self._validated_value = value
-        self._invalid_messages.append(self._error_message())                
-        if self._invalid_values:
-            self._is_valid = False
+
+        # evaluate conditions evaluates to True if all conditions are met.
+        if self._evaluate_conditions():
+
+            # Get evaluation function that will be used to evaluate an attribute
+            is_invalid = self._get_evaluation_function(value)
+
+            # Create inner function to recurse through array-like structures.
+            def validate_recursive(value, is_invalid):
+
+                # If array, initiate a recursive call for each array element.
+                if is_array(value):
+                    [validate_recursive(v, is_invalid) for v in value]
+                elif is_invalid(value):
+                    self._invalid_values.append(value)
+
+            validate_recursive(value, is_invalid)
+
+            # Save results of the evaluation
+            self._validated_value = value
+            self._invalid_messages.append(self._error_message())                
+            if self._invalid_values:
+                self._is_valid = False
+            else:
+                self._is_valid = True 
+
+            # if invalid and data has not been coerced, try coercing the data
+            # and reevaluate.
+            if not self._is_valid and not coerced:
+                coerced, self._validated_value = self._coerce(value)
+                if coerced:
+                    self.validate(self._validated_value, coerced)
+
         else:
-            self._is_valid = True        
-
-
+            self._validated_value = value
+            self._is_valid = True
+            
+    # ----------------------------------------------------------------------- #
+    #                         Printing and Messaging                          #
+    # ----------------------------------------------------------------------- #
     @abstractmethod
     def _error_message(self):
         pass
@@ -311,6 +362,7 @@ class Rule(ABC):
                 self._print_conditions(conditions)
 
     def print_rule(self):
+        self.compile()
         self._print_rule()
 
     def raise_invalid_val(self):
@@ -431,31 +483,33 @@ class NoneRule(SyntacticRule):
                                        attribute_name=attribute_name,
                                        array_ok=array_ok,
                                        **kwargs)
-        
+    
+    def _coerce(self, value, kind=None, force_numeric=False):
+        """Coerce an attribute to an appropriate value/type if possible."""
+        if value in ["None", "none"]:
+            value = None
+            coerced = True
+        else:
+            value = value
+            coerced = False
 
-    def validate(self, value, evaluate_validity=True):
-        super(NoneRule, self).validate(value=value)        
-        
-        # evaluate_conditions is True if all conditions are met.
-        if self._evaluate_conditions():            
-            
-            # If array, start recursion
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value]
-            # Otherwise, we have a literal value we can evaluate 
-            elif value is not None: 
-                self._invalid_values.append(value)            
+        return coerced, value
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
+        def is_invalid(value):
+            """Evaluation function for the NoneRule class."""
+            return value is not None
+
+        return is_invalid
+   
     def _error_message(self):
         msg = "The {attribute} property of the {classname} class is not None. \
             Invalid value(s): '{value}'.".format(
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
-                value=self._invalid_values)
+                value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
         return formatted_msg
@@ -472,23 +526,25 @@ class NotNoneRule(SyntacticRule):
                                        array_ok=array_ok,
                                        **kwargs)
 
-    def validate(self, value, evaluate_validity=True):
-        super(NotNoneRule, self).validate(value=value)
+    def _coerce(self, value, kind=None, force_numeric=False):
+        """Coerce an attribute to an appropriate value/type if possible."""
+        if value in ["None", "none"]:
+            value = None
+            coerced = True
+        else:
+            value = value
+            coerced = False
 
-        # evaluate_conditions is True if all conditions are met.
-        if self._evaluate_conditions():
+        return coerced, value
 
-            # If array, start recursion
-            if is_array(value):                
-                [self.validate(v, evaluate_validity=False) for v in value]                                    
-            # Otherwise, we have a literal value we can evaluate 
-            elif value is None: 
-                self._invalid_values.append(value)      
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+        def is_invalid(value):
+            """Evaluation function for the NoneRule class."""
+            return value is None
 
+        return is_invalid
 
     def _error_message(self):
         msg = "The {attribute} property of the {classname} class has values \
@@ -513,30 +569,28 @@ class EmptyRule(SyntacticRule):
                                        array_ok=array_ok,
                                        **kwargs)
 
-    def validate(self, value, evaluate_validity=True):
-        super(EmptyRule, self).validate(value=value)
+    def _coerce(self, value, kind=None, force_numeric=False):
+        """Coerce an attribute to an appropriate value/type if possible."""
+        # No coercion for this class.
+        value = value
+        coerced = False
+        return coerced, value
 
-        # evaluate_conditions is True if all conditions are met.
-        if self._evaluate_conditions():
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-            # If array, start recursion
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value]                                     
-            # Otherwise, we have a literal value we can evaluate 
-            elif not IsEmpty(a=value)(): 
-                self._invalid_values.append(value)
+        def is_invalid(value):
+            """Evaluation function for the NoneRule class."""
+            return not IsEmpty(value)()
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
-
+        return is_invalid
         
     def _error_message(self):
         msg = "The {attribute} property of the {classname} class is not empty. \
             Invalid value(s): '{value}'.".format(
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
-                value=self._invalid_values)
+                value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
         return formatted_msg
@@ -553,22 +607,21 @@ class NotEmptyRule(SyntacticRule):
                                        array_ok=array_ok,
                                        **kwargs)
 
-    def validate(self, value, evaluate_validity=True):
-        super(NotEmptyRule, self).validate(value=value)
+    def _coerce(self, value, kind=None, force_numeric=False):
+        """Coerce an attribute to an appropriate value/type if possible."""
+        # No coercion for this class.
+        value = value
+        coerced = False
+        return coerced, value
 
-        # evaluate_conditions is True if all conditions are met.
-        if self._evaluate_conditions():
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-            # If array, start recursion
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value]                                     
-            # Otherwise, we have a literal value we can evaluate 
-            elif IsEmpty(a=value)(): 
-                self._invalid_values.append(value)
+        def is_invalid(value):
+            """Evaluation function for the NoneRule class."""
+            return IsEmpty(value)()
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+        return is_invalid
 
         
     def _error_message(self):
@@ -594,40 +647,52 @@ class BoolRule(SyntacticRule):
 
     def _coerce(self, value, kind=None, force_numeric=False):
         """Attempt to coerce the property to a valid boolean."""        
-        if any(value) in ['True', 'true', 'yes','y', '1',1]:
-            return True
-        elif any(value) in ['False', 'false', 'no', 'n', '0',0]:            
-            return False
-        else:
-            pass
+        true_list = ['True', 'true', 'yes','y', '1']
+        false_list = ['False', 'false', 'no', 'n', '0']
 
-    def validate(self, value, evaluate_validity=True):
-        super(BoolRule, self).validate(value=value)
+        coerced = False
 
-        # evaluate_conditions is True if all conditions are met.
-        if self._evaluate_conditions():
+        # Handle value as a string
+        if isinstance(value, str):
+            if value in true_list:
+                value = True
+                coerced = True
+            elif value in false_list:
+                value = False
+                coerced = True
+        # Handle value as a number
+        elif isinstance(value, (int, float)):
+            if value == 0:
+                value = False
+                coerced = True
+            else:
+                value = True
+                coerced = True
+        # Handle array-like
+        elif is_array(value):
+            value = [x if x not in true_list else True for x in value]            
+            value = [x if x not in false_list else False for x in value]
+            value = [True if isinstance(x, (int, float)) and x == 0 else x for x in value]             
+            value = [False if isinstance(x, (int, float)) and x > 0 else x for x in value]             
+            coerced = True
 
-            # If array, start recursion
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value]                                     
-            # Otherwise, we have a literal value we can evaluate    
-            elif not isinstance(value, (bool, np.bool_)): 
-                self._invalid_values.append(value)
+        return coerced, value
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-        # Coerce value if invalid
-        if not self._is_valid:
-            self._validated_value = self._coerce(value) or value
+        def is_invalid(value):
+            """Evaluation function for the NoneRule class."""
+            return not (isinstance(value, bool) or isinstance(value, np.bool_))
+
+        return is_invalid
         
     def _error_message(self):
         msg = "The {attribute} property of the {classname} has non-Boolean \
             values. Invalid value(s): '{value}'".format(
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
-                value=self._invalid_values)
+                value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
         return formatted_msg
@@ -644,30 +709,57 @@ class IntegerRule(SyntacticRule):
                                            array_ok=array_ok,
                                            **kwargs)
 
-    def _coerce(self, value, kind=None, force_numeric=False):
+    def _coerce(self, value, kind=("i", "u"), force_numeric=False):
         """Attempt to coerce the property to a valid integer."""        
-        try:
-            self.validated_value = coerce_homogeneous_array(value, kind=kind, 
-                force_numeric=force_numeric)
-        except (ValueError, TypeError, OverflowError):
-            return False
-        return True 
 
-    def validate(self, value, evaluate_validity=True):
-        super(IntegerRule, self).validate(value=value)
+        coerced = False
+        if is_array(value):
+            try:
+                value = coerce_homogeneous_array(value, kind=kind, 
+                    force_numeric=force_numeric)       
+            except ValueError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                raise ValueError("ValueError occurred in IntegerRule class, \
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))         
+            except TypeError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                raise TypeError("TypeError occurred in IntegerRule class. {e}\
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))         
+            except OverflowError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                print("OverflowError occurred in IntegerRule class. {e}\
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))                               
+            else:
+                coerced = True
 
-        if self._evaluate_conditions():
-            # If array, start recursion
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
-                                                         
-            # Otherwise, we have a literal value we can evaluate 
-            elif not isinstance(value, int): 
-                self._invalid_values.append(value)     
+        return coerced, value 
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
+
+        def is_invalid(value):
+            """Evaluation function for the NoneRule class."""
+            return not isinstance(value, int)
+
+        return is_invalid
 
 
     def _error_message(self):
@@ -675,7 +767,7 @@ class IntegerRule(SyntacticRule):
             that are not integers. Invalid value(s): '{value}'".format(
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
-                value=self._invalid_values)
+                value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
         return formatted_msg
@@ -693,38 +785,64 @@ class FloatRule(SyntacticRule):
                                            array_ok=array_ok,
                                            **kwargs)
 
-    def _coerce(self, value, kind=None, force_numeric=True):
+    def _coerce(self, value, kind=("f"), force_numeric=False):
         """Attempt to coerce the property to a valid numeric."""        
-        try:
-            self.validated_value = coerce_homogeneous_array(value, kind=kind,
-                        force_numeric=force_numeric)
-        except (ValueError, TypeError, OverflowError):
-            return False
-        return True     
+        coerced = False
 
-    def validate(self, value, evaluate_validity=True):
-        super(FloatRule, self).validate(value=value)
+        if is_array(value):
+            try:
+                value = coerce_homogeneous_array(value, kind=kind,
+                            force_numeric=force_numeric)
+            except ValueError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                print("ValueError occurred in FloatRule class, \
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))         
+            except TypeError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                print("TypeError occurred in FloatRule class. {e}\
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))         
+            except OverflowError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                print("OverflowError occurred in FloatRule class. {e}\
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))                               
+            else:
+                coerced = True
 
-        if self._evaluate_conditions():
-            # If array, start recursion
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
-                                                         
-            # Otherwise, we have a literal value we can evaluate 
-            elif not isinstance(value, float): 
-                self._invalid_values.append(value)     
+        return coerced, value 
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
+        def is_invalid(value):
+            """Evaluation function for the NoneRule class."""
+            return not isinstance(value, float)
+
+        return is_invalid
 
     def _error_message(self):
         msg = "The {attribute} property of the {classname} class has values \
             that are not floats. Invalid value(s): '{value}'".format(
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
-                value=self._invalid_values)
+                value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
         return formatted_msg
@@ -741,30 +859,58 @@ class NumberRule(SyntacticRule):
                                            array_ok=array_ok,
                                            **kwargs)
 
-    def _coerce(self, value, kind=None, force_numeric=True):
+    def _coerce(self, value, kind=None, force_numeric=False):
         """Attempt to coerce the property to a valid numeric."""        
-        try:
-            self.validated_value = coerce_homogeneous_array(value, \
-                force_numeric=True)
-        except (ValueError, TypeError, OverflowError):
-            return False
-        return True 
+        coerced = False
 
-    def validate(self, value, evaluate_validity=True):
-        super(NumberRule, self).validate(value=value)
+        if is_array(value):
 
-        if self._evaluate_conditions():
-            # If array, start recursion
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value]    
-                                                         
-            # Otherwise, we have a literal value we can evaluate 
-            elif not isinstance(value, (int,float)): 
-                self._invalid_values.append(value)     
+            try:
+                value = coerce_homogeneous_array(value, kind=kind,
+                            force_numeric=force_numeric)
+            except ValueError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                print("ValueError occurred in NumberRule class, \
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))         
+            except TypeError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                print("TypeError occurred in NumberRule class. {e}\
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))         
+            except OverflowError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                print("OverflowError occurred in NumberRule class. {e}\
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))                               
+            else:
+                coerced = True
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+        return coerced, value 
+        
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
+
+        def is_invalid(value):
+            """Evaluation function for the NoneRule class."""
+            return not isinstance(value, (int, float))
+
+        return is_invalid
 
 
     def _error_message(self):
@@ -772,7 +918,7 @@ class NumberRule(SyntacticRule):
             that are not numbers. Invalid value(s): '{value}'".format(
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
-                value=self._invalid_values)
+                value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
         return formatted_msg
@@ -791,43 +937,73 @@ class StringRule(SyntacticRule):
                                            **kwargs)
         self.blanks_ok = blanks_ok
 
-    def _coerce(self, value, kind=None, force_numeric=True):
+    def _coerce(self, value, kind=("S","U"), force_numeric=False):
         """Attempt to coerce the property to a valid numeric."""        
-        self.validated_value = str(value)
-        return True
+        coerced = False
 
-    def validate(self, value, evaluate_validity=True):
-        super(StringRule, self).validate(value=value)
+        if is_homogeneous_array(value):
 
-        if self._evaluate_conditions():
-            # If array, start recursion
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
-                                                         
-            # Otherwise, we have a literal value we can evaluate 
-            elif not isinstance(value, str): 
-                self._invalid_values.append(value)      
+            try:
+                value = coerce_homogeneous_array(value, kind=kind,
+                            force_numeric=force_numeric)
+            except ValueError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                print("ValueError occurred in StringRule class, \
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))         
+            except TypeError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                print("TypeError occurred in StringRule class. {e}\
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))         
+            except OverflowError as e:
+                trace_back = sys.exc_info()[2]
+                line = trace_back.tb_lineno
+                print("OverflowError occurred in StringRule class. {e}\
+                    line {line}. {e}\
+                    Value(s) received: {value}".format(
+                        e=e,
+                        value=value,
+                        line=line
+                    ))                               
+            else:
+                coerced = True    
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+        else:
+            value = str(value)
+            coerced = True
 
+        return coerced, value 
 
-        # Attempt coercion if invalid. If coercion to string is true (which
-        # it always is), change is valid to True.
-        if not self._is_valid:
-            if self._coerce(value, force_numeric=False):
-                self._is_valid = True
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
+
+        def is_invalid(value):
+            """Evaluation function for the NoneRule class."""
+            return not isinstance(value, str)
+
+        return is_invalid
+
 
     def _error_message(self):
         msg = "The {attribute} property of the {classname} class has values \
             that are not strings. Invalid value(s): '{value}'".format(
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
-                value=self._invalid_values)
+                value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
-        return formatted_msg              
+        return formatted_msg
 
 
 # --------------------------------------------------------------------------- #
@@ -880,9 +1056,6 @@ class SemanticRule(SyntacticRule):
                     have an 'attribute_name' key and associated value. This \
                         attribute should contain the reference value.")
         
-    def validate(self, value, evaluate_validity=True):
-        super(SemanticRule, self).validate(value=value)
-
     def compile(self):
         super(SemanticRule, self).compile()
         # Extract instance and attribute_name from reference value if 
@@ -890,7 +1063,13 @@ class SemanticRule(SyntacticRule):
         if isinstance(self._reference_value, dict):
             instance = self._reference_value.get('instance')
             attribute_name = self._reference_value.get('attribute_name')
-            self._reference_value = getattr(instance, attribute_name)                                      
+            self._reference_value = getattr(instance, attribute_name)    
+
+    def _coerce(self, value, kind=None, force_numeric=False):
+        """Attempt to coerce the property to an appropriate value/type."""        
+        coerced = False
+        value = value
+        return coerced, value    
 
 # --------------------------------------------------------------------------- #
 #                                 EQUALRULE                                   #  
@@ -923,37 +1102,58 @@ class EqualRule(SemanticRule):
                                         array_ok=array_ok,
                                         **kwargs)        
 
-    def validate(self, value, evaluate_validity=True):
-        super(EqualRule, self).validate(value=value)
 
-        # Evaluate iff conditions are met.
-        if self._evaluate_conditions():
-            # If both evaluated and reference values are arrays, convert to
-            # numpy arrays and use numpy.array_equal
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
+
+        def is_invalid(value):
+            """Evaluation function for the EqualRule class."""
+            # Handle value and reference value arrays
             if is_array(value) and is_array(self._reference_value):
-                # Convert both to numpy arrays for element wise comparisons
                 attribute_value = np.array(value)
                 reference_value = np.array(self._reference_value)
-                if not np.array_equal(attribute_value, reference_value):
-                    self._invalid_values.append(attribute_value)
-            # If the evaluated attribute is an array like 
-            # (and the reference value isn't), Recursively evaluate equality
-            elif is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
+                return not (np.array_equal(attribute_value, reference_value))
+            # Handle objects of different lengths.
+            elif not is_array(value) and is_array(self._reference_value):
+                return True
+            # Handle array and reference value as basic type
+            else:
+                return(value != self._reference_value)            
 
-            # If the reference value is an array (and value isn't)
-            # They obviously are not equal
-            elif is_array(self._reference_value):
+        return is_invalid
+            
+
+    def validate(self, value, coerced=False):       
+        self._validate_params(value)
+        self.compile()  
+
+        # evaluate conditions evaluates to True if all conditions are met.
+        if self._evaluate_conditions():
+
+            # Get evaluation function that will be used to evaluate an attribute
+            is_invalid = self._get_evaluation_function(value)
+
+            if is_invalid(value):
                 self._invalid_values.append(value)
 
-            # Lastly, we are evaluating two basic, non-array types 
-            elif value != self._reference_value: 
-                self._invalid_values.append(value)
+            # Save results of the evaluation
+            self._validated_value = value
+            self._invalid_messages.append(self._error_message())                
+            if self._invalid_values:
+                self._is_valid = False
+            else:
+                self._is_valid = True 
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+            # if invalid and data has not been coerced, try coercing the data
+            # and reevaluate.
+            if not self._is_valid and not coerced:
+                coerced, self._validated_value = self._coerce(value)
+                if coerced:
+                    self.validate(self._validated_value, coerced)
 
+        else:
+            self._validated_value = value
+            self._is_valid = True
 
     def _error_message(self):
         msg = "The {attribute} property of the {classname} class is not equal \
@@ -962,7 +1162,7 @@ class EqualRule(SemanticRule):
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
                 refval = self._reference_value,
-                value=self._invalid_values)                    
+                value=self._invalid_values.copy())                    
         
         formatted_msg = format_text(msg)
         return formatted_msg 
@@ -998,36 +1198,57 @@ class NotEqualRule(SemanticRule):
                                         array_ok=array_ok,
                                         **kwargs)   
 
-    def validate(self, value, evaluate_validity=True):
-        super(NotEqualRule, self).validate(value=value)
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-        # Evaluate iff when conditions are met.
-        if self._evaluate_conditions():
-            # If both evaluated and reference values are arrays, convert to
-            # numpy arrays and use numpy.array_equal
+        def is_invalid(value):
+            """Evaluation function for the EqualRule class."""
+            # Handle value and reference value arrays
             if is_array(value) and is_array(self._reference_value):
-                # Convert both to numpy arrays for element wise comparisons
                 attribute_value = np.array(value)
                 reference_value = np.array(self._reference_value)
-                if np.array_equal(attribute_value, reference_value):
-                    self._invalid_values.append(attribute_value)
-            # If the evaluated attribute is an array like 
-            # (and the reference value isn't), Recursively evaluate equality
-            elif is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
+                return np.array_equal(attribute_value, reference_value)
+            # Handle objects of different lengths.
+            elif not is_array(value) and is_array(self._reference_value):
+                return False
+            # Handle array and reference value as basic type
+            else:
+                return(value == self._reference_value)  
 
-            # If the reference value is an array (and the evaluated value isn't)
-            # They obviously are not equal
-            elif is_array(self._reference_value):
-                pass
+        return is_invalid
+            
 
-            # Lastly, we are evaluating two basic, non-array types 
-            elif value == self._reference_value: 
+    def validate(self, value, coerced=False):       
+        self._validate_params(value)
+        self.compile()  
+
+        # evaluate conditions evaluates to True if all conditions are met.
+        if self._evaluate_conditions():
+
+            # Get evaluation function that will be used to evaluate an attribute
+            is_invalid = self._get_evaluation_function(value)
+
+            if is_invalid(value):
                 self._invalid_values.append(value)
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+            # Save results of the evaluation
+            self._validated_value = value
+            self._invalid_messages.append(self._error_message())                
+            if self._invalid_values:
+                self._is_valid = False
+            else:
+                self._is_valid = True 
+
+            # if invalid and data has not been coerced, try coercing the data
+            # and reevaluate.
+            if not self._is_valid and not coerced:
+                coerced, self._validated_value = self._coerce(value)
+                if coerced:
+                    self.validate(self._validated_value, coerced)
+
+        else:
+            self._validated_value = value
+            self._is_valid = True
   
 
     def _error_message(self):
@@ -1037,7 +1258,7 @@ class NotEqualRule(SemanticRule):
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
                 refval = self._reference_value,
-                value=self._invalid_values)                    
+                value=self._invalid_values.copy())                    
         
         formatted_msg = format_text(msg)
         return formatted_msg 
@@ -1072,29 +1293,17 @@ class AllowedRule(SemanticRule):
                                         array_ok=array_ok,
                                         **kwargs)   
 
-    def validate(self, value, evaluate_validity=True):
-        super(AllowedRule, self).validate(value=value)
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-        # Evaluate iff conditions are met.
-        if self._evaluate_conditions():
-            # Convert reference values to numpy array if not an array-like
-            if not is_array(self._reference_value):
-                self._reference_value = np.array([self._reference_value])
+        def is_invalid(value):
+            """Evaluation function for the EqualRule class."""
+            # Convert to numpy arrays for convenient evaluation                         
+            reference_value = np.array(self._reference_value)
+            return value not in reference_value
 
-            # If the evaluated attribute is an array like 
-            # (and the reference value isn't), Recursively evaluate allowedity
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
-
-            # If evaluated attribute is not among the allowed values, append
-            # to invalid values list.     
-            elif value not in self._reference_value:
-                self._invalid_values.append(value)
-
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
-
+        return is_invalid
+            
 
     def _error_message(self):
         msg = "The value of {attribute} property of the {classname} class is \
@@ -1103,7 +1312,7 @@ class AllowedRule(SemanticRule):
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
                 allowed = self._reference_value,
-                value=self._invalid_values)
+                value=self._invalid_values.copy())
 
         formatted_msg = format_text(msg)
         return formatted_msg 
@@ -1139,24 +1348,16 @@ class DisAllowedRule(SemanticRule):
                                         array_ok=array_ok,
                                         **kwargs)   
 
-    def validate(self, value, evaluate_validity=True):
-        super(DisAllowedRule, self).validate(value=value)
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-        # Evaluate iff conditions are met.
-        if self._evaluate_conditions():
-            # If the evaluated attribute is an array like 
-            # (and the reference value isn't), Recursively evaluate allowedity
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
+        def is_invalid(value):
+            """Evaluation function for the EqualRule class."""
+            # Convert to numpy arrays for convenient evaluation                         
+            reference_value = np.array(self._reference_value)
+            return value in reference_value
 
-            # If evaluated attribute is not among the allowed values, append
-            # to invalid values list.     
-            elif value in self._reference_value:
-                self._invalid_values.append(value)
-
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+        return is_invalid
 
 
     def _error_message(self):
@@ -1166,7 +1367,7 @@ class DisAllowedRule(SemanticRule):
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
                 allowed = self._reference_value,
-                value=self._invalid_values)
+                value=self._invalid_values.copy())
 
         formatted_msg = format_text(msg)
         return formatted_msg 
@@ -1215,40 +1416,71 @@ class LessRule(SemanticRule):
             raise ValueError("the 'value' parameter can be an array-like, only \
                 when the evaluated attribute value is an array-like.")
 
-    def validate(self, value, evaluate_validity=True):
-        super(LessRule, self).validate(value=value)
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-        # Evaluate iff when conditions are met.
-        if self._evaluate_conditions():
-            # If both evaluated and reference values are arrays, convert to
-            # numpy arrays and use numpy.array_less
+        def is_invalid(value):
+            """Evaluation function for the EqualRule class."""
+            # Handle value and reference value arrays
             if is_array(value) and is_array(self._reference_value):
-                # Convert both to numpy arrays for element wise comparisons
                 attribute_value = np.array(value)
                 reference_value = np.array(self._reference_value)
                 if self._inclusive:
-                    if not any(np.less_equal(attribute_value, reference_value)):
-                        self._invalid_values.append(attribute_value)
+                    return not all(np.less_equal(attribute_value, reference_value))
                 else:
-                    if not any(np.less(attribute_value, reference_value)):
-                        self._invalid_values.append(attribute_value)
+                    return not all(np.less(attribute_value, reference_value))
+            # Handle objects of different lengths.
+            elif not is_array(value) and is_array(self._reference_value):
+                if self._inclusive:
+                    return not (value <= all(self._reference_value))
+                else:
+                    return not (value < all(self._reference_value))
+            # Handle value array and reference value as basic type
+            elif is_array(value) and not is_array(self._reference_value):
+                if self._inclusive:
+                    return not (all(value) <= self._reference_value)
+                else:
+                    return not (all(value) < self._reference_value)
+            # Handle values as basic types
+            else:
+                if self._inclusive:
+                    return not (value <= self._reference_value)
+                else:
+                    return not (value < self._reference_value)
 
-            # If the evaluated attribute is an array like 
-            # (and the reference value isn't), Recursively evaluate.
-            elif is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
+        return is_invalid                
 
-            # Lastly, we are evaluating two basic, non-array types             
-            elif self._inclusive and \
-                value > self._reference_value:
+    def validate(self, value, coerced=False):       
+        self._validate_params(value)
+        self.compile()  
+
+        # evaluate conditions evaluates to True if all conditions are met.
+        if self._evaluate_conditions():
+
+            # Get evaluation function that will be used to evaluate an attribute
+            is_invalid = self._get_evaluation_function(value)
+
+            if is_invalid(value):
                 self._invalid_values.append(value)
-            elif not self._inclusive and \
-                (value >= self._reference_value):
-                self._invalid_values.append(value)
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+            # Save results of the evaluation
+            self._validated_value = value
+            self._invalid_messages.append(self._error_message())                
+            if self._invalid_values:
+                self._is_valid = False
+            else:
+                self._is_valid = True 
+
+            # if invalid and data has not been coerced, try coercing the data
+            # and reevaluate.
+            if not self._is_valid and not coerced:
+                coerced, self._validated_value = self._coerce(value)
+                if coerced:
+                    self.validate(self._validated_value, coerced)
+
+        else:
+            self._validated_value = value
+            self._is_valid = True
         
 
     def _error_message(self):
@@ -1258,7 +1490,7 @@ class LessRule(SemanticRule):
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
                 referenceval = self._reference_value,
-                value=self._invalid_values)                    
+                value=self._invalid_values.copy())                    
         
         formatted_msg = format_text(msg)
         return formatted_msg 
@@ -1306,40 +1538,72 @@ class GreaterRule(SemanticRule):
             raise ValueError("the 'value' parameter can be an array-like, only \
                 when the evaluated attribute value is an array-like.")
 
-    def validate(self, value, evaluate_validity=True):
-        super(GreaterRule, self).validate(value=value)
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-        # Evaluate iff when conditions are met.
-        if self._evaluate_conditions():
-            # If both evaluated and reference values are arrays, convert to
-            # numpy arrays and use numpy.array_greater
-            if is_array(value) and is_array(self._reference_value):
-                # Convert both to numpy arrays for element wise comparisons
-                attribute_value = np.array(value)
-                reference_value = np.array(self._reference_value)
-                if self._inclusive:
-                    if not any(np.greater_equal(attribute_value, reference_value)):
-                        self._invalid_values.append(attribute_value)
+        def is_invalid(value):
+                """Evaluation function for the EqualRule class."""
+                # Deal with arrays
+                if is_array(value) and is_array(self._reference_value):
+                    # Convert value and reference value to numpy arrays
+                    attribute_value = np.array(value)                         
+                    reference_value = np.array(self._reference_value)
+                    if self._inclusive:
+                        return not any(np.greater_equal(attribute_value, reference_value))
+                    else:
+                        return not any(np.greater(attribute_value, reference_value))
+                # Handle value array and reference_value a basic type
+                elif is_array(value) and not is_array(self._reference_value):
+                    if self._inclusive:
+                        return not all([v for v in value if v >= self._reference_value])
+                    else:
+                        return not all([v for v in value if v > self._reference_value])
+                # Handle value as basic type and reference_value as array
+                elif not is_array(value) and is_array(self._reference_value):
+                    if self._inclusive:
+                        return not (value >= all(self._reference_value))
+                    else:
+                        return not (value > all(self._reference_value))
+                # Handle value and reference value as basic types
                 else:
-                    if not any(np.greater(attribute_value, reference_value)):
-                        self._invalid_values.append(attribute_value)
+                    if self._inclusive:
+                        return not (value >= self._reference_value)
+                    else:
+                        return not (value > self._reference_value)
 
-            # If the evaluated attribute is an array like 
-            # (and the reference value isn't), Recursively evaluate.
-            elif is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
+        return is_invalid                
 
-            # Lastly, we are evaluating two basic, non-array types             
-            elif self._inclusive and \
-                value < self._reference_value:
+    def validate(self, value, coerced=False):       
+        self._validate_params(value)
+        self.compile()  
+
+        # evaluate conditions evaluates to True if all conditions are met.
+        if self._evaluate_conditions():
+
+            # Get evaluation function that will be used to evaluate an attribute
+            is_invalid = self._get_evaluation_function(value)
+
+            if is_invalid(value):
                 self._invalid_values.append(value)
-            elif not self._inclusive and \
-                (value <= self._reference_value):
-                self._invalid_values.append(value)
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+            # Save results of the evaluation
+            self._validated_value = value
+            self._invalid_messages.append(self._error_message())                
+            if self._invalid_values:
+                self._is_valid = False
+            else:
+                self._is_valid = True 
+
+            # if invalid and data has not been coerced, try coercing the data
+            # and reevaluate.
+            if not self._is_valid and not coerced:
+                coerced, self._validated_value = self._coerce(value)
+                if coerced:
+                    self.validate(self._validated_value, coerced)
+
+        else:
+            self._validated_value = value
+            self._is_valid = True
       
 
     def _error_message(self):
@@ -1349,7 +1613,7 @@ class GreaterRule(SemanticRule):
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
                 referenceval = self._reference_value,
-                value=self._invalid_values)                    
+                value=self._invalid_values.copy())                    
         
         formatted_msg = format_text(msg)
         return formatted_msg 
@@ -1389,25 +1653,15 @@ class RegexRule(SemanticRule):
         # Raise exception if reference value is not a valid regex string.
         re.compile(self._reference_value)
 
-    def validate(self, value, evaluate_validity=True):
-        super(RegexRule, self).validate(value=value)
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-        # Evaluate iff when conditions are met.
-        if self._evaluate_conditions():
-            # If the evaluated attribute is an array like, recursively evaluate.
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
-
-            # Lastly, we are evaluating two basic, non-array types             
-            else:
+        def is_invalid(value):
+                """Evaluation function for the RegexRule class."""                
                 matches = re.search(self._reference_value, value)
-                if not matches:                
-                    self._invalid_values.append(value)
+                return not matches
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
-
+        return is_invalid            
 
     def _error_message(self):
         msg = "The {attribute} property of the {classname} class does not  \
@@ -1416,7 +1670,7 @@ class RegexRule(SemanticRule):
                 attribute=self._target_attribute_name,
                 classname=self._target_classname,
                 referenceval=self._reference_value,
-                value=self._invalid_values)
+                value=self._invalid_values.copy())
 
         formatted_msg = format_text(msg)
         return formatted_msg 
@@ -1468,29 +1722,23 @@ class BetweenRule(SemanticRule):
             raise ValueError("the reference value must be an array-like \
                 of length=2, containing two numbers, min and max.")
 
+    def _get_evaluation_function(self, value):
+        """Creates a function that evaluates an attribute and returns a Boolean."""
 
-    def validate(self, value, evaluate_validity=True):
-        super(BetweenRule, self).validate(value=value)
-
-        # Evaluate iff conditions are met.
-        if self._evaluate_conditions():
-            # If the evaluated attribute is an array like, Recursively evaluate.
-            if is_array(value):           
-                [self.validate(v, evaluate_validity=False) for v in value] 
-
-            # Lastly, we are evaluating two basic, non-array types             
-            elif self._inclusive and \
+        def is_invalid(value):
+            """Evaluation function for the BetweenRule class."""                
+            if self._inclusive and \
                 (value < self._reference_value[0] or\
                     value > self._reference_value[1]):
-                self._invalid_values.append(value)
+                return True
             elif not self._inclusive and \
                 (value <= self._reference_value[0] or\
                     value >= self._reference_value[1]):
-                self._invalid_values.append(value)
+                return True
+            else:
+                return False
 
-        # Evaluate validity once recursion is complete
-        if evaluate_validity:
-            self._evaluate_validity(value)
+        return is_invalid  
 
 
     def _error_message(self):
@@ -1501,7 +1749,7 @@ class BetweenRule(SemanticRule):
                 classname=self._target_classname,
                 min_val = self._reference_value[0],
                 max_val = self._reference_value[1],
-                value=self._invalid_values)                    
+                value=self._invalid_values.copy())                    
         
         formatted_msg = format_text(msg)
         return formatted_msg                                    

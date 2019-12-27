@@ -84,7 +84,7 @@ def coerce_homogeneous_array(value, kind=None, force_numeric=False):
     # Designate numeric kinds and default types
     numeric_kinds = {"u", "i", "f"}
     kind_default_dtypes = {"u": "uint32", "i": "int32", "f": \
-        "float64", "O": "object"}        
+        "float64", "O": "object", "S": "string"}        
     
     # Coerce pandas Series and Index objects
     if isinstance(value, (pd.Series, pd.Index)):

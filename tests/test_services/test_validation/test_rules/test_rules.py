@@ -281,14 +281,10 @@ class SyntacticRuleTests:
         # Evaluate invalid array
         rule = BoolRule(test_object,"i", array_ok=True)
         rule.validate(test_object.a_i)
-        assert rule.is_valid == False, "Invalid BoolRule evaluation"                             
+        assert rule.is_valid == True, "Invalid BoolRule evaluation"                             
         print(rule.invalid_messages)        
         # Evaluate invalid nested array
-        rule = BoolRule(test_object,"i", array_ok=True)
-        rule.validate(test_object.na_e)
-        assert rule.is_valid == False, "Invalid BoolRule evaluation"                             
-        print(rule.invalid_messages)                
-
+        
     @mark.rules
     @mark.syntactic_rules
     @mark.syntactic_rules_IntegerRule
@@ -297,7 +293,12 @@ class SyntacticRuleTests:
         # Evaluate array_ok=False
         with pytest.raises(TypeError):
             rule = IntegerRule(test_object,"i", array_ok=False)
-            rule.validate(test_object.a_n)            
+            rule.validate(test_object.a_n)   
+
+        # Evaluate invalid nested array
+        with pytest.raises(ValueError):
+            rule = IntegerRule(test_object,"i", array_ok=True)
+            rule.validate(test_object.na_e)
         # Evaluate valid basic type 
         rule = IntegerRule(test_object,"i", array_ok=True)
         rule.validate(test_object.i)
@@ -312,19 +313,17 @@ class SyntacticRuleTests:
         assert rule.is_valid == True, "Invalid IntegerRule evaluation"                         
         # Evaluate invalid basic type
         rule = IntegerRule(test_object,"i", array_ok=True)
+        rule.validate(test_object.f)
+        assert rule.is_valid == False, "Invalid IntegerRule evaluation"                                 
+        # Evaluate string
+        rule = IntegerRule(test_object,"i", array_ok=True)
         rule.validate(test_object.s)
-        assert rule.is_valid == False, "Invalid IntegerRule evaluation"                             
-        print(rule.invalid_messages)
+        assert rule.is_valid == False, "Invalid IntegerRule evaluation"                         
         # Evaluate invalid array
         rule = IntegerRule(test_object,"i", array_ok=True)
         rule.validate(test_object.a_f)
         assert rule.is_valid == False, "Invalid IntegerRule evaluation"                             
         print(rule.invalid_messages)        
-        # Evaluate invalid nested array
-        rule = IntegerRule(test_object,"i", array_ok=True)
-        rule.validate(test_object.na_e)
-        assert rule.is_valid == False, "Invalid IntegerRule evaluation"                             
-        print(rule.invalid_messages)              
 
     @mark.rules
     @mark.syntactic_rules
@@ -334,7 +333,7 @@ class SyntacticRuleTests:
         # Evaluate array_ok=False
         with pytest.raises(TypeError):
             rule = FloatRule(test_object,"i", array_ok=False)
-            rule.validate(test_object.a_n)              
+            rule.validate(test_object.a_n) 
         # Evaluate valid basic type 
         rule = FloatRule(test_object,"i", array_ok=True)
         rule.validate(test_object.f)
@@ -347,21 +346,21 @@ class SyntacticRuleTests:
         rule = FloatRule(test_object,"i", array_ok=True)
         rule.validate(test_object.na_f)
         assert rule.is_valid == True, "Invalid FloatRule evaluation"                         
-        # Evaluate invalid basic type
-        rule = FloatRule(test_object,"i", array_ok=True)
-        rule.validate(test_object.s)
-        assert rule.is_valid == False, "Invalid FloatRule evaluation"                             
-        print(rule.invalid_messages)
         # Evaluate invalid array
         rule = FloatRule(test_object,"i", array_ok=True)
         rule.validate(test_object.a_i)
-        assert rule.is_valid == False, "Invalid FloatRule evaluation"                             
+        assert rule.is_valid == True, "Invalid FloatRule evaluation"                             
         print(rule.invalid_messages)        
         # Evaluate invalid nested array
         rule = FloatRule(test_object,"i", array_ok=True)
         rule.validate(test_object.na_e)
         assert rule.is_valid == False, "Invalid FloatRule evaluation"                             
-        print(rule.invalid_messages)               
+        print(rule.invalid_messages)       
+        # Evaluate string to float
+        rule = FloatRule(test_object,"i", array_ok=True)
+        rule.validate(test_object.s)                   
+        assert rule.is_valid == False, "Invalid FloatRule evaluation"                                     
+        print(rule.invalid_messages)       
 
     @mark.rules
     @mark.syntactic_rules
@@ -386,13 +385,13 @@ class SyntacticRuleTests:
         assert rule.is_valid == True, "Invalid NumberRule evaluation"                         
         # Evaluate invalid basic type
         rule = NumberRule(test_object,"i", array_ok=True)
-        rule.validate(test_object.s)
-        assert rule.is_valid == False, "Invalid NumberRule evaluation"                             
+        rule.validate(test_object.f)
+        assert rule.is_valid == True, "Invalid NumberRule evaluation"                             
         print(rule.invalid_messages)
         # Evaluate invalid array
         rule = NumberRule(test_object,"i", array_ok=True)
-        rule.validate(test_object.a_s)
-        assert rule.is_valid == False, "Invalid NumberRule evaluation"                             
+        rule.validate(test_object.a_f)
+        assert rule.is_valid == True, "Invalid NumberRule evaluation"                             
         print(rule.invalid_messages)        
         # Evaluate invalid nested array
         rule = NumberRule(test_object,"i", array_ok=True)
@@ -429,7 +428,7 @@ class SyntacticRuleTests:
         # Evaluate invalid array
         rule = StringRule(test_object,"i", array_ok=True)
         rule.validate(test_object.a_b)
-        assert rule.is_valid == True, "Invalid StringRule evaluation"                             
+        assert rule.is_valid == False, "Invalid StringRule evaluation"                             
         print(rule.invalid_messages)        
         # Evaluate invalid nested array
         rule = StringRule(test_object,"i", array_ok=True)
@@ -747,8 +746,7 @@ class SemanticRuleTests:
                                      get_validation_rule_reference_object):
         test_object = get_validation_rule_test_object        
         ref_object = get_validation_rule_reference_object
-        test_object = get_validation_rule_test_object        
-        ref_object = get_validation_rule_reference_object
+
         # Validate rule
         # Evaluate array_ok=False
         with pytest.raises(TypeError):
@@ -804,10 +802,8 @@ class SemanticRuleTests:
     @mark.rules
     @mark.semantic_rules
     @mark.semantic_rules_between
-    def test_semantic_rule_betweenrule(self, get_validation_rule_test_object,
-                                     get_validation_rule_reference_object):
-        test_object = get_validation_rule_test_object        
-        ref_object = get_validation_rule_reference_object
+    def test_semantic_rule_betweenrule(self, get_validation_rule_test_object):
+        test_object = get_validation_rule_test_object                
         # Validate rule
         # Evaluate array_ok=False
         with pytest.raises(TypeError):
@@ -871,10 +867,8 @@ class SemanticRuleTests:
     @mark.rules
     @mark.semantic_rules
     @mark.semantic_rules_regex
-    def test_semantic_rule_regexrule(self, get_validation_rule_test_object,
-                                     get_validation_rule_reference_object):
+    def test_semantic_rule_regexrule(self, get_validation_rule_test_object):
         test_object = get_validation_rule_test_object        
-        ref_object = get_validation_rule_reference_object
         # Validate rule
         # Evaluate array_ok=False
         with pytest.raises(TypeError):
@@ -1054,7 +1048,7 @@ class PrintSyntacticRuleTests:
                                                 attribute_name='i'),
                                            b=dict(instance=ref_object, 
                                                 attribute_name='i'))])
-        rule.compile()
+        
         rule.print_rule()
 
 class PrintSemanticRuleTests:
@@ -1067,7 +1061,8 @@ class PrintSemanticRuleTests:
         test_object = get_validation_rule_test_object       
         ref_object = get_validation_rule_reference_object
         rule = GreaterRule(instance=ref_object,
-                           attribute_name='f')\
+                           attribute_name='f',
+                           reference_value=5)\
                                .when(IsGreater(a=dict(instance=test_object, 
                                                 attribute_name='i'),
                                          b=dict(instance=ref_object, 
@@ -1088,7 +1083,7 @@ class PrintSemanticRuleTests:
                                                         attribute_name='i'),
                                                 b=dict(instance=ref_object, 
                                                         attribute_name='i'))])
-        rule.compile()
+        
         rule.print_rule()
 
 

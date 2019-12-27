@@ -540,8 +540,8 @@ def get_validation_rule_test_object():
             self.na_n = [[None, None], None]
             self.na_s = [["Discs", "Equalizer"], "Turntables"]
             self.na_xn = [[8, '9'], 'hat']
-            self.na_e = [[None, "Hats", 2.0], [3, False, 33,55]]
-            self.na_ne = [[None, "Hats", 2.0], [3, False, 33,55]]
+            self.na_e = [[66, "Hats", 2.0], [3, False, 3355]]
+            self.na_ne = [['dub', "Hats", 2.0], [3, False, 55]]
     test_object = TestClass()
     return test_object
 
@@ -565,8 +565,8 @@ def get_validation_rule_reference_object():
             self.a_f = np.linspace(1.0, 10,0, 30)
             self.a_s = ['apples','oranges']
             self.a_e = ["", "", ""]
-            self.na_e = [[None, "Hats", 2.0], [3, False, 33,55]]
-            self.na_ne = [[None, "Hats", 2.0], [3, False, 33,551]]
+            self.na_e = [[44, "Hats", 2.0], [3, False, 53]]
+            self.na_ne = [['dac', "Hats", 2.0], [3, False, 32]]
 
     reference_object = ReferenceClass()
     return reference_object
