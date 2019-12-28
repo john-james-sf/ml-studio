@@ -118,7 +118,7 @@ from ml_studio.utils.misc import format_text
 class Rule(ABC):
     """Base class for all rules."""
 
-    def __init__(self, instance, attribute_name, array_ok=False, *kwargs):
+    def __init__(self, instance, target_name, parentname, array_ok=False, **kwargs):
 
         # Designate unique/opaque userid and other metadata        
         self._id = uuid4()
@@ -126,9 +126,9 @@ class Rule(ABC):
         self._user = getpass.getuser()
 
         # Class and attribute to which this rule applies
-        self._target = instance
-        self._target_classname = instance.__class__.__name__
-        self._target_attribute_name = attribute_name
+        self._instance = instance
+        self._target_name = target_name
+        self._parent_name = parentname
 
         # Conditions
         self._conditions = defaultdict(set)
@@ -224,22 +224,22 @@ class Rule(ABC):
     #                     Validate Parameters and Compile                     #
     # ----------------------------------------------------------------------- #
     def _validate_params(self, value):
-        # Ensure the target class and attribute_name are a match.
-        if not hasattr(self._target, self._target_attribute_name):
-            raise AttributeError("{attrname} is not a valid attribute on the\
-                {classname} class.".format(
-                    attrname=self._target_attribute_name,
-                    classname=self._target_classname
+        # Ensure the instance class and attribute_name are a match.
+        if not hasattr(self._instance, self._target_name):
+            raise AttributeError("{targetname} is not a valid attribute on the\
+                {parentname} class.".format(
+                    targetname=self._target_name,
+                    parentname=self._parent_name
                 ))
         
         
         # Raise error if arrays encountered and arrays_ok = False
         if not self._array_ok:
             if is_array(value):
-                raise TypeError("Arrays are not permitted for the {classname}\
-                    class {attrname} property.".format(
-                        classname = self._target_classname,
-                        attrname = self._target_attribute_name
+                raise TypeError("Arrays are not permitted for the {parentname}\
+                    class {targetname} property.".format(
+                        parentname = self._parent_name,
+                        targetname = self._target_name
                     ))                    
 
     def compile(self):
@@ -505,10 +505,10 @@ class NoneRule(SyntacticRule):
         return is_invalid
    
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class is not None. \
+        msg = "The {attribute} property of the {parentname} class is not None. \
             Invalid value(s): '{value}'.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
@@ -547,10 +547,10 @@ class NotNoneRule(SyntacticRule):
         return is_invalid
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class has values \
+        msg = "The {attribute} property of the {parentname} class has values \
             that are None".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname)
+                attribute=self._target_name,
+                parentname=self._parent_name)
         
         formatted_msg = format_text(msg)
         return formatted_msg
@@ -586,10 +586,10 @@ class EmptyRule(SyntacticRule):
         return is_invalid
         
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class is not empty. \
+        msg = "The {attribute} property of the {parentname} class is not empty. \
             Invalid value(s): '{value}'.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
@@ -625,10 +625,10 @@ class NotEmptyRule(SyntacticRule):
 
         
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class is \
+        msg = "The {attribute} property of the {parentname} class is \
             empty.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname)
+                attribute=self._target_name,
+                parentname=self._parent_name)
         
         formatted_msg = format_text(msg)
         return formatted_msg
@@ -688,10 +688,10 @@ class BoolRule(SyntacticRule):
         return is_invalid
         
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} has non-Boolean \
+        msg = "The {attribute} property of the {parentname} has non-Boolean \
             values. Invalid value(s): '{value}'".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
@@ -763,10 +763,10 @@ class IntegerRule(SyntacticRule):
 
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class has values \
+        msg = "The {attribute} property of the {parentname} class has values \
             that are not integers. Invalid value(s): '{value}'".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
@@ -838,10 +838,10 @@ class FloatRule(SyntacticRule):
         return is_invalid
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class has values \
+        msg = "The {attribute} property of the {parentname} class has values \
             that are not floats. Invalid value(s): '{value}'".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
@@ -914,10 +914,10 @@ class NumberRule(SyntacticRule):
 
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class has values \
+        msg = "The {attribute} property of the {parentname} class has values \
             that are not numbers. Invalid value(s): '{value}'".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
@@ -996,10 +996,10 @@ class StringRule(SyntacticRule):
 
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class has values \
+        msg = "The {attribute} property of the {parentname} class has values \
             that are not strings. Invalid value(s): '{value}'".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 value=self._invalid_values.copy())
         
         formatted_msg = format_text(msg)
@@ -1156,11 +1156,11 @@ class EqualRule(SemanticRule):
             self._is_valid = True
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class is not equal \
+        msg = "The {attribute} property of the {parentname} class is not equal \
             to {refval}. \
             Invalid value(s): '{value}'.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 refval = self._reference_value,
                 value=self._invalid_values.copy())                    
         
@@ -1252,11 +1252,11 @@ class NotEqualRule(SemanticRule):
   
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class is equal \
+        msg = "The {attribute} property of the {parentname} class is equal \
             to {refval}. \
             Invalid value(s): '{value}'.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 refval = self._reference_value,
                 value=self._invalid_values.copy())                    
         
@@ -1306,11 +1306,11 @@ class AllowedRule(SemanticRule):
             
 
     def _error_message(self):
-        msg = "The value of {attribute} property of the {classname} class is \
+        msg = "The value of {attribute} property of the {parentname} class is \
             not allowed. Allowed value(s): '{allowed}' \
             Invalid value(s): '{value}'.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 allowed = self._reference_value,
                 value=self._invalid_values.copy())
 
@@ -1361,11 +1361,11 @@ class DisAllowedRule(SemanticRule):
 
 
     def _error_message(self):
-        msg = "The value of {attribute} property of the {classname} class is \
+        msg = "The value of {attribute} property of the {parentname} class is \
             not allowed. Allowed value(s): '{allowed}' \
             Invalid value(s): '{value}'.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 allowed = self._reference_value,
                 value=self._invalid_values.copy())
 
@@ -1484,11 +1484,11 @@ class LessRule(SemanticRule):
         
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class is not less \
+        msg = "The {attribute} property of the {parentname} class is not less \
             to {referenceval}. \
             Invalid value(s): '{value}'.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 referenceval = self._reference_value,
                 value=self._invalid_values.copy())                    
         
@@ -1607,11 +1607,11 @@ class GreaterRule(SemanticRule):
       
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class is not greater \
+        msg = "The {attribute} property of the {parentname} class is not greater \
             to {referenceval}. \
             Invalid value(s): '{value}'.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 referenceval = self._reference_value,
                 value=self._invalid_values.copy())                    
         
@@ -1664,11 +1664,11 @@ class RegexRule(SemanticRule):
         return is_invalid            
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class does not  \
+        msg = "The {attribute} property of the {parentname} class does not  \
             match regex pattern {referenceval}. \
             Invalid value(s): '{value}'.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 referenceval=self._reference_value,
                 value=self._invalid_values.copy())
 
@@ -1742,11 +1742,11 @@ class BetweenRule(SemanticRule):
 
 
     def _error_message(self):
-        msg = "The {attribute} property of the {classname} class is not between \
+        msg = "The {attribute} property of the {parentname} class is not between \
             [{min_val},{max_val}]. \
             Invalid value(s): '{value}'.".format(
-                attribute=self._target_attribute_name,
-                classname=self._target_classname,
+                attribute=self._target_name,
+                parentname=self._parent_name,
                 min_val = self._reference_value[0],
                 max_val = self._reference_value[1],
                 value=self._invalid_values.copy())                    
