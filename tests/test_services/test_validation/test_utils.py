@@ -11,7 +11,7 @@
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
 # Create Date: Saturday December 28th 2019, 9:18:43 am                        #
-# Last Modified: Saturday December 28th 2019, 11:16:03 am                     #
+# Last Modified: Saturday December 28th 2019, 6:29:14 pm                      #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
@@ -30,6 +30,7 @@ from ml_studio.services.validation.utils import is_integer, is_number
 from ml_studio.services.validation.utils import is_string, is_less
 from ml_studio.services.validation.utils import is_less_equal, is_greater
 from ml_studio.services.validation.utils import is_greater_equal, is_match
+from ml_studio.services.validation.utils import is_equal, is_not_equal
 
 class SyntacticFunctionsTests:
 
@@ -301,7 +302,8 @@ class SemanticFunctionsTests:
     @mark.validation
     @mark.validation_utils
     @mark.validation_utils_is_less
-    def test_validation_utils_is_less(self):
+    @mark.validation_utils_is_less_number
+    def test_validation_utils_is_less_numbers(self):
         # Test invalid types
         with pytest.raises(TypeError):
             a = "7.0"
@@ -348,10 +350,65 @@ class SemanticFunctionsTests:
         b = 5
         assert is_less(a,b) is False, "Invalid evaluation of is_less"
 
+
+    @mark.validation
+    @mark.validation_utils
+    @mark.validation_utils_is_less
+    @mark.validation_utils_is_less_strings
+    def test_validation_utils_is_less_strings(self):
+        # Test invalid types
+        with pytest.raises(TypeError):
+            a = "7.0"
+            b = 6
+            is_less(a,b)
+        with pytest.raises(TypeError):
+            a = 4
+            b = "6"
+            is_less(a,b)
+        with pytest.raises(TypeError):
+            a = 5
+            b = [4,5,None]
+            is_less(a,b)
+        # Test basic types for a and b that evaluates to True
+        a = "3"
+        b = "4.5"
+        assert is_less(a,b) is True, "Invalid evaluation of is_less"
+        # Test basic types for a and b that evaluates to False
+        a = "3"
+        b = "3"
+        assert is_less(a,b) is False, "Invalid evaluation of is_less"
+        # Test a as basic type and b as an array that evaluates to True
+        a = "3"
+        b = ["4","5","6"]
+        assert is_less(a,b) is True, "Invalid evaluation of is_less"
+        # Test a as basic type and b as an array that evaluates to False
+        a = "3"
+        b = ["1","5","6"]
+        assert is_less(a,b) is False, "Invalid evaluation of is_less"
+        # Test a and b are arrays and evaluates to True
+        a = ["3","6","2"]
+        b = ["5","9","5"]
+        assert is_less(a,b) is True, "Invalid evaluation of is_less"
+        # Test a and b are arrays and evaluates to False
+        a = ["3","6","7"]
+        b = ["5","9","5"]
+        assert is_less(a,b) is False, "Invalid evaluation of is_less"
+        # Test a is array and b is a basic type and evaluates to True
+        a = ["3","8","7"]
+        b = "9"
+        assert is_less(a,b) is True, "Invalid evaluation of is_less"
+        # Test a is array and b is a basic type and evaluates to False
+        a = ["3","9","7"]
+        b = "5"
+        assert is_less(a,b) is False, "Invalid evaluation of is_less"
+
+
+
     @mark.validation
     @mark.validation_utils
     @mark.validation_utils_is_less_equal
-    def test_validation_utils_is_less_equal(self):
+    @mark.validation_utils_is_less_equal_numbers
+    def test_validation_utils_is_less_equal_numbers(self):
         # Test invalid types
         with pytest.raises(TypeError):
             a = "7.0"
@@ -398,10 +455,66 @@ class SemanticFunctionsTests:
         b = 5
         assert is_less_equal(a,b) is False, "Invalid evaluation of is_less_equal"
 
+
+
+    @mark.validation
+    @mark.validation_utils
+    @mark.validation_utils_is_less_equal
+    @mark.validation_utils_is_less_equal_strings
+    def test_validation_utils_is_less_equal_strings(self):
+        # Test invalid types
+        with pytest.raises(TypeError):
+            a = "7.0"
+            b = 6
+            is_less_equal(a,b)
+        with pytest.raises(TypeError):
+            a = 4
+            b = "6"
+            is_less_equal(a,b)
+        with pytest.raises(TypeError):
+            a = 5
+            b = [4,5,None]
+            is_less_equal(a,b)
+        # Test basic types for a and b that evaluates to True
+        a = "3"
+        b = "3"
+        assert is_less_equal(a,b) is True, "Invalid evaluation of is_less_equal"
+        # Test basic types for a and b that evaluates to False
+        a = "3"
+        b = "2"
+        assert is_less_equal(a,b) is False, "Invalid evaluation of is_less_equal"
+        # Test a as basic type and b as an array that evaluates to True
+        a = "3"
+        b = ["3","5","6"]
+        assert is_less_equal(a,b) is True, "Invalid evaluation of is_less_equal"
+        # Test a as basic type and b as an array that evaluates to False
+        a = "3"
+        b = ["1","5","6"]
+        assert is_less_equal(a,b) is False, "Invalid evaluation of is_less_equal"
+        # Test a and b are arrays and evaluates to True
+        a = ["3","8","2"]
+        b = ["5","9","5"]
+        assert is_less_equal(a,b) is True, "Invalid evaluation of is_less_equal"
+        # Test a and b are arrays and evaluates to False
+        a = ["3","8","7"]
+        b = ["5","9","5"]
+        assert is_less_equal(a,b) is False, "Invalid evaluation of is_less_equal"
+        # Test a is array and b is a basic type and evaluates to True
+        a = ["3","8","7"]
+        b = "9"
+        assert is_less_equal(a,b) is True, "Invalid evaluation of is_less_equal"
+        # Test a is array and b is a basic type and evaluates to False
+        a = ["3","9","7"]
+        b = "5"
+        assert is_less_equal(a,b) is False, "Invalid evaluation of is_less_equal"
+
+
+
     @mark.validation
     @mark.validation_utils
     @mark.validation_utils_is_greater
-    def test_validation_utils_is_greater(self):
+    @mark.validation_utils_is_greater_numbers
+    def test_validation_utils_is_greater_numbers(self):
         # Test invalid types
         with pytest.raises(TypeError):
             a = "7.0"
@@ -444,14 +557,71 @@ class SemanticFunctionsTests:
         a = 15
         assert is_greater(a,b) is True, "Invalid evaluation of is_greater"
         # Test a is array and b is a basic type and evaluates to False
-        b = [3,9,7]
-        a = 5
+        a = [3,9,7]
+        b = 5
         assert is_greater(a,b) is False, "Invalid evaluation of is_greater"
+
+
+    @mark.validation
+    @mark.validation_utils
+    @mark.validation_utils_is_greater
+    @mark.validation_utils_is_greater_strings
+    def test_validation_utils_is_greater_strings(self):
+        # Test invalid types
+        with pytest.raises(TypeError):
+            a = "7.0"
+            b = 6
+            is_greater(a,b)
+        with pytest.raises(TypeError):
+            a = 4
+            b = "6"
+            is_greater(a,b)
+        with pytest.raises(TypeError):
+            a = 5
+            b = [4,5,None]
+            is_greater(a,b)
+        # Test basic types for a and b that evaluates to True
+        a = "6"
+        b = "4.5"
+        assert is_greater(a,b) is True, "Invalid evaluation of is_greater"
+        # Test basic types for a and b that evaluates to False
+        a = "3"
+        b = "3"
+        assert is_greater(a,b) is False, "Invalid evaluation of is_greater"
+        # Test a as basic type and b as an array that evaluates to True
+        a = "9"
+        b = ["4","5","6"]
+        assert is_greater(a,b) is True, "Invalid evaluation of is_greater"
+        # Test a as basic type and b as an array that evaluates to False
+        a = "5"
+        b = ["1","5","6"]
+        assert is_greater(a,b) is False, "Invalid evaluation of is_greater"
+        # Test a and b are arrays and evaluates to True
+        b = ["3","8","2"]
+        a = ["5","9","5"]
+        assert is_greater(a,b) is True, "Invalid evaluation of is_greater"
+        # Test a and b are arrays and evaluates to False
+        b = ["3","9","7"]
+        a = [5,9,5]
+        a = list(map(str,a))
+        assert is_greater(a,b) is False, "Invalid evaluation of is_greater"
+        # Test a is array and b is a basic type and evaluates to True
+        b = [3,5,7]
+        b = list(map(str,b))
+        a = str(9)
+        assert is_greater(a,b) is True, "Invalid evaluation of is_greater"
+        # Test a is array and b is a basic type and evaluates to False
+        a = [3,9,7]
+        a = list(map(str,a))
+        b = str(5)
+        assert is_greater(a,b) is False, "Invalid evaluation of is_greater"
+
 
     @mark.validation
     @mark.validation_utils
     @mark.validation_utils_is_greater_equal
-    def test_validation_utils_is_greater_equal(self):
+    @mark.validation_utils_is_greater_equal_numbers
+    def test_validation_utils_is_greater_equal_numbers(self):
         # Test invalid types
         with pytest.raises(TypeError):
             a = "7.0"
@@ -494,9 +664,70 @@ class SemanticFunctionsTests:
         a = 15
         assert is_greater_equal(a,b) is True, "Invalid evaluation of is_greater_equal"
         # Test a is array and b is a basic type and evaluates to False
-        b = [3,9,7]
-        a = 5
+        a = [3,9,7]
+        b = 5
         assert is_greater_equal(a,b) is False, "Invalid evaluation of is_greater_equal"        
+
+
+    @mark.validation
+    @mark.validation_utils
+    @mark.validation_utils_is_greater_equal
+    @mark.validation_utils_is_greater_equal_strings
+    def test_validation_utils_is_greater_equal_strings(self):
+        # Test invalid types
+        with pytest.raises(TypeError):
+            a = "7.0"
+            b = 6
+            is_greater_equal(a,b)
+        with pytest.raises(TypeError):
+            a = 4
+            b = "6"
+            is_greater_equal(a,b)
+        with pytest.raises(TypeError):
+            a = 5
+            b = [4,5,None]
+            is_greater_equal(a,b)
+        # Test basic types for a and b that evaluates to True
+        b = str(3)
+        a = str(3)
+        assert is_greater_equal(a,b) is True, "Invalid evaluation of is_greater_equal"
+        # Test basic types for a and b that evaluates to False
+        b = str(3)
+        a = str(2)
+        assert is_greater_equal(a,b) is False, "Invalid evaluation of is_greater_equal"
+        # Test a as basic type and b as an array that evaluates to True
+        b = str(3)
+        a = [3,5,6]
+        a = list(map(str,a))
+        assert is_greater_equal(a,b) is True, "Invalid evaluation of is_greater_equal"
+        # Test a as basic type and b as an array that evaluates to False
+        b = str(3)
+        a = [1,5,6]
+        a = list(map(str,a))
+        assert is_greater_equal(a,b) is False, "Invalid evaluation of is_greater_equal"
+        # Test a and b are arrays and evaluates to True
+        b = [3,7,2]
+        b = list(map(str,b))
+        a = [5,9,5]
+        a = list(map(str,a))
+        assert is_greater_equal(a,b) is True, "Invalid evaluation of is_greater_equal"
+        # Test a and b are arrays and evaluates to False
+        b = [3,4,7]
+        b = list(map(str,b))
+        a = [5,9,5]
+        a = list(map(str,a))
+        assert is_greater_equal(a,b) is False, "Invalid evaluation of is_greater_equal"
+        # Test a is array and b is a basic type and evaluates to True
+        b = [3,6,7]
+        b = list(map(str,b))        
+        a = str(9)
+        assert is_greater_equal(a,b) is True, "Invalid evaluation of is_greater_equal"
+        # Test a is array and b is a basic type and evaluates to False
+        a = [3,9,7]
+        a = list(map(str,a))
+        b = str(5)
+        assert is_greater_equal(a,b) is False, "Invalid evaluation of is_greater_equal"        
+
 
     @mark.validation
     @mark.validation_utils
@@ -519,3 +750,83 @@ class SemanticFunctionsTests:
         a = "hats"
         b = '[a-zA-Z]+\\s+\\d{4}'
         assert is_match(a,b) is False, "Invalid evaluation of is_match"                
+
+    @mark.validation
+    @mark.validation_utils
+    @mark.validation_utils_is_equal_numbers
+    def test_validation_utils_is_equal_numbers(self):
+        # Test basic types for a and b that evaluates to True
+        b = 3
+        a = 3
+        assert is_equal(a,b) is True, "Invalid evaluation of is_equal"
+        # Test basic types for a and b that evaluates to False
+        b = 3
+        a = 2
+        assert is_equal(a,b) is False, "Invalid evaluation of is_equal"
+        # Test a as basic type and b as an array that evaluates to True
+        b = 4
+        a = [4,4,4]
+        assert is_equal(a,b) is True, "Invalid evaluation of is_equal"
+        # Test a as basic type and b as an array that evaluates to False
+        a = 2
+        b = [4,4,4]
+        assert is_equal(a,b) is False, "Invalid evaluation of is_equal"
+        # Test a and b are arrays and evaluates to True
+        a = [1,"hat",None, 6]
+        b = [1,"hat",None, 6]
+        assert is_equal(a,b) is True, "Invalid evaluation of is_equal"
+        # Test a and b are arrays and evaluates to False
+        a = [2,9,7]
+        b = [3,9,7]
+        assert is_equal(a,b) is False, "Invalid evaluation of is_equal"
+        # Test a is array and b is a basic type and evaluates to True
+        b = [15,15,15]
+        a = 15
+        assert is_equal(a,b) is True, "Invalid evaluation of is_equal"
+        # Test a is array and b is a basic type and evaluates to False
+        a = [3,9,7]
+        b = 5
+        assert is_equal(a,b) is False, "Invalid evaluation of is_equal"                            
+
+    @mark.validation
+    @mark.validation_utils
+    @mark.validation_utils_is_equal_strings
+    def test_validation_utils_is_equal_strings(self):
+        # Test basic types for a and b that evaluates to True
+        b = str(3)
+        a = str(3)
+        assert is_equal(a,b) is True, "Invalid evaluation of is_equal"
+        # Test basic types for a and b that evaluates to False
+        b = str(3)
+        a = str(2)
+        assert is_equal(a,b) is False, "Invalid evaluation of is_equal"
+        # Test a as basic type and b as an array that evaluates to True
+        b = str(4)
+        a = [4,4,4]
+        a = list(map(str,a))
+        assert is_equal(a,b) is True, "Invalid evaluation of is_equal"
+        # Test a as basic type and b as an array that evaluates to False
+        a = "2"
+        b = [4,4,4]
+        b = list(map(str,b))
+        assert is_equal(a,b) is False, "Invalid evaluation of is_equal"
+        # Test a and b are arrays and evaluates to True
+        a = [1,"hat",None, 6]
+        b = [1,"hat",None, 6]
+        assert is_equal(a,b) is True, "Invalid evaluation of is_equal"
+        # Test a and b are arrays and evaluates to False
+        a = [2,9,7]
+        a = list(map(str,a))
+        b = [3,9,7]
+        b = list(map(str,b))
+        assert is_equal(a,b) is False, "Invalid evaluation of is_equal"
+        # Test a is array and b is a basic type and evaluates to True
+        b = [15,15,15]
+        b = list(map(str,b))
+        a = str(15)
+        assert is_equal(a,b) is True, "Invalid evaluation of is_equal"
+        # Test a is array and b is a basic type and evaluates to False
+        a = [3,9,7]
+        a = list(map(str,a))
+        b = str(5)
+        assert is_equal(a,b) is False, "Invalid evaluation of is_equal"            

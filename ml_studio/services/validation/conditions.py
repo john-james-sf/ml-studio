@@ -9,7 +9,7 @@
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
 # Create Date: Saturday December 28th 2019, 6:31:33 am                        #
-# Last Modified: Saturday December 28th 2019, 9:33:12 am                      #
+# Last Modified: Saturday December 28th 2019, 12:57:50 pm                     #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
@@ -35,6 +35,16 @@ from uuid import uuid4
 
 import numpy as np
 import pandas as pd
+
+from ml_studio.services.validation.utils import is_array, is_homogeneous_array
+from ml_studio.services.validation.utils import is_simple_array, is_none
+from ml_studio.services.validation.utils import is_not_none, is_empty
+from ml_studio.services.validation.utils import is_not_empty, is_bool
+from ml_studio.services.validation.utils import is_integer, is_number
+from ml_studio.services.validation.utils import is_string, is_less
+from ml_studio.services.validation.utils import is_less_equal, is_greater
+from ml_studio.services.validation.utils import is_greater_equal, is_match
+from ml_studio.services.validation.utils import is_equal, is_not_equal
 # --------------------------------------------------------------------------- #
 #                                 BASECONDITION                               #
 # --------------------------------------------------------------------------- #
@@ -139,6 +149,7 @@ class Condition(BaseCondition):
     def when_attribute(self):        
         return self._attribute
 
+    @when_attribute.setter
     def when_attribute(self, attribute_name):
         try:
             self._attribute = attribute_name
@@ -148,7 +159,78 @@ class Condition(BaseCondition):
                 attrname=attribute_name,
                 classname=self._instance.__class__.__name__
             ))
-            
 
+    @property
+    def is_none(self):
+        self._eval_function = is_none
+
+    @property
+    def is_not_none(self):
+        self._eval_function = is_not_none
+
+    @property
+    def is_empty(self):
+        self._eval_function = is_empty        
     
+    @property
+    def is_not_empty(self):
+        self._eval_function = is_not_empty         
+
+    @property
+    def is_bool(self):
+        self._eval_function = is_bool        
     
+    @property
+    def is_integer(self):
+        self._eval_function = is_integer          
+
+    @property
+    def is_number(self):
+        self._eval_function = is_number
+
+    @property
+    def is_string(self):
+        self._eval_function = is_string         
+
+    def _get_value(self,b):
+        try:
+            self._b = getattr(self._instance, b)
+        except AttributeError:        
+            self._b = b        
+
+    def is_equal(self, b):
+        self._get_value(b)
+        self._eval_function = is_equal
+
+    def is_not_equal(self, b):
+        self._get_value(b)
+        self._eval_function = is_not_equal        
+
+    def is_less(self, b):
+        self._get_value(b)
+        self._eval_function = is_less
+
+    def is_less_equal(self, b):
+        self._get_value(b)
+        self._eval_function = is_less_equal        
+
+    def is_greater(self, b):
+        self._get_value(b)
+        self._eval_function = is_greater
+
+    def is_greater_equal(self, b):
+        self._get_value(b)
+        self._eval_function = is_greater_equal        
+
+    def is_match(self, b):
+        self._get_value(b)
+        self._eval_function = is_match
+
+    def evaluate(self):
+        result = self._eval_function(self._a, self._b)
+        if result:
+            return True
+        else:
+            return False
+
+            

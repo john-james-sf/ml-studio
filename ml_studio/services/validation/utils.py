@@ -11,7 +11,7 @@
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
 # Create Date: Saturday December 28th 2019, 7:41:40 am                        #
-# Last Modified: Saturday December 28th 2019, 11:14:40 am                     #
+# Last Modified: Saturday December 28th 2019, 6:32:28 pm                      #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
@@ -20,6 +20,7 @@
 #                        VALIDATION : UTILITY FUNCTIONS                       #
 # =========================================================================== #
 import numpy as np
+import operator
 import pandas as pd
 import re
 
@@ -94,74 +95,85 @@ def is_string(a, b=None):
 
 # --------------------------------------------------------------------------- #
 #                        SEMANTIC EVALUATION FUNCTIONS                        #
-# --------------------------------------------------------------------------- #              
+# --------------------------------------------------------------------------- #    
+def compare_numbers(a, b, func):
+    answer = func['number'](a,b).all()
+    return answer    
 
+def compare_strings(a, b, func):
+    answer = func['string'](a,b).all()
+    return answer
+    
 def compare(a,b, func=None):
-    # Handle both arrays
-    if is_array(a) and is_array(b):
-        a_np = np.array(a)
-        b_np = np.array(b)
-        return all(func(a_np, b_np))
-    
-    # Handle a is array and b is basic type
-    elif is_array(a):
-        return all(compare(elem, b, func=func) \
-                   for elem in a)
+    # Convert input to numpy arrays to use numpy comparison functions.
+    a = np.array(a)
+    b = np.array(b)
+    # Attempt to compare, first as numbers, then as strings.
+    answer = None
+    try:
+        answer = compare_numbers(a, b, func)
+    except(TypeError):
+        pass        
+    if answer is None:
+        try:
+            answer = compare_strings(a, b, func)        
+        except(TypeError):
+            raise TypeError("Unable to compare values as strings or numbers.")
 
-    # Handle a is basic and b is an array
-    elif not is_array(a) and is_array(b):                
-        return all(func(a,b))
-    
-    # Handle both a and b are non-arrays
-    elif not is_array(a) and not is_array(b):
-        if isinstance(a, (int, float)) and isinstance(b, (int,float)):
-            return func(a,b)
-        else:
-            if not isinstance(a, (int, float)) and not isinstance(b, (int,float)):
-                raise TypeError("Invalid types. The is_less function \
-                    operates on numbers only. \n   a type: {atype}\n   b type: {btype}".format(
-                        atype=type(a),
-                        btype=type(b)
-                    ))
-            elif not isinstance(a, (int, float)):
-                raise TypeError("Invalid types. The is_less function \
-                    operates on numbers only. \n   a type: {atype}".format(
-                        atype=type(a)
-                    ))
-            else:
-                raise TypeError("Invalid types. The is_less function \
-                    operates on numbers only. \n   b type: {btype}".format(
-                        btype=type(b)
-                    ))
-   
-def is_less(a,b):
-    func = np.less
-    if compare(a,b, func=func):
+    # when we have but one boolean in the response
+    if answer:
         return True
     else:
         return False
-    
+
+def is_equal(a,b):
+    func = dict({'number':np.equal, 'string':np.char.equal})
+    answer = compare(a,b, func=func)
+    if answer:
+        return True
+    else:
+        return False
+
+def is_not_equal(a,b):
+    func = dict({'number':np.equal, 'string':np.char.equal})
+    answer = compare(a,b, func=func)
+    if answer:
+        return False
+    else:
+        return True
+
+def is_less(a,b):
+    func = dict({'number':np.less, 'string':np.char.less})
+    answer = compare(a,b, func=func)
+    if answer:
+        return True
+    else:
+        return False
+
 def is_less_equal(a,b):
-    func = np.less_equal
-    if compare(a,b, func=func):
+    func = dict({'number':np.less_equal,  'string':np.char.less_equal})
+    answer = compare(a,b, func=func)
+    if answer:
+        return True
+    else:
+        return False
+
+def is_greater(a,b):
+    func = dict({'number':np.greater, 'string':np.char.greater})
+    answer = compare(a,b, func=func)
+    if answer:
+        return True
+    else:
+        return False
+
+def is_greater_equal(a,b):
+    func = dict({'number':np.greater_equal, 'string':np.char.greater_equal})
+    answer = compare(a,b, func=func)
+    if answer:
         return True
     else:
         return False
         
-def is_greater(a,b):
-    func = np.greater
-    if compare(a,b, func=func):
-        return True
-    else:
-        return False
-    
-def is_greater_equal(a,b):
-    func = np.greater_equal
-    if compare(a,b, func=func):
-        return True
-    else:
-        return False
-
 def is_match(a,b):
     """Evaluates if a or elements of a are a regex match to the pattern in b."""
     if is_array(a):
