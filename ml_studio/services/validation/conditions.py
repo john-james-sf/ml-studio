@@ -9,7 +9,7 @@
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
 # Create Date: Saturday December 28th 2019, 6:31:33 am                        #
-# Last Modified: Sunday December 29th 2019, 5:09:41 am                        #
+# Last Modified: Sunday December 29th 2019, 9:20:46 am                        #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
@@ -65,32 +65,104 @@ class BaseCondition(ABC):
         # Initialize state instance variables
         self._is_valid = True
         self._evaluated_instance = None
-    
-    def on(self, value):
-        self._evaluated_instance = value
-        return self
+        self._evaluated_attribute = None
 
-    @property
-    def id(self):
-        return self._id
+        # Composite Management Structures
+        self._conditions = {}
 
+    def is_composite(self):
+        return False
+
+    # ----------------------------------------------------------------------- #
+    #                          Property Management                            #
+    # ----------------------------------------------------------------------- #
     @property
-    def evaluated_instance(self):
-        return self._evaluated_instance
+    def id(self):        
+        return copy.deepcopy(self._id)   
 
     @property
     def is_valid(self):
         return self._is_valid
 
+    def on(self, value):
+        self._evaluated_instance = value
+        return self
+
+    def attribute(self, value):
+        """Updates current instance and propogates through children."""        
+        try:
+            self._evaluated_attribute == getattr(self._evaluated_instance, value)
+        except AttributeError:
+            print("{attr} is not a valid attribute for the {classname} class.".format(
+                attr=value, classname=self._evaluated_instance.__class__.__name__
+            ))        
+        return self  
+
+    @property
+    def evaluated_instance(self):
+        return copy.deepcopy(self._evaluated_instance)
+
+    @property
+    def evaluated_attribute(self):
+        return copy.deepcopy(self._evaluated_attribute)
+
+    # ----------------------------------------------------------------------- #
+    #                            Composite Management                         #
+    # ----------------------------------------------------------------------- #
+
+    def get_condition(self, condition):        
+        pass   
+
+    def add_condition(self, condition):           
+        pass
+
+    def remove_condition(self, condition):
+        pass
+
+    # ----------------------------------------------------------------------- #
+    #                                 Operation                               #
+    # ----------------------------------------------------------------------- #     
     @abstractmethod
     def evaluate(self):
         pass
 
+    # ----------------------------------------------------------------------- #
+    #                              Print Management                           #
+    # ----------------------------------------------------------------------- #   
+    @property
+    def print_conditions(self):
+        pass
+
+# --------------------------------------------------------------------------- #
+#                            CONDITIONSETITERATOR                             #
+# --------------------------------------------------------------------------- #    
+class ConditionSetIterator:
+    """Iterator Class."""
+    def __init__(self, condition_set):
+        # Condition object reference
+        self._condition_set = condition_set
+        # Member variable to keep track of current index
+        self._index = 0
+
+    def __next__(self):
+        ''''Returns the next value from ConditionSet object's lists '''
+        if self._index < (len(self._condition_set._conditions)):
+            result = (self._condition_set._conditions[self._index] , 'condition')
+            self._index +=1
+            return result
+        # End of Iteration
+        raise StopIteration
 # --------------------------------------------------------------------------- #
 #                                CONDITIONSET                                 #
 # --------------------------------------------------------------------------- #    
 class ConditionSet(BaseCondition):
-    """Collection of Condition objects."""
+    """A ConditionSet contains Conditions and a logical operator for evaluation.
+    
+    This is the composite class collects Conditions objects into CollectionSets.
+    CollectionSets may contain individual Conditions as well as Condition Sets
+    ConditionSets have a logical operator which specifies how the Conditions
+    within the set will be evaluated.
+    """
 
     def __init__(self):
         super(ConditionSet, self).__init__()
@@ -100,6 +172,33 @@ class ConditionSet(BaseCondition):
     def reset(self):
         self._conditions = {}
 
+    def is_composite(self):
+        return True
+
+    # ----------------------------------------------------------------------- #
+    #                              Iteration                                  #
+    # ----------------------------------------------------------------------- #
+    def __iter__(self):
+        """Returns the iterator object."""
+        return ConditionSetIterator(self)              
+    # ----------------------------------------------------------------------- #
+    #                            Composite Management                         #
+    # ----------------------------------------------------------------------- #
+
+    def get_condition(self, condition):        
+        return self._conditions[condition.id]   
+
+    def add_condition(self, condition):           
+        self._conditions[condition.id] = condition 
+        return self
+
+    def remove_condition(self, condition):
+        del self._conditions[condition.id]
+        return self
+
+    # ----------------------------------------------------------------------- #
+    #                            Property Management                          #
+    # ----------------------------------------------------------------------- #
     @property
     def when_all_conditions_are_true(self):
         self._logical = "all"
@@ -115,14 +214,39 @@ class ConditionSet(BaseCondition):
         self._logical = "none"
         return self        
 
+    def on(self, value):
+        """Updates current instance and propogates through children."""
+        self._evaluated_instance = value
+        for _, condition in self._conditions.items():
+            condition.on(copy.deepcopy(value))
+            self._conditions[condition.id] = condition
+        return self
+
+    def attribute(self, value):
+        """Updates current instance and propogates through children."""        
+        try:
+            self._evaluated_attribute == getattr(self._evaluated_instance, value)
+        except AttributeError:
+            print("{attr} is not a valid attribute for the {classname} class.".format(
+                attr=value, classname=self._evaluated_instance.__class__.__name__
+            ))        
+        else:
+            for _, condition in self._conditions.items():
+                condition.attribute(copy.deepcopy(self._evaluated_attribute))
+                self._conditions[condition.id] = condition
+        return self        
+
+    # ----------------------------------------------------------------------- #
+    #                                Operation                                #
+    # ----------------------------------------------------------------------- #
     @property
-    def evaluate(self):
+    def evaluate(self):        
 
         # Update list of conditions with evaluations
-        ({self.add_condition(condition.evaluate) for _, condition in self._conditions.items()})
+        ({self.add_condition(condition.evaluate) for (_, condition) in self._conditions.items()})
     
         # Obtain evaluation results from each condition in the list
-        is_valid = [v.is_valid for (_,v) in self._conditions.items()]
+        is_valid = [condition.is_valid for (_,condition) in self._conditions.items()]
 
         # Execute appropriate logical
         if self._logical == "all":
@@ -134,18 +258,9 @@ class ConditionSet(BaseCondition):
 
         return self
 
-
-    def get_condition(self, condition):
-        return self._conditions[condition.key]   
-
-    def add_condition(self, condition):           
-        self._conditions[condition.id] = condition 
-        return self
-
-    def remove_condition(self, condition):
-        del self._conditions[condition.id]
-        return self
-
+    # ----------------------------------------------------------------------- #
+    #                             Print Management                            #
+    # ----------------------------------------------------------------------- #
     @property
     def print_conditions(self):
         print("\nCondition Set: {id} evaluates to true when {logical} conditions pass.".format(
@@ -153,7 +268,7 @@ class ConditionSet(BaseCondition):
             logical=self._logical
         ))
         for _, condition in self._conditions.items():
-            condition.print_condition
+            condition.print_conditions
         return self
 
 # --------------------------------------------------------------------------- #
@@ -174,6 +289,8 @@ class Condition(BaseCondition):
     def _reset(self):
         self._is_valid = "Not evaluated."
 
+    def is_composite(self):
+        return False
     
     def when(self, value):
         self._a = value
@@ -304,7 +421,7 @@ class Condition(BaseCondition):
                 is_valid=self._is_valid
             ))
     @property
-    def print_condition(self):
+    def print_conditions(self):
         """Prints condition for most recent result or current values."""
 
         if self._eval_function in SYNTACTIC_EVAL_FUNCTIONS:
