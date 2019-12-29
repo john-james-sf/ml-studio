@@ -9,7 +9,7 @@
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
 # Create Date: Saturday December 28th 2019, 6:31:33 am                        #
-# Last Modified: Sunday December 29th 2019, 10:40:59 am                       #
+# Last Modified: Sunday December 29th 2019, 1:30:56 pm                        #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
@@ -25,7 +25,7 @@ This module contains the following classes:
 
 """
 from abc import ABC, abstractmethod, abstractproperty
-from collections import OrderedDict 
+from collections import OrderedDict, abc 
 import copy
 from datetime import datetime
 import getpass
@@ -89,12 +89,12 @@ class BaseCondition(ABC):
 
     def attribute(self, value):
         """Updates current instance and propogates through children."""        
-        try:
-            self._evaluated_attribute == getattr(self._evaluated_instance, value)
-        except AttributeError:
+        if hasattr(self._evaluated_instance, value):
+            self._evaluated_attribute = value
+        else:            
             print("{attr} is not a valid attribute for the {classname} class.".format(
                 attr=value, classname=self._evaluated_instance.__class__.__name__
-            ))        
+            ))                
         return self  
 
     @property
@@ -200,23 +200,27 @@ class ConditionSet(BaseCondition):
     def on(self, value):
         """Updates current instance and propogates through children."""
         self._evaluated_instance = value
-        for _, condition in self._conditions.items():
-            condition.on(copy.deepcopy(value))
-            self._conditions[condition.id] = condition
+        if isinstance(self, ConditionSet):                    
+            for _, condition in self._conditions.items():
+                condition.on(value)                
+        else:
+            condition._evaluated_instance = value                        
         return self
 
     def attribute(self, value):
         """Updates current instance and propogates through children."""        
-        try:
-            self._evaluated_attribute == getattr(self._evaluated_instance, value)
-        except AttributeError:
+        
+        if hasattr(self._evaluated_instance, value):
+            self._evaluated_attribute = value
+        else:            
             print("{attr} is not a valid attribute for the {classname} class.".format(
                 attr=value, classname=self._evaluated_instance.__class__.__name__
-            ))        
-        else:
+            ))                
+        if isinstance(self, ConditionSet):
             for _, condition in self._conditions.items():
-                condition.attribute(copy.deepcopy(self._evaluated_attribute))
-                self._conditions[condition.id] = condition
+                condition.attribute(value)                
+        else:
+            condition._evaluated_attribute = value                        
         return self        
 
     # ----------------------------------------------------------------------- #

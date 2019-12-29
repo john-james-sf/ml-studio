@@ -11,7 +11,7 @@
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
 # Create Date: Saturday December 28th 2019, 8:04:47 pm                        #
-# Last Modified: Sunday December 29th 2019, 10:41:21 am                       #
+# Last Modified: Sunday December 29th 2019, 1:34:06 pm                        #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
@@ -810,8 +810,8 @@ class ChildNodeTests:
 
     @mark.validation
     @mark.validation_conditions
-    @mark.validation_conditions_iteration
-    def test_validation_conditions_child_node_target(self, get_validation_rule_test_object):
+    @mark.validation_conditions_printing
+    def test_validation_conditions_printing(self, get_validation_rule_test_object):
         """Testing propagation of data down through child nodes."""
         test_object = get_validation_rule_test_object        
         # Create some conditions
@@ -841,3 +841,50 @@ class ChildNodeTests:
         cs2.when_no_conditions_are_true
         # Print to see how it looks in the hierarchy
         cs2.print_condition_set
+
+
+    @mark.validation
+    @mark.validation_conditions
+    @mark.validation_conditions_propagation
+    def test_validation_conditions_propagation(self, get_validation_rule_test_object):
+        """Testing propagation of data down through child nodes."""
+        test_object = get_validation_rule_test_object        
+        # Create some conditions
+        # True Test Condition
+        condition1 = Condition().on(test_object)\
+                          .when('i')\
+                          .is_equal(5)
+        # Create another True condition
+        condition2 = Condition().on(test_object)\
+                          .when('a_ge')\
+                          .is_equal('a_g')
+
+        # Create a false condition
+        condition3 = Condition().on(test_object)\
+                          .when('a_g')\
+                          .is_equal(50)
+        # Create another false condition
+        condition4 = Condition().on(test_object)\
+                          .when('a_g')\
+                          .is_greater(50)        
+        # Add 1 and 2 to a new Condition Set
+        cs1 = ConditionSet()
+        cs1.add_condition(condition1).add_condition(condition2)
+        # Add CS1 and conditions 3 and 4 to new ConditionSet
+        cs2 = ConditionSet()
+        cs2.add_condition(cs1).add_condition(condition3).add_condition(condition4)
+        cs2.when_no_conditions_are_true
+        # Set the target object and attribute
+        cs2.on(test_object)
+        cs2.attribute('a_g')
+        # Traverse through confirming updates
+        def traverse(condition):         
+            assert condition._evaluated_instance == test_object, "Test object not set" 
+            assert condition._evaluated_attribute == "a_g", "Attribute not set" 
+            if isinstance(condition, ConditionSet):
+                for _,condition in condition._conditions.items():      
+                    return traverse(condition)
+            else:
+                assert condition._evaluated_instance == test_object, "Test object not set" 
+                assert condition._evaluated_attribute == "a_g", "Attribute not set" 
+        traverse(cs2)
