@@ -9,7 +9,7 @@
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
 # Create Date: Saturday December 28th 2019, 6:31:33 am                        #
-# Last Modified: Saturday December 28th 2019, 8:50:48 pm                      #
+# Last Modified: Sunday December 29th 2019, 5:09:41 am                        #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
@@ -25,6 +25,7 @@ This module contains the following classes:
 
 """
 from abc import ABC, abstractmethod, abstractproperty
+import copy
 from datetime import datetime
 import getpass
 import os
@@ -48,31 +49,38 @@ from ml_studio.services.validation.utils import is_equal, is_not_equal
 # --------------------------------------------------------------------------- #
 #                                 BASECONDITION                               #
 # --------------------------------------------------------------------------- #
+SYNTACTIC_EVAL_FUNCTIONS = [is_array,is_homogeneous_array,is_simple_array,
+                            is_none, is_not_none, is_empty, is_not_empty,
+                            is_bool, is_integer, is_number, is_string]
+
 class BaseCondition(ABC):
     """Abstract base class for all Condition classes."""
     
     def __init__(self):
         # Designate unique/opaque userid and other metadata        
-        self._id = uuid4()
+        self._id = str(uuid4())
         self._created = datetime.now()
-        self._user = getpass.getuser()
+        self._creator = getpass.getuser()
+
+        # Initialize state instance variables
         self._is_valid = True
-        self._instance = None
-        self._value = None
+        self._evaluated_instance = None
+    
+    def on(self, value):
+        self._evaluated_instance = value
+        return self
 
-    def on(self, instance, value):
-        """Specifies the instance of the class and the value being evaluated.
-        
-        Parameters
-        ----------
-        instance : Any
-            The object being evaluated.
+    @property
+    def id(self):
+        return self._id
 
-        value : Any
-            The value being evaluated.
-        """
-        self._instance = instance
-        self._value = value
+    @property
+    def evaluated_instance(self):
+        return self._evaluated_instance
+
+    @property
+    def is_valid(self):
+        return self._is_valid
 
     @abstractmethod
     def evaluate(self):
@@ -87,42 +95,66 @@ class ConditionSet(BaseCondition):
     def __init__(self):
         super(ConditionSet, self).__init__()
         self._logical = 'all'
-        self._conditions = set()
+        self._conditions = {}
+
+    def reset(self):
+        self._conditions = {}
 
     @property
-    def is_valid(self):
-        return self._is_valid
-        
-    @property
-    def logical(self):
-        return self._logical
-
-    @logical.setter
-    def all(self):
+    def when_all_conditions_are_true(self):
         self._logical = "all"
+        return self
 
-    @logical.setter
-    def any(self):
-        self._logical = "any" 
+    @property
+    def when_any_condition_is_true(self):
+        self._logical = "any"
+        return self        
 
-    @logical.setter
-    def none(self):
-        self._logical = "none"                
-    
+    @property
+    def when_no_conditions_are_true(self):
+        self._logical = "none"
+        return self        
+
+    @property
     def evaluate(self):
-        results = []
-        evaluation = dict({"all": all(results),
-                          "any": any(results),
-                          "none": bool(not any (results))})
-        for condition in self._conditions:
-            results.append(condition.evaluate().is_valid)
-        return evaluation.get(self._logical)
 
-    def add_condition(self, condition):
-        self._conditions.add(condition)
+        # Update list of conditions with evaluations
+        ({self.add_condition(condition.evaluate) for _, condition in self._conditions.items()})
+    
+        # Obtain evaluation results from each condition in the list
+        is_valid = [v.is_valid for (_,v) in self._conditions.items()]
+
+        # Execute appropriate logical
+        if self._logical == "all":
+            self._is_valid = all(is_valid)
+        elif self._logical == "any":
+            self._is_valid = any(is_valid)
+        else:
+            self._is_valid = not any(is_valid)
+
+        return self
+
+
+    def get_condition(self, condition):
+        return self._conditions[condition.key]   
+
+    def add_condition(self, condition):           
+        self._conditions[condition.id] = condition 
+        return self
 
     def remove_condition(self, condition):
-        self._conditions.discard(condition)
+        del self._conditions[condition.id]
+        return self
+
+    @property
+    def print_conditions(self):
+        print("\nCondition Set: {id} evaluates to true when {logical} conditions pass.".format(
+            id=self._id, 
+            logical=self._logical
+        ))
+        for _, condition in self._conditions.items():
+            condition.print_condition
+        return self
 
 # --------------------------------------------------------------------------- #
 #                                 CONDITION                                   #
@@ -133,53 +165,27 @@ class Condition(BaseCondition):
     def __init__(self):
         super(Condition, self).__init__()
         self._a = None
-        self._b = None        
-        self._attribute = None
+        self._b = None
+        self._a_attribute = None
+        self._b_attribute = None                
         self._eval_function = None
+        self._is_valid = "Not evaluated."
 
     def _reset(self):
-        self._a = None
-        self._b = None
-        self._instance = None
-        self._attribute = None
-        self._eval_function = None
-        
+        self._is_valid = "Not evaluated."
 
-    def on(self, instance, attribute):
-        self._instance = instance
-        self._attribute = attribute
+    
+    def when(self, value):
+        self._a = value
         return self
 
     @property
-    def when_value(self):
-        try:
-            self._a = getattr(self._instance, self._attribute)
-        except AttributeError:
-            print("{attr} is not a valid attribute for the {classname} class.".format(
-                attr=self._attribute,
-                classname=self._instance.__class__.__name__
-            ))
-        return self
+    def b(self):
+        return self._b
 
-    @when_value.setter
-    def when_value(self):
-        self._a = self._value
-        return self
-
-    @property
-    def when_attribute(self):        
-        return self
-
-    @when_attribute.setter
-    def when_attribute(self, attribute_name):        
-        try:            
-            self._a = getattr(self._instance, attribute_name)
-        except AttributeError:
-            print("{attrname} is not an attribute of {classname}.".format(
-                attrname=attribute_name,
-                classname=self._instance.__class__.__name__
-            ))
-        return self
+    @b.setter
+    def b(self, value):
+        self._b = value
 
     @property
     def is_none(self):
@@ -221,57 +227,87 @@ class Condition(BaseCondition):
         self._eval_function = is_string         
         return self
 
-    def _get_value(self,b):
-        if isinstance(b, str):
-            try:
-                self._b = getattr(self._instance, b)
-            except AttributeError:        
-                self._b = b                
-        else:
-            self._b = b
-
     def is_equal(self, b):
-        self._get_value(b)
+        self._b = b
         self._eval_function = is_equal
         return self
 
     def is_not_equal(self, b):
-        self._get_value(b)
+        self._b = b
         self._eval_function = is_not_equal        
         return self
 
     def is_less(self, b):
-        self._get_value(b)
+        self._b = b
         self._eval_function = is_less
         return self
 
     def is_less_equal(self, b):
-        self._get_value(b)
+        self._b = b
         self._eval_function = is_less_equal        
         return self
 
     def is_greater(self, b):
-        self._get_value(b)
+        self._b = b
         self._eval_function = is_greater
         return self
 
     def is_greater_equal(self, b):
-        self._get_value(b)
+        self._b = b
         self._eval_function = is_greater_equal        
         return self
 
     def is_match(self, b):
-        self._get_value(b)
+        self._b = b
         self._eval_function = is_match
         return self
-
-    @property
-    def evaluate(self):
-        result = self._eval_function(self._a, self._b)
-        self._reset()
-        if result:
-            return True
+    
+    
+    def _get_value(self,a):
+        if isinstance(a, str):
+            try:
+                value = getattr(self._evaluated_instance, a)
+            except AttributeError:        
+                value = a
         else:
-            return False
+            value = a
+        return value
+        
+    @property
+    def evaluate(self):        
+        self._reset()
+        self._a = self._get_value(self._a)
+        self._b = self._get_value(self._b)
+        self._is_valid = self._eval_function(self._a, self._b)        
+        return self
+        
+    @property
+    def _print_syntactic_condition(self):
 
+        print("\n   Condition #{id}: when {a} is {func} evaluates to {is_valid}."\
+            .format(
+                id=self._id, 
+                a=self._a,
+                func=self._eval_function, 
+                is_valid=self._is_valid
+            ))
+    
+    @property
+    def _print_semantic_condition(self):
             
+        print("\n   Condition #{id}: when {a} is {func} {b} evaluates to {is_valid}."\
+            .format(
+                id=self._id, 
+                a=self._a,
+                func=self._eval_function, 
+                b=self._b,
+                is_valid=self._is_valid
+            ))
+    @property
+    def print_condition(self):
+        """Prints condition for most recent result or current values."""
+
+        if self._eval_function in SYNTACTIC_EVAL_FUNCTIONS:
+            self._print_syntactic_condition
+        else:
+            self._print_semantic_condition
