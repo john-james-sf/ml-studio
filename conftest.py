@@ -523,6 +523,8 @@ def get_validation_rule_test_object():
             self.color_rgb = "rgb(128,0,0)"
             self.e = ""
             self.s = "hats"
+            self.sl = "aaron"
+            self.sg = "zac"
             self.a_l = [4,3,2,5]
             self.a_n = [None, None, None]
             self.a_xn = [None, None, 9]
@@ -533,6 +535,7 @@ def get_validation_rule_test_object():
             self.a_i = [1,3,3,5,7,11,13,39]
             self.a_f = [1.5, 2.8, 3.9]
             self.a_s = ['apples','oranges', 'pears', 'bananas']
+            self.a_sg = ['bananas','zulu', 'tomato', 'carrots']
             self.a_e = ["", "", ""]
             self.na_i = [[2, 44], 6]
             self.na_f = [[2.3, 4.4], 6.0]

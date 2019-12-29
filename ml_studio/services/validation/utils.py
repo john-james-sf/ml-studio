@@ -11,7 +11,7 @@
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
 # Create Date: Saturday December 28th 2019, 7:41:40 am                        #
-# Last Modified: Saturday December 28th 2019, 6:32:28 pm                      #
+# Last Modified: Saturday December 28th 2019, 9:23:16 pm                      #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
@@ -119,7 +119,7 @@ def compare(a,b, func=None):
             answer = compare_strings(a, b, func)        
         except(TypeError):
             raise TypeError("Unable to compare values as strings or numbers.")
-
+    
     # when we have but one boolean in the response
     if answer:
         return True
