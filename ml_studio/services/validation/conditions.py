@@ -9,7 +9,7 @@
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
 # Create Date: Saturday December 28th 2019, 6:31:33 am                        #
-# Last Modified: Sunday December 29th 2019, 9:20:46 am                        #
+# Last Modified: Sunday December 29th 2019, 10:40:59 am                       #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
@@ -25,6 +25,7 @@ This module contains the following classes:
 
 """
 from abc import ABC, abstractmethod, abstractproperty
+from collections import OrderedDict 
 import copy
 from datetime import datetime
 import getpass
@@ -66,11 +67,9 @@ class BaseCondition(ABC):
         self._is_valid = True
         self._evaluated_instance = None
         self._evaluated_attribute = None
-
-        # Composite Management Structures
-        self._conditions = {}
-
-    def is_composite(self):
+        
+    @property
+    def _is_composite(self):
         return False
 
     # ----------------------------------------------------------------------- #
@@ -130,28 +129,10 @@ class BaseCondition(ABC):
     #                              Print Management                           #
     # ----------------------------------------------------------------------- #   
     @property
-    def print_conditions(self):
+    def print_condition_set(self):
         pass
 
-# --------------------------------------------------------------------------- #
-#                            CONDITIONSETITERATOR                             #
-# --------------------------------------------------------------------------- #    
-class ConditionSetIterator:
-    """Iterator Class."""
-    def __init__(self, condition_set):
-        # Condition object reference
-        self._condition_set = condition_set
-        # Member variable to keep track of current index
-        self._index = 0
 
-    def __next__(self):
-        ''''Returns the next value from ConditionSet object's lists '''
-        if self._index < (len(self._condition_set._conditions)):
-            result = (self._condition_set._conditions[self._index] , 'condition')
-            self._index +=1
-            return result
-        # End of Iteration
-        raise StopIteration
 # --------------------------------------------------------------------------- #
 #                                CONDITIONSET                                 #
 # --------------------------------------------------------------------------- #    
@@ -167,26 +148,24 @@ class ConditionSet(BaseCondition):
     def __init__(self):
         super(ConditionSet, self).__init__()
         self._logical = 'all'
-        self._conditions = {}
+        self._conditions = OrderedDict()
 
     def reset(self):
-        self._conditions = {}
+        self._conditions = OrderedDict()
 
-    def is_composite(self):
+    @property
+    def _is_composite(self):
         return True
 
-    # ----------------------------------------------------------------------- #
-    #                              Iteration                                  #
-    # ----------------------------------------------------------------------- #
-    def __iter__(self):
-        """Returns the iterator object."""
-        return ConditionSetIterator(self)              
     # ----------------------------------------------------------------------- #
     #                            Composite Management                         #
     # ----------------------------------------------------------------------- #
 
-    def get_condition(self, condition):        
-        return self._conditions[condition.id]   
+    def get_condition(self, condition=None):        
+        if condition is None:
+            return self._conditions
+        else:
+            return self._conditions[condition.id]   
 
     def add_condition(self, condition):           
         self._conditions[condition.id] = condition 
@@ -199,6 +178,10 @@ class ConditionSet(BaseCondition):
     # ----------------------------------------------------------------------- #
     #                            Property Management                          #
     # ----------------------------------------------------------------------- #
+    @property
+    def logical(self):
+        return copy.deepcopy(self._logical)
+        
     @property
     def when_all_conditions_are_true(self):
         self._logical = "all"
@@ -262,13 +245,18 @@ class ConditionSet(BaseCondition):
     #                             Print Management                            #
     # ----------------------------------------------------------------------- #
     @property
-    def print_conditions(self):
-        print("\nCondition Set: {id} evaluates to true when {logical} conditions pass.".format(
-            id=self._id, 
-            logical=self._logical
-        ))
-        for _, condition in self._conditions.items():
-            condition.print_conditions
+    def print_condition_set(self):
+        if self._is_composite:
+            print("\nCondition Set: {id} evaluates to true when {logical} \
+                conditions pass.".format(
+                id=self._id, 
+                logical=self._logical
+            ))
+            for _,v in self._conditions.items():
+                if v._is_composite:
+                    v.print_condition_set
+                else:
+                    v.print_condition  
         return self
 
 # --------------------------------------------------------------------------- #
@@ -288,8 +276,9 @@ class Condition(BaseCondition):
 
     def _reset(self):
         self._is_valid = "Not evaluated."
-
-    def is_composite(self):
+    
+    @property
+    def _is_composite(self):
         return False
     
     def when(self, value):
@@ -421,7 +410,7 @@ class Condition(BaseCondition):
                 is_valid=self._is_valid
             ))
     @property
-    def print_conditions(self):
+    def print_condition(self):
         """Prints condition for most recent result or current values."""
 
         if self._eval_function in SYNTACTIC_EVAL_FUNCTIONS:

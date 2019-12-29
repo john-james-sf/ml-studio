@@ -11,12 +11,13 @@
 # Email: jjames@decisionscients.com                                           #
 # ---------------                                                             #
 # Create Date: Saturday December 28th 2019, 8:04:47 pm                        #
-# Last Modified: Sunday December 29th 2019, 9:26:21 am                        #
+# Last Modified: Sunday December 29th 2019, 10:41:21 am                       #
 # Modified By: John James (jjames@decisionscients.com)                        #
 # ---------------                                                             #
 # License: Modified BSD                                                       #
 # Copyright (c) 2019 Decision Scients                                         #
 # =========================================================================== #
+from collections import OrderedDict 
 import numpy as np
 import pandas as pd
 import pytest
@@ -751,13 +752,13 @@ class ConditionSetTests:
         cs.remove_condition(condition2)        
         cs.add_condition(condition3)                
         answer = cs.evaluate.is_valid
-        cs.print_conditions
+        cs.print_condition_set
         assert answer is True, "Invalid evaluation of conditions 1 and 3"
         # Create False/False condition where all must be true
         cs.remove_condition(condition1)
         cs.add_condition(condition4) 
         answer = cs.evaluate.is_valid           
-        cs.print_conditions
+        cs.print_condition_set
         assert answer is False, "Invalid evaluation of conditions 3 and 4"                
 
     @mark.validation
@@ -796,13 +797,13 @@ class ConditionSetTests:
         cs.remove_condition(condition2)        
         cs.add_condition(condition3)                
         answer = cs.evaluate.is_valid
-        cs.print_conditions
+        cs.print_condition_set
         assert answer is False, "Invalid evaluation of conditions 1 and 3"
         # Create False/False condition where all must be true
         cs.remove_condition(condition1)
         cs.add_condition(condition4) 
         answer = cs.evaluate.is_valid           
-        cs.print_conditions
+        cs.print_condition_set
         assert answer is True, "Invalid evaluation of conditions 3 and 4"            
 
 class ChildNodeTests:
@@ -837,17 +838,6 @@ class ChildNodeTests:
         # Add CS1 and conditions 3 and 4 to new ConditionSet
         cs2 = ConditionSet()
         cs2.add_condition(cs1).add_condition(condition3).add_condition(condition4)
+        cs2.when_no_conditions_are_true
         # Print to see how it looks in the hierarchy
-        cs2.print_conditions        
-        # Get the iterator for the ConditionSet class
-        iterator = iter(cs2)
-        while True:
-            try:
-                print("_______________________")
-                print(self._index)
-                # Get next element from ConditionSetIterator object using iterator object
-                elem = next(iterator)
-                # Print the element
-                print(elem)
-            except StopIteration:
-                break
+        cs2.print_condition_set
