@@ -1,195 +1,188 @@
-Group #,Param #,category,classname,attribute,type,validator #,validator,_of rule,context_class,context_attribute,context_type,context_value,directive,value,inv_msg
-1,1,titles,CanvasTitle,title_text,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
-1,1,titles,CanvasTitle,title_text,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
-1,2,titles,CanvasTitle,title_font_family,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
-1,2,titles,CanvasTitle,title_font_family,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
-1,3,titles,CanvasTitle,title_font_size,"int, float >= 1",1,NumberValidator,NA,,,,,min,1,invalid_font_size
-1,4,titles,CanvasTitle,title_font_color,str,1,ColorValidator,anyof,CanvasTitle,title_font_color,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-1,4,titles,CanvasTitle,title_font_color,str,2,ColorValidator,anyof,CanvasTitle,title_font_color,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-1,4,titles,CanvasTitle,title_font_color,str,3,ColorValidator,anyof,CanvasTitle,title_font_color,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-1,4,titles,CanvasTitle,title_font_color,str,3,ColorValidator,anyof,CanvasTitle,title_font_color,str,,allowed,See list of colors plotly github,unrecognized color
-1,5,titles,CanvasTitle,title_xref,str,1,DiscreteValidator,NA,,,,,allowed,"['paper, 'container']",invalid value
-1,6,titles,CanvasTitle,title_yref,str,1,DiscreteValidator,NA,,,,,allowed,"['paper, 'container']",invalid value
-1,7,titles,CanvasTitle,title_x,"int,float",1,NumberValidator,allof,,,,,type,"(int, float)","value must be a number between min and max, inclusive."
-1,7,titles,CanvasTitle,title_x,"int,float",2,NumberValidator,allof,,,,,max,0,"value must be a number between min and max, inclusive."
-1,7,titles,CanvasTitle,title_x,"int,float",3,NumberValidator,allof,,,,,max,1,"value must be a number between min and max, inclusive."
-1,8,titles,CanvasTitle,title_y,"str, int, float",1,NumberValidator,allof,CanvasTitle,title_y,numeric,,type,"(int, float)","value must be a number between min and max, inclusive."
-1,8,titles,CanvasTitle,title_y,"str, int, float",2,NumberValidator,allof,CanvasTitle,title_y,numeric,,max,0,"value must be a number between min and max, inclusive."
-1,8,titles,CanvasTitle,title_y,"str, int, float",3,NumberValidator,allof,CanvasTitle,title_y,numeric,,max,1,"value must be a number between min and max, inclusive."
-1,8,titles,CanvasTitle,title_y,"str, int, float",4,NumberValidator,allof,CanvasTitle,title_y,str,,allowed,"""auto""",unrecognized value
-1,9,titles,CanvasTitle,title_xanchor,str,1,DiscreteValidator,NA,,,,,allowed,"[""auto"", ""left"", ""center"", ""right""]",unrecognized value
-1,10,titles,CanvasTitle,title_yanchor,str,1,DiscreteValidator,NA,,,,,allowed,"[""auto"", ""top"", ""middle"", ""bottom""]",unrecognized value
-1,11,titles,CanvasTitle,title_pad.t,int,1,NumberValidator,NA,,,,,min,0,value must be a number greater or equal to min.
-1,11,titles,CanvasTitle,title_pad.b,int,1,NumberValidator,NA,,,,,min,0,value must be a number greater or equal to min.
-1,11,titles,CanvasTitle,title_pad.l,int,1,NumberValidator,NA,,,,,min,0,value must be a number greater or equal to min.
-2,1,legend,CanvasLegend,legend_show,bool,1,BooleanValidator,NA,,,,,type,bool,value must be boolean
-2,2,legend,CanvasLegend,legend_bgcolor,str,1,ColorValidator,anyof,CanvasLegend,legend_bgcolor,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-2,2,legend,CanvasLegend,legend_bgcolor,str,2,ColorValidator,anyof,CanvasLegend,legend_bgcolor,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-2,2,legend,CanvasLegend,legend_bgcolor,str,3,ColorValidator,anyof,CanvasLegend,legend_bgcolor,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-2,2,legend,CanvasLegend,legend_bgcolor,str,4,ColorValidator,anyof,CanvasLegend,legend_bgcolor,str,,allowed,See list of colors plotly github,unrecognized color
-2,3,legend,CanvasLegend,legend_bordercolor,str,1,ColorValidator,anyof,CanvasLegend,legend_bgcolor,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-2,3,legend,CanvasLegend,legend_bordercolor,str,2,ColorValidator,anyof,CanvasLegend,legend_bgcolor,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-2,3,legend,CanvasLegend,legend_bordercolor,str,3,ColorValidator,anyof,CanvasLegend,legend_bgcolor,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-2,3,legend,CanvasLegend,legend_bordercolor,str,4,ColorValidator,anyof,CanvasLegend,legend_bgcolor,str,,allowed,See list of colors plotly github,unrecognized color
-2,4,legend,CanvasLegend,legend_borderwidth,"int, float",1,NumberValidator,NA,,,,,min,0,value must be a number greater or equal to min.
-2,5,legend,CanvasLegend,legend_font_family,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
-2,5,legend,CanvasLegend,legend_font_family,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
-2,6,legend,CanvasLegend,legend_font_size,"int, float >= 1",1,NumberValidator,NA,,,,,min,1,value must be a number greater or equal to min.
-2,7,legend,CanvasLegend,legend_font_color,str,1,ColorValidator,anyof,CanvasLegend,legend_font_color,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-2,7,legend,CanvasLegend,legend_font_color,str,2,ColorValidator,anyof,CanvasLegend,legend_font_color,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-2,7,legend,CanvasLegend,legend_font_color,str,3,ColorValidator,anyof,CanvasLegend,legend_font_color,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-2,7,legend,CanvasLegend,legend_font_color,str,4,ColorValidator,anyof,CanvasLegend,legend_font_color,str,,allowed,See list of colors plotly github,unrecognized color
-2,8,legend,CanvasLegend,legend_orientation,str,1,DiscreteValidator,allof,,,,,allowed,"['v', 'h']",unrecognized value
-2,9,legend,CanvasLegend,legend_itemsizing,str,1,DiscreteValidator,allof,,,,,allowed,"['trace', 'constant']",unrecognized value
-2,10,legend,CanvasLegend,legend_itemclick,str,1,DiscreteValidator,allof,,,,,allowed,"['toggle', 'toggleothers', False)",unrecognized value
-2,11,legend,CanvasLegend,legend_x,numeric -2:3,1,NumberValidator,allof,,,,,type,"(int, float)","value must be a number between min and max, inclusive."
-2,11,legend,CanvasLegend,legend_x,numeric -2:3,2,NumberValidator,allof,,,,,min,-2,"value must be a number between min and max, inclusive."
-2,11,legend,CanvasLegend,legend_x,numeric -2:3,3,NumberValidator,allof,,,,,max,3,"value must be a number between min and max, inclusive."
-2,12,legend,CanvasLegend,legend_y,numeric -2:3,1,NumberValidator,allof,,,,,type,"(int, float)","value must be a number between min and max, inclusive."
-2,12,legend,CanvasLegend,legend_y,numeric -2:3,2,NumberValidator,allof,,,,,min,-2,"value must be a number between min and max, inclusive."
-2,12,legend,CanvasLegend,legend_y,numeric -2:3,3,NumberValidator,allof,,,,,max,3,"value must be a number between min and max, inclusive."
-2,13,legend,CanvasLegend,legend_xanchor,str,1,DiscreteValidator,NA,,,,,allowed,"[""auto"", ""left"", ""center"", ""right""]",unrecognized value
-2,14,legend,CanvasLegend,legend_yanchor,str,1,DiscreteValidator,NA,,,,,allowed,"[""auto"", ""top"", ""middle"", ""bottom""]",unrecognized value
-2,15,legend,CanvasLegend,legend_valign,str,,DiscreteValidator,NA,,,,,allowed,"[""top"", ""middle"", ""bottom""]",unrecognized value
-3,1,margins,CanvasMargins,margins_left,num >=0,1,NumberValidator,allof,,,,,type,"(int, float)",invalid type
-3,1,margins,CanvasMargins,margins_left,num >=0,2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-3,2,margins,CanvasMargins,margins_top,num >=0,1,NumberValidator,allof,,,,,type,"(int, float)",invalid type
-3,2,margins,CanvasMargins,margins_top,num >=0,2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-3,3,margins,CanvasMargins,margins_bottom,num >=0,1,NumberValidator,allof,,,,,type,"(int, float)",invalid type
-3,3,margins,CanvasMargins,margins_bottom,num >=0,2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-3,4,margins,CanvasMargins,margins_pad,num >=0,1,NumberValidator,allof,,,,,type,"(int, float)",invalid type
-3,4,margins,CanvasMargins,margins_pad,num >=0,2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-4,1,size,CanvasSize,size_autosize,bool,1,BooleanValidator,allof,,,,,bool,,value must be boolean
-4,2,size,CanvasSize,size_width,num>=10,1,NumberValidator,NA,,,,,type,"(int, float)",value must be a number greater or equal to min.
-4,2,size,CanvasSize,size_width,num>=10,2,NumberValidator,NA,,,,,min,10,value must be a number greater or equal to min.
-4,2,size,CanvasSize,size_height,num>=10,1,NumberValidator,NA,,,,,type,"(int, float)",value must be a number greater or equal to min.
-4,2,size,CanvasSize,size_height,num>=10,2,NumberValidator,NA,,,,,min,10,value must be a number greater or equal to min.
-5,1,font,CanvasFont,font_family,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
-5,1,font,CanvasFont,font_family,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
-5,2,font,CanvasFont,font_size,num>=1,1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-5,2,font,CanvasFont,font_size,num>=1,2,NumberValidator,allof,,,,,min,1,value must be a number greater or equal to min.
-5,2,font,CanvasFont,font_color,str,1,ColorValidator,anyof,CanvasFont,font_color,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-5,2,font,CanvasFont,font_color,str,2,ColorValidator,anyof,CanvasFont,font_color,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-5,2,font,CanvasFont,font_color,str,3,ColorValidator,anyof,CanvasFont,font_color,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-5,2,font,CanvasFont,font_color,str,4,ColorValidator,anyof,CanvasFont,font_color,str,,allowed,See list of colors plotly github,unrecognized color
-5,2,font,CanvasFont,font_separators,str,1,StringValidator,allof,,,,,empty_ok,TRUE,value must be a valid or empty string
-5,2,font,CanvasFont,font_separators,str,1,StringValidator,allof,,,,,allowed,"[""."", "",""]",value must be a valid or empty string
-6,1,colors,CanvasColorBackground,paper_bgcolor,str,1,ColorValidator,anyof,CanvasColorBackground,paper_bgcolor,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-6,1,colors,CanvasColorBackground,paper_bgcolor,str,2,ColorValidator,anyof,CanvasColorBackground,paper_bgcolor,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-6,1,colors,CanvasColorBackground,paper_bgcolor,str,3,ColorValidator,anyof,CanvasColorBackground,paper_bgcolor,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-6,1,colors,CanvasColorBackground,paper_bgcolor,str,4,ColorValidator,anyof,CanvasColorBackground,paper_bgcolor,str,,allowed,See list of colors plotly github,unrecognized color
-6,2,colors,CanvasColorBackground,plot_bgcolor,str,1,ColorValidator,anyof,CanvasColorBackground,plot_bgcolor,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-6,2,colors,CanvasColorBackground,plot_bgcolor,str,2,ColorValidator,anyof,CanvasColorBackground,plot_bgcolor,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-6,2,colors,CanvasColorBackground,plot_bgcolor,str,3,ColorValidator,anyof,CanvasColorBackground,plot_bgcolor,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-6,2,colors,CanvasColorBackground,plot_bgcolor,str,4,ColorValidator,anyof,CanvasColorBackground,plot_bgcolor,str,,allowed,See list of colors plotly github,unrecognized color
-6,3,colors,CanvasColorScale,colorscale_sequential,str,1,ColorScaleValidator,NA,,,,,function,https://github.com/plotly/plotly.py/blob/97e4378b8c9efac6421c6ac3b7303982abaa69b9/packages/python/plotly/_plotly_utils/basevalidators.py,unrecognized colorscale
-6,4,colors,CanvasColorScale,colorscale_sequentialminus,str,1,ColorScaleValidator,NA,,,,,function,https://github.com/plotly/plotly.py/blob/97e4378b8c9efac6421c6ac3b7303982abaa69b9/packages/python/plotly/_plotly_utils/basevalidators.py,unrecognized colorscale
-6,5,colors,CanvasColorScale,colorscale_diverging,str,1,ColorScaleValidator,NA,,,,,function,https://github.com/plotly/plotly.py/blob/97e4378b8c9efac6421c6ac3b7303982abaa69b9/packages/python/plotly/_plotly_utils/basevalidators.py,unrecognized colorscale
-6,6,colors,CanvasColorScale,colorway,array_like,1,ColorListValidator,NA,,,,,function,https://github.com/plotly/plotly.py/blob/master/packages/python/plotly/_plotly_utils/basevalidators.py,unrecognized colorscale
-6,7,colors,CanvasColorAxisDomain,coloraxis_cauto,bool,1,BooleanValidator,allof,,,,,type,bool,value must be boolean
-6,7,colors,CanvasColorAxisDomain,coloraxis_cmin,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,8,colors,CanvasColorAxisDomain,coloraxis_cmin,"int, float",2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-6,8,colors,CanvasColorAxisDomain,coloraxis_cmax,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,9,colors,CanvasColorAxisDomain,coloraxis_cmax,"int, float",2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-6,9,colors,CanvasColorAxisDomain,coloraxis_cmid,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,10,colors,CanvasColorAxisDomain,coloraxis_cmid,"int, float",2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-6,11,colors,CanvasColorAxisScales,coloraxis_colorscale,str,1,ColorScaleValidator,NA,,,,,function,https://github.com/plotly/plotly.py/blob/master/packages/python/plotly/_plotly_utils/basevalidators.py,invalid colorscale
-6,12,colors,CanvasColorAxisScales,coloraxis_autoscale,bool,1,BooleanValidator,NA,,,,,bool,,value must be boolean
-6,13,colors,CanvasColorAxisScales,coloraxis_reversescale,bool,1,BooleanValidator,NA,,,,,bool,,value must be boolean
-6,14,colors,CanvasColorAxisScales,coloraxis_showscale,bool,1,BooleanValidator,NA,,,,,bool,,value must be boolean
-6,15,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_thicknessmode,str,1,DiscreteValidator,NA,,,,,allowed,"[""fraction"", ""pixels""]",invalid value
-6,15,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_thickness,"int, float",1,NumberValidator,NA,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,16,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_thickness,"int, float",2,NumberValidator,NA,,,,,min,0,value must be a number greater or equal to min.
-6,17,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_lenmode,str,1,DiscreteValidator,NA,,,,,allowed,"[""fraction"", ""pixels""]",invalid value
-6,17,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_len,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,18,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_len,"int, float",2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-6,18,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_x,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)","value must be a number between min and max, inclusive."
-6,18,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_x,"int, float",2,NumberValidator,allof,,,,,min,-2,"value must be a number between min and max, inclusive."
-6,19,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_x,"int, float",3,NumberValidator,allof,,,,,max,3,"value must be a number between min and max, inclusive."
-6,19,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_y,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)","value must be a number between min and max, inclusive."
-6,19,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_y,"int, float",2,NumberValidator,allof,,,,,min,-2,"value must be a number between min and max, inclusive."
-6,20,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_y,"int, float",2,NumberValidator,allof,,,,,max,3,"value must be a number between min and max, inclusive."
-6,21,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_xanchor,str,1,DiscreteValidator,NA,,,,,allowed,"[""left"", ""center"", ""right""]",
-6,22,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_yanchor,str,1,DiscreteValidator,NA,,,,,allowed,"[""top"", ""middle"", ""bottom""]",
-6,22,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_xpad,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,23,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_xpad,"int, float",2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-6,23,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_ypad,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,24,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_ypad,"int, float",2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-6,23,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,str,1,ColorValidator,anyof,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-6,24,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,str,2,ColorValidator,anyof,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-6,24,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,str,3,ColorValidator,anyof,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-6,25,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,str,4,ColorValidator,anyof,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,str,,allowed,See list of colors plotly github,unrecognized color
-6,25,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinewidth,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,26,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinewidth,"int, float",2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-6,27,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,str,1,ColorValidator,anyof,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-6,28,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,str,2,ColorValidator,anyof,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-6,29,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,str,3,ColorValidator,anyof,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-6,30,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,str,4,ColorValidator,anyof,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,str,,allowed,See list of colors plotly github,unrecognized color
-6,27,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_borderwidth,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",
-6,28,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_borderwidth,"int, float",2,NumberValidator,allof,,,,,min,0,
-6,29,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,str,1,ColorValidator,anyof,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-6,30,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,str,2,ColorValidator,anyof,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-6,31,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,str,3,ColorValidator,anyof,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-6,32,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,str,4,ColorValidator,anyof,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,str,,allowed,See list of colors plotly github,unrecognized color
-6,30,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tickmode,str,1,DiscreteValidator,NA,,,,,allowed,"[""auto"", ""linear"", ""array""]",
-6,33,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_nticks,"int,float",1,NumberValidator,allof,,,,,type,"(int, float)",
-6,31,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_nticks,"int,float",2,NumberValidator,allof,,,,,min,0,
-6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tick0,"int,float",1,Tick0Validator,anyof,CanvasXAxis,type,str,"""-""",type,"(int, float)",value must be a number
-6,32,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tick0,"int,float",2,Tick0Validator,anyof,CanvasXAxis,type,str,"""linear""",type,"(int, float)",value must be a number
-6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tick0,"int, float",3,Tick0Validator,anyof,CanvasXAxis,type,"int, float","""log""",type,"(int, float)",value must be a number
-6,32,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tick0,str,4,Tick0Validator,anyof,CanvasXAxis,type,"int, float","""date""",type,datetimes,value must be a date string
-6,33,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tick0,"int,float",5,Tick0Validator,anyof,CanvasXAxis,type,"int, float","""category""",type,"(int, float)",value must be a number
-6,33,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_dtick,"int,float",1,DTickValidator,anyof,CanvasXAxis,type,str,"""-""",type,"(int, float)",value must be a number
-6,35,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_dtick,"int, float",2,DTickValidator,anyof,CanvasXAxis,type,str,"""linear""",type,"(int, float)",value must be a number
-6,33,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_dtick,str,3,DTickValidator,anyof,CanvasXAxis,type,"int, float","""log""",type,str,value must be a string
-6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_dtick,str,4,DTickValidator,anyof,CanvasXAxis,type,"int, float","""date""",type,datetimes,value must be a date string
-6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_dtick,"int, float",5,DTickValidator,anyof,CanvasXAxis,type,"int, float","""category""",type,"int, float",value must be a number
-6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tickvals,array_like,1,ArrayLikeValidator,anyof,CanvasColorAxisBarTicks,coloraxis_colorbar_tickvals,"int, float",,type,"int, float",value must be an array-like of numbers
-6,36,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tickvals,array_like,2,ArrayLikeValidator,anyof,CanvasColorAxisBarTicks,coloraxis_colorbar_tickvals,str,,type,str,value must be an array-like of strings.
-6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tickvals,array_like,3,ArrayLikeValidator,anyof,CanvasColorAxisBarTicks,coloraxis_colorbar_tickvals,datetimes,,type,datetimes,value must be an array-like of datetimes
-6,35,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_ticktext,array_like,1,ArrayLikeValidator,anyof,CanvasColorAxisBarTicks,coloraxis_colorbar_ticktext,"int, float",,type,"(int, float)",value must be an array-like of numbers
-6,37,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_ticktext,array_like,2,ArrayLikeValidator,anyof,CanvasColorAxisBarTicks,coloraxis_colorbar_ticktext,str,,type,str,value must be an array-like of strings.
-6,35,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_ticktext,array_like,3,ArrayLikeValidator,anyof,CanvasColorAxisBarTicks,coloraxis_colorbar_ticktext,datetimes,,type,datetimes,value must be an array-like of datetimes
-6,36,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_ticks,str,1,DiscreteValidator,allof,,,,,allowed,"[""outside"", ""inside""]",
-6,36,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticklen,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,37,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticklen,"int, float",2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-6,37,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickwidth,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,38,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickwidth,"int, float",2,NumberValidator,allof,,,,,min,0,value must be a number greater or equal to min.
-6,39,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,str,1,ColorValidator,anyof,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-6,40,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,str,2,ColorValidator,anyof,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-6,41,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,str,3,ColorValidator,anyof,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-6,42,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,str,4,ColorValidator,anyof,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,str,,allowed,See list of colors plotly github,unrecognized color
-6,40,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_showticklabels,bool,1,BooleanValidator,allof,,,,,type,bool,value must be a boolean
-6,43,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_family,str,1,StringValidator,anyof,,,,,empty_ok,TRUE,value must be a valid or empty string
-6,41,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_family,str,1,StringValidator,anyof,,,,,type,str,value must be a valid or empty string
-6,41,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_size,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater or equal to min.
-6,42,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_size,"int, float",2,NumberValidator,allof,,,,,min,1,value must be a number greater or equal to min.
-6,43,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,str,1,ColorValidator,anyof,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-6,44,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,str,2,ColorValidator,anyof,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-6,45,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,str,3,ColorValidator,anyof,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-6,46,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,str,4,ColorValidator,anyof,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,str,,allowed,See list of colors plotly github,unrecognized color
-6,44,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickangle,"int, float",1,AngleValidator,allof,,,,,function,see https://github.com/plotly/plotly.py/blob/master/packages/python/plotly/_plotly_utils/basevalidators.py,
-6,45,colors,CanvasColorAxisBarTickFormatStops,coloraxis_colorbar_tickformatstops_enabled,na,,na,,,,,,,,
-6,46,colors,CanvasColorAxisBarTickFormatStops,coloraxis_colorbar_tickformatstops_dtickrange,na,,na,,,,,,,,
-6,47,colors,CanvasColorAxisBarTickFormatStops,coloraxis_colorbar_tickformatstops_value,na,,na,,,,,,,,
-6,48,colors,CanvasColorAxisBarTickFormatStops,coloraxis_colorbar_tickformatstops_name,na,,na,,,,,,,,
-6,49,colors,CanvasColorAxisBarTickFormatStops,coloraxis_colorbar_tickformatstops_templateitemname,na,,na,,,,,,,,
-6,49,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickprefix,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
-6,50,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickprefix,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
-6,51,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_showtickprefix,str,1,DiscreteValidator,allof,,,,,allowed,"[""all"", ""first"", ""last"", ""none""]",unrecognized value
-6,51,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticksuffix,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
-6,52,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticksuffix,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
-6,53,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_showticksuffix,str,1,DiscreteValidator,NA,,,,,allowed,"[""all"", ""first"", ""last"", ""none""]",unrecognized value
-6,54,colors,CanvasColorAxisBarNumbers,coloraxis_colorbar_separatethousands,bool,1,BooleanValidator,NA,,,,,type,bool,value must be a boolean
-6,55,colors,CanvasColorAxisBarNumbers,coloraxis_colorbar_exponentformat,str,1,DiscreteValidator,NA,,,,,allowed,"[""none"", ""e"", ""E"", ""power"", ""SI"", ""B""]",unrecognized value
-6,56,colors,CanvasColorAxisBarNumbers,coloraxis_colorbar_showexponent,str,1,DiscreteValidator,NA,,,,,allowed,"[""all"", ""first"", ""last"", ""none""]",unrecognized shoue
-6,56,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_text,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
-6,57,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_text,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
-6,57,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_family,str,1,StringValidator,NA,,,,,empty_ok,TRUE,value must be a valid or empty string
-6,58,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_family,str,2,StringValidator,NA,,,,,type,str,value must be a valid or empty string
-6,58,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_size,"int, float",1,NumberValidator,allof,,,,,type,"(int, float)",value must be a number greater than or equal to min.
-6,59,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_size,"int, float",2,NumberValidator,allof,,,,,min,1,unrecognized fonue
-6,60,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,str,1,ColorValidator,anyof,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,regex,,regex,"re_hex=re.compile(r""#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"")",unrecognized color
-6,61,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,str,2,ColorValidator,anyof,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,regex,,regex,"re_rgb_etc=re.compile(r""(rgb|hsl|hsv)a?\([\d.]+%?(,[\d.]+%?){2,3}\)"")",unrecognized color
-6,62,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,str,3,ColorValidator,anyof,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,regex,,regex,"re_ddk=re.compile(r""var\(\-\-.*\)"")",unrecognized color
-6,63,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,str,4,ColorValidator,anyof,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,str,,allowed,See list of colors plotly github,unrecognized color
+Group #,Param #,category,classname,attribute,type,validator #,validator,rule set,rule,rule_value,condition,context_class,context_attribute,context_type,context_value,inv_msg
+1,1,titles,CanvasTitle,title_text,str,1,StringValidator,NA,is_string,,not_empty,NA,NA,NA,NA,title parameter must be a valid string when non-empty.
+1,2,titles,CanvasTitle,title_font_family,str,1,StringValidator,NA,is_string,,not_empty,NA,NA,NA,NA,value must be a valid or empty string
+1,3,titles,CanvasTitle,title_font_size,"int, float >= 1",1,NumberValidator,NA,is_greater_equal,1,NA,NA,NA,NA,NA,invalid_font_size
+1,4,titles,CanvasTitle,title_font_color,str,1,ColorValidator,font_color,is_match,see reference guide,NA,NA,NA,NA,NA,unrecognized color
+1,4,titles,CanvasTitle,title_font_color,str,2,ColorValidator,font_color,is_match,see reference guide,NA,NA,NA,NA,NA,unrecognized color
+1,4,titles,CanvasTitle,title_font_color,str,3,ColorValidator,font_color,is_match,see reference guide,NA,NA,NA,NA,NA,unrecognized color
+1,4,titles,CanvasTitle,title_font_color,str,3,ColorValidator,font_color,is_allowed,see reference guide,NA,NA,NA,NA,NA,unrecognized color
+1,5,titles,CanvasTitle,title_xref,str,1,DiscreteValidator,NA,allowed,"['container', 'paper']",NA,NA,NA,NA,NA,invalid value
+1,6,titles,CanvasTitle,title_yref,str,1,DiscreteValidator,NA,allowed,"['container', 'paper']",NA,NA,NA,NA,NA,invalid value
+1,7,titles,CanvasTitle,title_x,"int,float",1,NumberValidator,NA,is_number_between,[0:1],NA,NA,NA,NA,NA,"value must be a number between min and max, inclusive."
+1,8,titles,CanvasTitle,title_y,"str, int, float",1,NumberValidator,NA,is_number_between,[0:1],,,,,,"value must be a number between min and max, inclusive."
+1,9,titles,CanvasTitle,title_xanchor,str,1,DiscreteValidator,NA,allowed," ( ""auto"" | ""left"" | ""center"" | ""right"" )",NA,NA,NA,NA,NA,unrecognized value
+1,10,titles,CanvasTitle,title_yanchor,str,1,DiscreteValidator,NA,allowed," ( ""auto"" | ""top"" | ""middle"" | ""bottom"" )",NA,NA,NA,NA,NA,unrecognized value
+1,11,titles,CanvasTitle,title_pad.t,int,1,NumberValidator,NA,is_greater_equal,0,NA,NA,NA,NA,NA,value must be a number greater or equal to min.
+1,11,titles,CanvasTitle,title_pad.b,int,1,NumberValidator,NA,is_greater_equal,0,NA,NA,NA,NA,NA,value must be a number greater or equal to min.
+1,11,titles,CanvasTitle,title_pad.l,int,1,NumberValidator,NA,is_greater_equal,0,NA,NA,NA,NA,NA,value must be a number greater or equal to min.
+2,1,legend,CanvasLegend,legend_show,bool,1,BooleanValidator,,NA,,,,,,,value must be boolean
+2,2,legend,CanvasLegend,legend_bgcolor,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+2,2,legend,CanvasLegend,legend_bgcolor,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+2,2,legend,CanvasLegend,legend_bgcolor,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+2,2,legend,CanvasLegend,legend_bgcolor,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+2,3,legend,CanvasLegend,legend_bordercolor,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+2,3,legend,CanvasLegend,legend_bordercolor,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+2,3,legend,CanvasLegend,legend_bordercolor,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+2,3,legend,CanvasLegend,legend_bordercolor,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+2,4,legend,CanvasLegend,legend_borderwidth,"int, float",1,NumberValidator,,NA,,,,,,,value must be a number greater or equal to min.
+2,5,legend,CanvasLegend,legend_font_family,str,1,StringValidator,,NA,,,,,,,value must be a valid or empty string
+2,5,legend,CanvasLegend,legend_font_family,str,2,StringValidator,,NA,,,,,,,value must be a valid or empty string
+2,6,legend,CanvasLegend,legend_font_size,"int, float >= 1",1,NumberValidator,,NA,,,,,,,value must be a number greater or equal to min.
+2,7,legend,CanvasLegend,legend_font_color,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+2,7,legend,CanvasLegend,legend_font_color,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+2,7,legend,CanvasLegend,legend_font_color,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+2,7,legend,CanvasLegend,legend_font_color,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+2,8,legend,CanvasLegend,legend_orientation,str,1,DiscreteValidator,,allof,,,,,,,unrecognized value
+2,9,legend,CanvasLegend,legend_itemsizing,str,1,DiscreteValidator,,allof,,,,,,,unrecognized value
+2,10,legend,CanvasLegend,legend_itemclick,str,1,DiscreteValidator,,allof,,,,,,,unrecognized value
+2,11,legend,CanvasLegend,legend_x,numeric -2:3,1,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+2,11,legend,CanvasLegend,legend_x,numeric -2:3,2,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+2,11,legend,CanvasLegend,legend_x,numeric -2:3,3,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+2,12,legend,CanvasLegend,legend_y,numeric -2:3,1,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+2,12,legend,CanvasLegend,legend_y,numeric -2:3,2,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+2,12,legend,CanvasLegend,legend_y,numeric -2:3,3,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+2,13,legend,CanvasLegend,legend_xanchor,str,1,DiscreteValidator,,NA,,,,,,,unrecognized value
+2,14,legend,CanvasLegend,legend_yanchor,str,1,DiscreteValidator,,NA,,,,,,,unrecognized value
+2,15,legend,CanvasLegend,legend_valign,str,,DiscreteValidator,,NA,,,,,,,unrecognized value
+3,1,margins,CanvasMargins,margins_left,num >=0,1,NumberValidator,,allof,,,,,,,invalid type
+3,1,margins,CanvasMargins,margins_left,num >=0,2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+3,2,margins,CanvasMargins,margins_top,num >=0,1,NumberValidator,,allof,,,,,,,invalid type
+3,2,margins,CanvasMargins,margins_top,num >=0,2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+3,3,margins,CanvasMargins,margins_bottom,num >=0,1,NumberValidator,,allof,,,,,,,invalid type
+3,3,margins,CanvasMargins,margins_bottom,num >=0,2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+3,4,margins,CanvasMargins,margins_pad,num >=0,1,NumberValidator,,allof,,,,,,,invalid type
+3,4,margins,CanvasMargins,margins_pad,num >=0,2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+4,1,size,CanvasSize,size_autosize,bool,1,BooleanValidator,,allof,,,,,,,value must be boolean
+4,2,size,CanvasSize,size_width,num>=10,1,NumberValidator,,NA,,,,,,,value must be a number greater or equal to min.
+4,2,size,CanvasSize,size_width,num>=10,2,NumberValidator,,NA,,,,,,,value must be a number greater or equal to min.
+4,2,size,CanvasSize,size_height,num>=10,1,NumberValidator,,NA,,,,,,,value must be a number greater or equal to min.
+4,2,size,CanvasSize,size_height,num>=10,2,NumberValidator,,NA,,,,,,,value must be a number greater or equal to min.
+5,1,font,CanvasFont,font_family,str,1,StringValidator,,NA,,,,,,,value must be a valid or empty string
+5,1,font,CanvasFont,font_family,str,2,StringValidator,,NA,,,,,,,value must be a valid or empty string
+5,2,font,CanvasFont,font_size,num>=1,1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+5,2,font,CanvasFont,font_size,num>=1,2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+5,2,font,CanvasFont,font_color,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+5,2,font,CanvasFont,font_color,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+5,2,font,CanvasFont,font_color,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+5,2,font,CanvasFont,font_color,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+5,2,font,CanvasFont,font_separators,str,1,StringValidator,,allof,,,,,,,value must be a valid or empty string
+5,2,font,CanvasFont,font_separators,str,1,StringValidator,,allof,,,,,,,value must be a valid or empty string
+6,1,colors,CanvasColorBackground,paper_bgcolor,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+6,1,colors,CanvasColorBackground,paper_bgcolor,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+6,1,colors,CanvasColorBackground,paper_bgcolor,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+6,1,colors,CanvasColorBackground,paper_bgcolor,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+6,2,colors,CanvasColorBackground,plot_bgcolor,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+6,2,colors,CanvasColorBackground,plot_bgcolor,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+6,2,colors,CanvasColorBackground,plot_bgcolor,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+6,2,colors,CanvasColorBackground,plot_bgcolor,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+6,3,colors,CanvasColorScale,colorscale_sequential,str,1,ColorScaleValidator,,NA,,,,,,,unrecognized colorscale
+6,4,colors,CanvasColorScale,colorscale_sequentialminus,str,1,ColorScaleValidator,,NA,,,,,,,unrecognized colorscale
+6,5,colors,CanvasColorScale,colorscale_diverging,str,1,ColorScaleValidator,,NA,,,,,,,unrecognized colorscale
+6,6,colors,CanvasColorScale,colorway,array_like,1,ColorListValidator,,NA,,,,,,,unrecognized colorscale
+6,7,colors,CanvasColorAxisDomain,coloraxis_cauto,bool,1,BooleanValidator,,allof,,,,,,,value must be boolean
+6,7,colors,CanvasColorAxisDomain,coloraxis_cmin,"int, float",1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,8,colors,CanvasColorAxisDomain,coloraxis_cmin,"int, float",2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,8,colors,CanvasColorAxisDomain,coloraxis_cmax,"int, float",1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,9,colors,CanvasColorAxisDomain,coloraxis_cmax,"int, float",2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,9,colors,CanvasColorAxisDomain,coloraxis_cmid,"int, float",1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,10,colors,CanvasColorAxisDomain,coloraxis_cmid,"int, float",2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,11,colors,CanvasColorAxisScales,coloraxis_colorscale,str,1,ColorScaleValidator,,NA,,,,,,,invalid colorscale
+6,12,colors,CanvasColorAxisScales,coloraxis_autoscale,bool,1,BooleanValidator,,NA,,,,,,,value must be boolean
+6,13,colors,CanvasColorAxisScales,coloraxis_reversescale,bool,1,BooleanValidator,,NA,,,,,,,value must be boolean
+6,14,colors,CanvasColorAxisScales,coloraxis_showscale,bool,1,BooleanValidator,,NA,,,,,,,value must be boolean
+6,15,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_thicknessmode,str,1,DiscreteValidator,,NA,,,,,,,invalid value
+6,15,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_thickness,"int, float",1,NumberValidator,,NA,,,,,,,value must be a number greater or equal to min.
+6,16,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_thickness,"int, float",2,NumberValidator,,NA,,,,,,,value must be a number greater or equal to min.
+6,17,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_lenmode,str,1,DiscreteValidator,,NA,,,,,,,invalid value
+6,17,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_len,"int, float",1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,18,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_len,"int, float",2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,18,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_x,"int, float",1,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+6,18,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_x,"int, float",2,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+6,19,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_x,"int, float",3,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+6,19,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_y,"int, float",1,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+6,19,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_y,"int, float",2,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+6,20,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_y,"int, float",2,NumberValidator,,allof,,,,,,,"value must be a number between min and max, inclusive."
+6,21,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_xanchor,str,1,DiscreteValidator,,NA,,,,,,,
+6,22,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_yanchor,str,1,DiscreteValidator,,NA,,,,,,,
+6,22,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_xpad,"int, float",1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,23,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_xpad,"int, float",2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,23,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_ypad,"int, float",1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,24,colors,CanvasColorAxisBarPosition,coloraxis_colorbar_ypad,"int, float",2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,23,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+6,24,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+6,24,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+6,25,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinecolor,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+6,25,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinewidth,"int, float",1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,26,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_outlinewidth,"int, float",2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,27,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+6,28,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+6,29,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+6,30,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_bordercolor,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+6,27,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_borderwidth,"int, float",1,NumberValidator,,allof,,,,,,,
+6,28,colors,CanvasColorAxisBarBoundary,coloraxis_colorbar_borderwidth,"int, float",2,NumberValidator,,allof,,,,,,,
+6,29,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+6,30,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+6,31,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+6,32,colors,CanvasColorAxisBarStyle,coloraxis_colorbar_bgcolor,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+6,30,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tickmode,str,1,DiscreteValidator,,NA,,,,,,,
+6,33,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_nticks,"int,float",1,NumberValidator,,allof,,,,,,,
+6,31,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_nticks,"int,float",2,NumberValidator,,allof,,,,,,,
+6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tick0,"int,float",1,Tick0Validator,,anyof,,,,,,"""-""",value must be a number
+6,32,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tick0,"int,float",2,Tick0Validator,,anyof,,,,,,"""linear""",value must be a number
+6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tick0,"int, float",3,Tick0Validator,,anyof,,,,,,"""log""",value must be a number
+6,32,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tick0,str,4,Tick0Validator,,anyof,,,,,,"""date""",value must be a date string
+6,33,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tick0,"int,float",5,Tick0Validator,,anyof,,,,,,"""category""",value must be a number
+6,33,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_dtick,"int,float",1,DTickValidator,,anyof,,,,,,"""-""",value must be a number
+6,35,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_dtick,"int, float",2,DTickValidator,,anyof,,,,,,"""linear""",value must be a number
+6,33,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_dtick,str,3,DTickValidator,,anyof,,,,,,"""log""",value must be a string
+6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_dtick,str,4,DTickValidator,,anyof,,,,,,"""date""",value must be a date string
+6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_dtick,"int, float",5,DTickValidator,,anyof,,,,,,"""category""",value must be a number
+6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tickvals,array_like,1,ArrayLikeValidator,,anyof,,,,,,,value must be an array-like of numbers
+6,36,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tickvals,array_like,2,ArrayLikeValidator,,anyof,,,,,,,value must be an array-like of strings.
+6,34,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_tickvals,array_like,3,ArrayLikeValidator,,anyof,,,,,,,value must be an array-like of datetimes
+6,35,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_ticktext,array_like,1,ArrayLikeValidator,,anyof,,,,,,,value must be an array-like of numbers
+6,37,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_ticktext,array_like,2,ArrayLikeValidator,,anyof,,,,,,,value must be an array-like of strings.
+6,35,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_ticktext,array_like,3,ArrayLikeValidator,,anyof,,,,,,,value must be an array-like of datetimes
+6,36,colors,CanvasColorAxisBarTicks,coloraxis_colorbar_ticks,str,1,DiscreteValidator,,allof,,,,,,,
+6,36,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticklen,"int, float",1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,37,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticklen,"int, float",2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,37,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickwidth,"int, float",1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,38,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickwidth,"int, float",2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,39,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+6,40,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+6,41,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+6,42,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickcolor,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+6,40,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_showticklabels,bool,1,BooleanValidator,,allof,,,,,,,value must be a boolean
+6,43,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_family,str,1,StringValidator,,anyof,,,,,,,value must be a valid or empty string
+6,41,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_family,str,1,StringValidator,,anyof,,,,,,,value must be a valid or empty string
+6,41,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_size,"int, float",1,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,42,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_size,"int, float",2,NumberValidator,,allof,,,,,,,value must be a number greater or equal to min.
+6,43,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,str,1,ColorValidator,,anyof,,,,,,,unrecognized color
+6,44,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,str,2,ColorValidator,,anyof,,,,,,,unrecognized color
+6,45,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,str,3,ColorValidator,,anyof,,,,,,,unrecognized color
+6,46,colors,CanvasColorAxisBarTickFont,coloraxis_colorbar_tickfont_color,str,4,ColorValidator,,anyof,,,,,,,unrecognized color
+6,44,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickangle,"int, float",1,AngleValidator,,allof,,,,,,,
+6,45,colors,CanvasColorAxisBarTickFormatStops,coloraxis_colorbar_tickformatstops_enabled,na,,na,,,,,,,,,
+6,46,colors,CanvasColorAxisBarTickFormatStops,coloraxis_colorbar_tickformatstops_dtickrange,na,,na,,,,,,,,,
+6,47,colors,CanvasColorAxisBarTickFormatStops,coloraxis_colorbar_tickformatstops_value,na,,na,,,,,,,,,
+6,48,colors,CanvasColorAxisBarTickFormatStops,coloraxis_colorbar_tickformatstops_name,na,,na,,,,,,,,,
+6,49,colors,CanvasColorAxisBarTickFormatStops,coloraxis_colorbar_tickformatstops_templateitemname,na,,na,,,,,,,,,
+6,49,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickprefix,str,1,StringValidator,,NA,,empty_ok,,,,,value must be a valid or empty string
+6,50,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_tickprefix,str,2,StringValidator,,NA,,type,,,,,value must be a valid or empty string
+6,51,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_showtickprefix,str,1,DiscreteValidator,,allof,,allowed,,,,,unrecognized value
+6,51,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticksuffix,str,1,StringValidator,,NA,,empty_ok,,,,,value must be a valid or empty string
+6,52,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_ticksuffix,str,2,StringValidator,,NA,,type,,,,,value must be a valid or empty string
+6,53,colors,CanvasColorAxisBarTickStyle,coloraxis_colorbar_showticksuffix,str,1,DiscreteValidator,,NA,,allowed,,,,,unrecognized value
+6,54,colors,CanvasColorAxisBarNumbers,coloraxis_colorbar_separatethousands,bool,1,BooleanValidator,,NA,,type,,,,,value must be a boolean
+6,55,colors,CanvasColorAxisBarNumbers,coloraxis_colorbar_exponentformat,str,1,DiscreteValidator,,NA,,allowed,,,,,unrecognized value
+6,56,colors,CanvasColorAxisBarNumbers,coloraxis_colorbar_showexponent,str,1,DiscreteValidator,,NA,,allowed,,,,,unrecognized shoue
+6,56,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_text,str,1,StringValidator,,NA,,empty_ok,,,,,value must be a valid or empty string
+6,57,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_text,str,2,StringValidator,,NA,,type,,,,,value must be a valid or empty string
+6,57,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_family,str,1,StringValidator,,NA,,empty_ok,,,,,value must be a valid or empty string
+6,58,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_family,str,2,StringValidator,,NA,,type,,,,,value must be a valid or empty string
+6,58,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_size,"int, float",1,NumberValidator,,allof,,type,,,,,value must be a number greater than or equal to min.
+6,59,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_size,"int, float",2,NumberValidator,,allof,,min,,,,,unrecognized fonue
+6,60,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,str,1,ColorValidator,,anyof,,regex,,,,,unrecognized color
+6,61,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,str,2,ColorValidator,,anyof,,regex,,,,,unrecognized color
+6,62,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,str,3,ColorValidator,,anyof,,regex,,,,,unrecognized color
+6,63,colors,CanvasColorAxisBarTitle,coloraxis_colorbar_title_font_color,str,4,ColorValidator,,anyof,,allowed,,,,,unrecognized color
