@@ -10,7 +10,7 @@ autopep8==1.4.4
 Babel==2.7.0
 backcall==0.1.0
 binaryornot==0.4.4
-bleach==3.1.0
+bleach==3.1.2
 bumpversion==0.5.3
 certifi==2019.6.16
 cffi==1.12.3
